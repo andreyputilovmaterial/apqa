@@ -9,7 +9,7 @@ class DBFile:
             if resource_type in dbfile_processors:
                 return dbfile_processors[resource_type]
             else:
-                raise NotImplementedError(f'db file: resource type not supported: {resource_type or 'unrecognized'}')
+                raise NotImplementedError(f'db file: resource type not supported: {resource_type or "unrecognized"}')
         if cls is DBFile:
             DBFileCls = detect_dbfile_cls(cls._registry,resource_path)
             return DBFileCls(resource_path)
