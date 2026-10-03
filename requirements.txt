@@ -1,0 +1,9 @@
+pytest
+pytest-html
+beautifulsoup4>=4
+python-dotenv>=1.0
+PyYAML>=6
+rjsmin>=1
+csscompressor>=0.9
+markdown-it-py>=4
+rich>=15

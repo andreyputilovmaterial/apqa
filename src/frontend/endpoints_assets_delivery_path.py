@@ -1,0 +1,180 @@
+from urllib.parse import urlparse, parse_qs, unquote # to deliver deeper resources, like in fonts
+import re # to set content-type based on file type
+
+
+
+
+from .common_functions import get_matching_endpoint
+from .template.make_html import make_html
+from .template.GENERATED.TEMPLATE_COMPILED.ASSETS import (
+    common_css,
+    common_js,
+    normalize_css,
+)
+from .GENERATED.ASSETS import (
+    app_js,
+    # app_css,
+    project_specific_styles_css,
+    vendorlibs_vue_js,
+    vendorlibs_marked_js,
+    vendorlibs_dompurify_js,
+    _ASSETS_VENDORLIBS_FONTS_IBMPLEXSANS,
+    _ASSETS_VENDORLIBS_FONTS_IBMPLEXMONO,
+)
+
+
+
+
+
+def detect_content_type(path):
+    content_type = 'text/plain'
+    if re.match(r'.*\.css\s*$',path,flags=re.I):
+        content_type = 'text/css'
+    elif re.match(r'.*\.m?js\s*$',path,flags=re.I):
+        content_type = 'text/javascript'
+    return content_type
+
+def render_payload(net_request_handler, config: dict,added_data=None,is_binary=False):
+    WebResponse = config.get('iface').get('WebResponse')
+    path_with_query = net_request_handler.path
+    path_parsed = f'{urlparse(path_with_query).path}'
+    content_type = detect_content_type(path_parsed)
+    payload = added_data
+    return WebResponse(
+        status_code = 200,
+        content_type = content_type, #'text/css',
+        body = payload,
+        headers = [],
+        is_binary=is_binary,
+    )
+
+
+
+def render_assets_common_css(net_request_handler, config: dict,added_data=None):
+    payload = common_css
+    return render_payload(net_request_handler,config,added_data=payload)
+
+def render_assets_normalize_css(net_request_handler, config: dict,added_data=None):
+    payload = normalize_css
+    return render_payload(net_request_handler,config,added_data=payload)
+
+def render_assets_common_js(net_request_handler, config: dict,added_data=None):
+    payload = common_js
+    return render_payload(net_request_handler,config,added_data=payload)
+
+def render_assets_app_js(net_request_handler, config: dict,added_data=None):
+    payload = app_js
+    return render_payload(net_request_handler,config,added_data=payload)
+
+def render_assets_project_specific_styles_css(net_request_handler, config: dict,added_data=None):
+    payload = project_specific_styles_css
+    return render_payload(net_request_handler,config,added_data=payload)
+
+def render_assets_vendorlibs_vue_js(net_request_handler, config: dict,added_data=None):
+    payload = vendorlibs_vue_js
+    return render_payload(net_request_handler,config,added_data=payload)
+def render_assets_vendorlibs_marked_js(net_request_handler, config: dict,added_data=None):
+    payload = vendorlibs_marked_js
+    return render_payload(net_request_handler,config,added_data=payload)
+def render_assets_vendorlibs_dompurify_js(net_request_handler, config: dict,added_data=None):
+    payload = vendorlibs_dompurify_js
+    return render_payload(net_request_handler,config,added_data=payload)
+def render_assets_vendorlibs_font_ibmplexsans(net_request_handler, config: dict,added_data=None):
+    WebResponse = config.get('iface').get('WebResponse')
+    payload_dict = _ASSETS_VENDORLIBS_FONTS_IBMPLEXSANS
+    payload_dict = { propname: propvalue for propname,propvalue in payload_dict }
+    path_with_query = net_request_handler.path
+    path_parsed = f'{urlparse(path_with_query).path}'
+    path = '/'.join([ unquote(p) for p in (path_parsed.split('/'))[5:] ])
+    if path not in payload_dict:
+        return WebResponse(
+            status_code = 404,
+            content_type = 'text/css',
+            body = '',
+            headers = [],
+        )
+    payload = payload_dict.get(path)
+    return render_payload(
+        net_request_handler,
+        config,
+        added_data = payload,
+        is_binary = True,
+    )
+def render_assets_vendorlibs_font_ibmplexmono(net_request_handler, config: dict,added_data=None):
+    WebResponse = config.get('iface').get('WebResponse')
+    payload_dict = _ASSETS_VENDORLIBS_FONTS_IBMPLEXMONO
+    payload_dict = { propname: propvalue for propname,propvalue in payload_dict }
+    path_with_query = net_request_handler.path
+    path_parsed = f'{urlparse(path_with_query).path}'
+    path = '/'.join([ unquote(p) for p in (path_parsed.split('/'))[5:] ])
+    if path not in payload_dict:
+        return WebResponse(
+            status_code = 404,
+            content_type = 'text/css',
+            body = '',
+            headers = [],
+        )
+    payload = payload_dict.get(path)
+    return render_payload(
+        net_request_handler,
+        config,
+        added_data = payload,
+        is_binary = True,
+    )
+
+
+endpoints = {
+    '/common.css': render_assets_common_css,
+    '/normalize.css': render_assets_normalize_css,
+    '/common.js': render_assets_common_js,
+    '/vendorlibs/vue.js': render_assets_vendorlibs_vue_js,
+    '/vendorlibs/marked.js': render_assets_vendorlibs_marked_js,
+    '/vendorlibs/dompurify.js': render_assets_vendorlibs_dompurify_js,
+    re.compile('^/vendorlibs/fonts/ibm-plex-sans/.*'): render_assets_vendorlibs_font_ibmplexsans,
+    re.compile('^/vendorlibs/fonts/ibm-plex-mono/.*'): render_assets_vendorlibs_font_ibmplexmono,
+    '/app.js': render_assets_app_js,
+    '/project-specific.css': render_assets_project_specific_styles_css,
+}
+
+
+def renderer_assets(net_request_handler, config: dict,added_data=None):
+    WebResponse = config.get('iface').get('WebResponse')
+    def not_found(*args,**argv):
+        payload = f'Resource not found: {repr(net_request_handler.path)}'
+        return WebResponse(
+            status_code = 404,
+            content_type = 'text/plain',
+            body = payload,
+            headers = [],
+            is_binary=False,
+        )
+    path_with_query = net_request_handler.path
+    path_parsed = f'{urlparse(path_with_query).path}'
+    path_parts = [ unquote(p) for p in (path_parsed.split('/')) ]
+    if any( any( char in p for char in ('/','\\','\0',) ) for p in path_parts):
+        return WebResponse(
+            status_code = 404,
+            content_type = 'text/plain', # detect_content_type(path_parsed),
+            body = f'Error: "/" encoded in path element; paths can\'t contain "/": {path_parsed}',
+            headers = [],
+        )
+    method = net_request_handler.command
+    if len(path_parts)>=3 and path_parts[0]=='' and (method in ('GET','HEAD',)):
+        path = '/'.join(['']+path_parts[2:])
+        renderer = get_matching_endpoint(path,endpoints) or not_found
+    else:
+        renderer = not_found
+    try:
+        result = renderer(net_request_handler,config,added_data)
+        if method in ('HEAD',):
+            result.body = None
+        return result
+    except FileNotFoundError:
+        return WebResponse(
+            status_code = 404,
+            content_type = detect_content_type(path_parsed),
+            body = '',
+            headers = [],
+        )
+    except Exception:
+        raise # for readability - to make it clear any exception normally passes up to webserver engine

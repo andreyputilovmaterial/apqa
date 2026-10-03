@@ -1,0 +1,86 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+
+.eslintcache
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+
+# Vitest
+__screenshots__/
+
+# Vite
+*.timestamp-*-*.mjs
+
+# --- Proprietary / sensitive data ---
+*.mdd
+*.ddf
+
+# Outputs / generated artifacts
+dist/
+build/
+# Ignore all GENERATED and COMPILED directories everywhere
+GENERATED/
+COMPILED/
+
+# Reports generated from real data
+report.*
+
+# Examples directory (top-level only)
+examples/
+
+# Test directories (case-insensitive, any level)
+tests-real-sensitive-data/
+
+# --- Python artifacts ---
+__pycache__/
+*.pyc
+.venv/
+
+# --- OS junk files ---
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100/
+.Trashes/
+
+# Optional: Windows shortcuts
+*.lnk
+
+# Keep .gitignore itself
+!.gitignore
