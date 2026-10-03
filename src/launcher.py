@@ -7,16 +7,30 @@ import traceback, sys
 
 
 
-
+# necessary adjustment for pinliner, as how I am using it
 if __name__ == '__main__':
     # run as a program
-    from GENERATED._VERSION import _VERSION as script_version
+    from src.GENERATED.VERSION import _VERSION as gitgui_script_version
+    from src.GENERATED.HELP import _MD as help_md
+    from src.main_print_help import print_help
+    from src.main_ui_program import main as call_ui_program
+    # from src.main_gitgui_project_selector import main as call_gitgui_project_selector_program
 elif '.' in __name__:
     # package
-    from .GENERATED._VERSION import _VERSION as script_version
+    from .GENERATED.VERSION import _VERSION as gitgui_script_version
+    from .GENERATED.HELP import _MD as help_md
+    from .main_print_help import print_help
+    from .main_ui_program import main as call_ui_program
+    # from .main_gitgui_project_selector import main as call_gitgui_project_selector_program
 else:
     # included with no parent package
-    from GENERATED._VERSION import _VERSION as script_version
+    from GENERATED.VERSION import _VERSION as gitgui_script_version
+    from GENERATED.HELP import _MD as help_md
+    from main_print_help import print_help
+    from main_ui_program import main as call_ui_program
+    # from main_gitgui_project_selector import main as call_gitgui_project_selector_program
+
+gitgui_script_version = gitgui_script_version.strip()
 
 
 
@@ -29,25 +43,39 @@ STDOUT_COLOR_GREEN = "\033[32m"
 
 
 
-
 def call_test_program(*argcs,**kwargs):
     msg = '''
-hello, world! From apqa
+hello, world! From gitgui
+    '''
+    print(msg)
+    return True
+
+def call_done_program(*argcs,**kwargs):
+    msg = f'''
+{STDOUT_COLOR_GREEN}done{STDOUT_COLOR_RESET}
     '''
     print(msg)
     return True
 
 def call_printversion_program(*argcs,**kwargs):
-    msg = script_version
+    msg = gitgui_script_version
     msg = msg.strip()
     print(msg)
     return True
+
+# def call_help_program(*argcs,**kwargs):
+#     print_help()
+#     return True
 
 
 
 
 run_programs = {
+    'ui': call_ui_program,
+    # 'project-selector': call_gitgui_project_selector_program,
     'test': call_test_program,
+    'done': call_done_program,
+    # 'help': call_help_program,
     'version': call_printversion_program,
 }
 
@@ -67,14 +95,14 @@ def main():
         )
         args, args_rest = parser.parse_known_args()
         if args.program:
-            program = '{arg}'.format(arg=args.program)
+            program = f'{args.program}' # make sure it's text
             if program in run_programs:
                 run_programs[program](args_rest)
             else:
-                raise AttributeError('program to run not recognized: {program}'.format(program=args.program))
+                raise Exception('program to run not recognized: {program}'.format(program=args.program))
         else:
-            print('program to run not specified')
-            raise AttributeError('program to run not specified')
+            # print(f'{STDOUT_COLOR_RED}program to run not specified{STDOUT_COLOR_RESET}')
+            raise Exception('program to run not specified')
     except Exception as e:
         # the program is designed to be user-friendly
         # that's why we reformat error messages a little bit

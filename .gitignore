@@ -5,10 +5,13 @@
 # Outputs / generated artifacts
 dist/
 build/
-**/GENERATED/
+# Ignore all GENERATED and COMPILED directories everywhere
+GENERATED/
+COMPILED/
 
 # Reports generated from real data
 report.*
+pytest-outputs/
 
 # Examples directory (top-level only)
 examples/
@@ -20,6 +23,14 @@ tests-real-sensitive-data/
 __pycache__/
 *.pyc
 .venv/
+
+# --- Exclude environment variables file ---
+.env
+
+# --- Editor files ---
+# .vscode/*
+!.vscode/extensions.json
+.idea
 
 # --- OS junk files ---
 
