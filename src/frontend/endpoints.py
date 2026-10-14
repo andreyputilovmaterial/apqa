@@ -9,3 +9,6 @@ from .endpoints_html_paths import (
 from .endpoints_assets_delivery_path import (
     renderer_assets,
 )
+from .endpoints_rule_crud import (
+    handle_rule_crud,
+)

@@ -18,13 +18,20 @@ def detect_type(resource_path: Path | str | None) -> str | None:
         # str_rest = protocol_str_matches[2]
         if str_protocol_part=='oledb':
             return 'oledb'
+        elif str_protocol_part=='file':
+            resource_path = Path(resource_path).resolve()
+            if resource_path.suffix.lower() in ('.yaml','.yml',):
+                return 'yaml'
+            elif resource_path.suffix.lower() in ('.json',):
+                return 'json'
+            else:
+                return None
         return None
     else:
-        resource_path = Path(resource_path).resolve()
-        if resource_path.suffix.lower() in ('.yaml','.yml',):
-            return 'yaml'
-        elif resource_path.suffix.lower() in ('.json',):
-            return 'json'
-        else:
-            return None
+        # I'd love to have better validation that path is a file, but can't think
+        # of any good way to detect it - physical path can start with a slash, with
+        # drive, a colon, and a backslashes (windows), with cnc network windows path...
 
+        # No need to escape in the inside - it's not the full protocol string,
+        # it's just a convention to pass path, with first part indicating connection type.
+        return detect_type(f'file://{resource_path}')

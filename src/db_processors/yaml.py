@@ -2,12 +2,9 @@
 
 from pathlib import Path
 import yaml
-from dataclasses import asdict
 
 from .dbfile_base import DBFile as DBFileBase
-from .rule_base import make_rule_factory
-
-
+from .rule_base import Rule
 
 
 class IndexedProperty:
@@ -45,46 +42,89 @@ class DBFileYaml(DBFileBase):
         self.resource_path = Path(resource_path).resolve()
         if not self.resource_path.is_file():
             raise FileNotFoundError(f'db file: file not found: {self.resource_path}')
-        def read():
-            with open(self.resource_path, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f) or []
-                rules_old = { rule.name: rule for _,rule in self._rules.items() }
-                self._rules.clear()
-
-                names_used = set()
-                for rule in data:
-                    rule_name = rule.get('name')
-                    if not rule_name:
-                        raise Exception(f'reading dbfile: a rule is missing a name')
-                    if rule_name in names_used:
-                        raise Exception(f'reading dbfile: duplicated rule name(s): {rule_name}')
-                    names_used.add(rule_name)
-                    if rule_name in rules_old:
-                        rule_existing = rules_old[rule_name]
-                        rule_existing.update(rule)
-                        rule_obj = rule_existing
-                    else:
-                        RuleCls = self._Rule
-                        rule_obj = RuleCls(rule)
-                    self._rules[rule_name] = rule_obj
-                return self._rules
-        def save():
-            with open(self._path, "w", encoding="utf-8") as f:
-                yaml.safe_dump([ asdict(rule) for _,rule in self._rules.items() ], f, sort_keys=False)
-        self._save = save
-        self._Rule = make_rule_factory(read,save)
         self._rules = {}
-        read()
+        self._read()
+
+    def _read(self):
+        with open(self.resource_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or []
+        if not isinstance(data, list):
+            raise ValueError(f'db file: top-level must be a list of rules: {self.resource_path}')
+        self._rules.clear()
+        for item in data:
+            rule = Rule.from_dict(item)
+            if rule.name in self._rules:
+                raise ValueError(f'db file: duplicated rule name(s): {rule.name}')
+            self._rules[rule.name] = rule
+        return self._rules
+
+    def save(self):
+        with open(self.resource_path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(
+                [ rule.to_dict() for rule in self.list_rules() ],
+                f,
+                sort_keys=False,
+            )
+
+    # ---- CRUD -------------------------------------------------------------
+
+    def list_rules(self):
+        return [ rule for _,rule in self._rules.items() ]
+
+    def get_rule(self,name):
+        name = f'{name}'
+        if name not in self._rules:
+            raise KeyError(f'rule not found: {name}')
+        return self._rules[name]
+
+    def has_rule(self,name):
+        return f'{name}' in self._rules
+
+    def add_rule(self,rule):
+        if not isinstance(rule, Rule):
+            rule = Rule.from_dict(rule)
+        if rule.name in self._rules:
+            raise ValueError(f'rule already exists: {rule.name}')
+        self._rules[rule.name] = rule
+        return rule
+
+    def update_rule(self,name,**changes):
+        # note: `name` cannot be passed as a keyword here (Python raises
+        # TypeError) — renames go through rename_rule().
+        rule = self.get_rule(name)
+        rule.update(**changes)
+        return rule
+
+    def rename_rule(self,name,new_name):
+        rule = self.get_rule(name)
+        new_name = f'{new_name}'
+        if new_name == name:
+            return rule
+        if new_name in self._rules:
+            raise ValueError(f'rule already exists: {new_name}')
+        del self._rules[name]
+        rule.name = new_name
+        self._rules[new_name] = rule
+        return rule
+
+    def delete_rule(self,name):
+        rule = self.get_rule(name)
+        del self._rules[name]
+        return rule
+
+    # ---- backward-compatible accessors --------------------------------------
 
     @property
-    def rules(self) -> str:
-        return [ rule for _,rule in self._rules.items() ]
+    def rules(self):
+        return self.list_rules()
 
     @IndexedProperty
     def rule(self, name):
-        return self._rules[name]
+        return self.get_rule(name)
 
     @rule.setter
     def rule(self, name, value):
+        if not isinstance(value, Rule):
+            value = Rule.from_dict(value)
         self._rules[name] = value
 
