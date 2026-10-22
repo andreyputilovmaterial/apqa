@@ -113,10 +113,7 @@ class DBFileYaml(DBFileBase):
         return rule
 
     # ---- backward-compatible accessors --------------------------------------
-
-    @property
-    def rules(self):
-        return self.list_rules()
+    # (the generic `.rules` accessor lives on the base class)
 
     @IndexedProperty
     def rule(self, name):

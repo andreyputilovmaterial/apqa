@@ -36,7 +36,8 @@ The program ships as a single self-contained Python bundle (`dist/apqa_bundle.py
 no installation beyond Python.
 
 The project to work on is selected by pointing the program at its **rules database
-file** (currently a YAML file):
+file** — a SQLite database by default (`.sqlite3`/`.sqlite`); YAML is also
+supported (`.yaml`/`.yml`). The format is chosen by the file extension:
 
 - Desktop app: `--db-file <path>` (see `run_ui.sh`).
 - Run tests: the `APQA_DB_FILE` environment variable (see `run_tests.sh`).

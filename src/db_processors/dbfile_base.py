@@ -72,5 +72,11 @@ class DBFile:
     def __contains__(self,name):
         return self.has_rule(name)
 
+    # ---- backward-compatible accessors --------------------------------------
+
+    @property
+    def rules(self):
+        return self.list_rules()
+
 
 

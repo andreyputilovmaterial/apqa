@@ -24,6 +24,8 @@ def detect_type(resource_path: Path | str | None) -> str | None:
                 return 'yaml'
             elif resource_path.suffix.lower() in ('.json',):
                 return 'json'
+            elif resource_path.suffix.lower() in ('.sqlite','.sqlite3',):
+                return 'sqlite'
             else:
                 return None
         return None

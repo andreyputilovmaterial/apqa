@@ -44,6 +44,16 @@ you can:
 
 Your changes are saved to the project's rules database file.
 
+## Project database file
+
+Rules are stored in the project's **database file**, in one of two formats:
+
+- **SQLite** (`.sqlite3` or `.sqlite`) — the default. A small local database file.
+- **YAML** (`.yaml` or `.yml`) — a plain text file you can read and edit by hand.
+
+The format is chosen by the file extension. To start a new project, create an
+empty file with the extension you want (for example, `project.sqlite3`).
+
 ## Running the QC tests
 
 Once your rules are defined, run the tests to check the project data against them.

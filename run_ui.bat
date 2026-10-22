@@ -1,11 +1,9 @@
 
-### `run_ui.bat`
-
-:::writing{variant="standard" id="74106" title="run_ui.bat"}
 @echo off
 setlocal
 
-set "DBFILE=..\tests-real-sensitive-data\projects.yaml"
+@REM  set "DBFILE=..\tests-real-sensitive-data\projects.yaml"
+set "DBFILE=..\tests-real-sensitive-data\projects.sqlite3"
 set "APQA_DB_FILE=%DBFILE%"
 
 call run_init.bat

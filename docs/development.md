@@ -19,8 +19,9 @@ rules** for a research project. It has two run modes:
    enabled rule against the source data and reports pass/fail.
 
 The project is selected by pointing the program at a **rules database file**
-(currently YAML): `--db-file` in the desktop app, or the `APQA_DB_FILE`
-environment variable in the run-tests mode (CLI args are not available there).
+(SQLite by default; YAML also supported): `--db-file` in the desktop app, or the
+`APQA_DB_FILE` environment variable in the run-tests mode (CLI args are not
+available there). The format is chosen by the file extension.
 
 ## Distribution model: the pinliner bundle
 
@@ -95,8 +96,8 @@ Notes:
   script). User CLI params are not available in this mode.
 - `--import-mode=importlib` is required **only** when running the bundle under
   pytest (a pinliner limitation). It is unnecessary for development tests.
-- The QC rules stored in the project DB YAML are the fixtures and acceptance
-  criteria.
+- The QC rules stored in the project DB (SQLite or YAML) are the fixtures and
+  acceptance criteria.
 - `tests-real-sensitive-data/` is gitignored (sensitive/proprietary data). Never
   commit it.
 
@@ -163,6 +164,21 @@ collection of uniform objects, tuple) are still being finalized.
 
 The same design principles apply to the DB storage format, the UI, and what flows
 through the pipe. Rules may carry pytest modifiers (e.g. `xfail`) in `meta.markers`.
+
+### Rules database storage
+
+The rules database is a format-agnostic interface
+(`src/db_processors/dbfile_base.py`) with backends selected by file extension via
+`detect_type`:
+
+- **SQLite** (`.sqlite3`/`.sqlite`) — the default. Each rule is one row; `meta`,
+  `left` and `right` are stored as JSON text, `name`/`op` as plain text.
+- **YAML** (`.yaml`/`.yml`) — a list of rule mappings.
+
+Both backends implement the same CRUD contract (`list_rules`, `get_rule`,
+`has_rule`, `add_rule`, `update_rule`, `rename_rule`, `delete_rule`, `save`) and
+return `Rule` objects. The SQLite backend is thread-safe (the web server is a
+`ThreadingHTTPServer`) via a re-entrant lock around a single shared connection.
 
 ## Code style & error handling
 
