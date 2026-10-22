@@ -4,6 +4,14 @@
 
 ## Last state
 
+- Made the `run_*.sh` / `run_*.bat` scripts work from the repo root: they launch the
+  program via `python -m src.launcher` and point at `tests-real-sensitive-data/`.
+  `build.sh` now transforms them for `dist/` (`-m src.launcher` → `apqa_bundle.py`,
+  `dist/apqa_bundle.py` → `apqa_bundle.py`, `tests-real-sensitive-data/` →
+  `../tests-real-sensitive-data/`, and the dev-only "build the bundle first" block in
+  `run_tests.*` is stripped). `run_tests.*` stay bundle-only: from the root they run
+  `build.sh` first, then pytest on `dist/apqa_bundle.py`.
+
 - Resolved the "Review if `@` alias is working in frontend" TODO: the self-written
   JS bundler **does** resolve the `@` alias (app root, from `jsconfig.json`
   `compilerOptions.paths`). Verified by swapping a deep `../../` for `@` and
@@ -83,6 +91,16 @@
   `detect_type.py`.
 
 ## Key conventions / gotchas
+
+- `src/launcher.py` must be run as `python -m src.launcher` (its `__main__` branch
+  imports `src.GENERATED.*`, which needs the repo root on `sys.path`); `python
+  src/launcher.py` fails with `ModuleNotFoundError: No module named 'src'`.
+- The `run_*.sh`/`run_*.bat` scripts are root-oriented (launch `-m src.launcher`, use
+  `tests-real-sensitive-data/`); `build.sh` rewrites them for `dist/` via
+  `build_templates.py --program transform-run-script` (`-m src.launcher` →
+  `apqa_bundle.py`, data path → `../tests-real-sensitive-data/`, strips the
+  `run_tests.*` build block). `run_tests.*` are bundle-only: from the root they run
+  `build.sh` first, then pytest on `dist/apqa_bundle.py`.
 
 - Only **relative imports** in `.py`; imported-module paths need `__init__.py` at
   each level (`src/launcher.py` is the only import exception).

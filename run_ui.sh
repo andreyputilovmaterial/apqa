@@ -7,5 +7,5 @@ DBFILE="tests-real-sensitive-data/projects.sqlite3"
 
 ./run_init.sh
 
-./.venv/bin/python apqa_bundle.py --program ui --db-file "$DBFILE"
+./.venv/bin/python -m src.launcher --program ui --db-file "$DBFILE"
 

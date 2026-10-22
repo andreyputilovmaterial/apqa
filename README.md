@@ -27,9 +27,17 @@ You need Python 3 and a command line.
 
 ```bash
 ./build.sh        # produce the self-contained program into dist/
-cd dist
+```
+
+The run scripts work from the repo root (development) or from `dist/` (distribution):
+
+```bash
 ./run_ui.sh       # open the desktop app (rule editor) in your browser
-./run_tests.sh    # run all QC rules as tests
+./run_tests.sh    # build, then run all QC rules as tests
+
+cd dist           # or, after building, from the distributed folder:
+./run_ui.sh
+./run_tests.sh
 ```
 
 The program ships as a single self-contained Python bundle (`dist/apqa_bundle.py`) —

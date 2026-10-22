@@ -65,6 +65,28 @@ Only append to the bundle — pinliner hard-codes where each module starts and e
 so patching anywhere else would corrupt it. Appending at the very end is safe
 because it is beyond all recorded positions.
 
+### Run scripts (root → dist)
+
+The `run_*.sh` / `run_*.bat` scripts in the repo root are the source of truth and run
+from the root during development. They launch the program as `python -m src.launcher`
+(note: `python src/launcher.py` does **not** work — its `__main__` branch imports
+`src.GENERATED.*`, which needs the repo root on `sys.path`) and point at
+`tests-real-sensitive-data/`.
+
+`build.sh` copies them into `dist/` while adapting them for the distributed layout
+(via `build_templates.py --program transform-run-script`):
+
+- `-m src.launcher` → `apqa_bundle.py`
+- `dist/apqa_bundle.py` → `apqa_bundle.py` (the `run_tests` pytest target)
+- `tests-real-sensitive-data/` → `../tests-real-sensitive-data/` (the data directory
+  lives one level above `dist/`)
+- the dev-only "build the bundle first" block in `run_tests.*` is stripped
+
+`run_tests.*` run QC rules through pytest, whose entry point exists only inside the
+bundle. So from the root they first run `build.sh` and then pytest on
+`dist/apqa_bundle.py`; the distributed copy skips the build and runs `apqa_bundle.py`
+directly.
+
 ## Frontend & build
 
 - The web server is **self-written** (`src/webserver_engine/webserve`, a submodule),

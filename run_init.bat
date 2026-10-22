@@ -27,7 +27,7 @@ echo done
 echo.
 echo.
 
-"%pythonexecutable%" apqa_bundle.py --program done
+"%pythonexecutable%" -m src.launcher --program done
 
 if errorlevel 1 exit /b %errorlevel%
 

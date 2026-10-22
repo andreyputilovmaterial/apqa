@@ -7,5 +7,9 @@ DBFILE="tests-real-sensitive-data/projects.sqlite3"
 
 ./run_init.sh
 
-APQA_DB_FILE="$DBFILE" ./.venv/bin/python -m pytest --import-mode=importlib  apqa_bundle.py
+# BEGIN BUILD-ONLY
+# Build the bundle first (this block is stripped when build.sh copies this file into dist/).
+./build.sh
+# END BUILD-ONLY
+APQA_DB_FILE="$DBFILE" ./.venv/bin/python -m pytest --import-mode=importlib dist/apqa_bundle.py
 

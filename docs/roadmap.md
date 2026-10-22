@@ -6,9 +6,9 @@ This sections is to capture everything that comes to mind that should ideally be
 - Make foldable groups for qc rules - otherwise it would be an enornous list
 - Also make way more compact view of qc rule list - current view is way too spacious. Only 3 rules fit the screen by default, not suitable for maintaining big number of rules.
 - Continue implementation - edit qc rule, test run the qc rule, add or remove qc rules, etc...
-- Implement exact cmdlets and rproviders - that read Excel, CSV, SPSS, retrieve rows, object fields, etc...
+- Implement exact cmdlets and providers - that read Excel, CSV, SPSS, retrieve rows, object fields, etc...
 - Go ahead and try on real oproject, and then update the list here with all key findings.
-- Update run_ui.sh, run_ui.bat, run_tests.sh, run_tests.bat so that they work from root folder launching src/launcher.py and referring to files from tests-real-sensitive-data/, and are translated so that call the bundle and and ".." to the address to files from tests-real-sensitive-data/
+- Format navbar links so that they stay aligned on the right and open new page in a popup when clicked.
 
 ## Linter warnings 22 oct 2026
 

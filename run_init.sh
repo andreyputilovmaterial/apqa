@@ -53,4 +53,4 @@ echo -
 # echo -
 
 
-"$pythonexecutable" "apqa_bundle.py" --program done
+"$pythonexecutable" -m src.launcher --program done
