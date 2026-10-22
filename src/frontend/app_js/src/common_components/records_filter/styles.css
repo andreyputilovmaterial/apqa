@@ -1,0 +1,137 @@
+.apqa-records-filter {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apqa-records-filter-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.apqa-records-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  /* Fixed box width: on wide containers boxes flow naturally and wrap,
+     leaving a ragged right edge instead of stretching to fill. */
+  flex: 0 0 200px;
+}
+
+.apqa-records-filter-field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.apqa-records-filter-field input,
+.apqa-records-filter-field .apqa-records-filter-field-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.apqa-records-filter-field input:focus,
+.apqa-records-filter-field .apqa-records-filter-field-input:focus {
+  outline: none;
+  border-color: #6670bb;
+}
+
+/* ~3 boxes fit -> 33% each (fills the row, aligned to the right edge). */
+@container (max-width: 840px) {
+  .apqa-records-filter-field {
+    flex: 1 1 calc(33.333% - 10px);
+  }
+}
+
+/* ~2 boxes fit -> 50% each. */
+@container (max-width: 620px) {
+  .apqa-records-filter-field {
+    flex: 1 1 calc(50% - 7.5px);
+  }
+}
+
+/* Not even 2 boxes fit -> full width. */
+@container (max-width: 420px) {
+  .apqa-records-filter-field {
+    flex: 1 1 100%;
+  }
+}
+
+.apqa-records-filter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.apqa-records-filter-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.apqa-records-filter-sort-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.apqa-records-filter-select {
+  padding: 5px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #333;
+}
+
+.apqa-records-filter-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.apqa-records-filter-pagination-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.apqa-records-filter-page {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+}
+
+.apqa-records-filter-page:hover {
+  border-color: #999;
+}
+
+.apqa-records-filter-page.is-active {
+  border-color: #6670bb;
+  border-width: 3px;
+  padding: 0 4px;
+}
+
+/* The "hide with CSS" level: records that stopped matching are kept mounted
+   but visually hidden, so their component state survives quick re-typing. */
+.apqa-records-filter-content .apqa-u-hidden {
+  display: none !important;
+}

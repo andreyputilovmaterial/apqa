@@ -1,0 +1,38 @@
+/* No padding/margin/border on the container: it collapses to zero height when
+   there are no errors and grows by exactly one line per error. */
+.apqa-error-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apqa-error-banner.apqa-error-banner-nonempty {
+  margin-bottom: 14px;
+}
+
+.apqa-error-banner-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  background: #b00020;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.apqa-error-banner-item-time {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+@media all and (min-width: 700px) {
+  .apqa-error-banner-item {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .apqa-error-banner-item-time {
+    flex: 0 0 auto;
+  }
+}

@@ -1,0 +1,125 @@
+.apqa-projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apqa-projects-list-state {
+  padding: 14px;
+  color: #666;
+}
+
+.apqa-projects-list-state-error {
+  color: #cc0000;
+}
+
+.apqa-projects-list-items {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apqa-projects-list-item {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-projects-list-item-head {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.apqa-projects-list-item-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.apqa-projects-list-item-op {
+  font-size: 0.8rem;
+  padding: 1px 7px;
+  border: 1px solid #6670bb;
+  border-radius: 10px;
+  color: #6670bb;
+}
+
+.apqa-projects-list-item-enabled {
+  font-size: 0.8rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: #e6f4e6;
+  color: #1a7f37;
+}
+
+.apqa-projects-list-item-enabled.is-disabled {
+  background: #eee;
+  color: #888;
+}
+
+.apqa-projects-list-item-comment {
+  color: #555;
+}
+
+.apqa-projects-list-item-definition {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apqa-projects-list-item-chain {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.apqa-projects-list-item-definition-op {
+  align-self: flex-start;
+  font-weight: 600;
+  color: #6670bb;
+}
+
+.apqa-projects-list-item-markers {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.apqa-projects-list-item-marker {
+  font-size: 0.8rem;
+  padding: 1px 7px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 10px;
+}
+
+.apqa-projects-list-item-meta {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #888;
+  font-size: 0.8rem;
+}
+
+@media all and (min-width: 900px) {
+  .apqa-projects-list-item-definition {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .apqa-projects-list-item-definition-op {
+    align-self: auto;
+  }
+}

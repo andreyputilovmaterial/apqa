@@ -1,6 +1,6 @@
 
 // import { Vue } from "./vue.js";
-import { createApp, ref, onMounted, onUnmounted, watch, reactive, h, } from 'vue'
+import { createApp } from 'vue';
 
 
 import './app.css';
@@ -23,12 +23,13 @@ import ComponentLoaderInProgress from './common_components/loader_inprogress/ind
 import './common_components/css_grid/styles.css';
 
 // all "system" components - modals, pages, environment for showing errors...
-import { _logErrorProxyContext } from './common_components/_log_error_proxy';
 import { ModalsSite, createModal } from './common_components/modals/modals';
 import ManipulateNavLinksDummyWrapper from './app/background_navlinks_attachmodals/manipulate_links';
 
-// functions and methods defined in app setup
-import useMaintenanceDebug from './common_app_exposed_defs/maintenance_n_debug/index';
+// app-specific views and features
+import ErrorView from './app/apppane_errorview/index';
+import ProjectsList from './app/projects_list/index';
+import useErrorReporting from './common_app_exposed_defs/error_reporting/index';
 
 
 
@@ -44,20 +45,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const app = createApp({
     template: `
 <div class="mdm-apqa-ui-app">
-    Hey you
+  <div class="apqa-app-section-errorbanner">
+    <errorbanner :errors="errors"></errorbanner>
+  </div>
+  <div class="apqa-app-section-projects">
+    <component-projects-list :repo-actions="repoActions"></component-projects-list>
+  </div>
+  <background-navlinks-attachmodals :repo-actions="repoActions"></background-navlinks-attachmodals>
+  <modals-site></modals-site>
 </div>
 `,
     components: {
       'errorbanner': ErrorView,
+      'component-projects-list': ProjectsList,
+      'background-navlinks-attachmodals': ManipulateNavLinksDummyWrapper,
+      'modals-site': ModalsSite,
     },
     setup() {
+      const { errors, repoActions } = useErrorReporting();
+      repoActions.createModal = createModal;
 
-      const exports = {};
-
-      return ({
-        ...exports,
-      });
-
+      return {
+        errors,
+        repoActions,
+      };
     }
   })
   // FORCE VUE DEVTOOLS TO ACTIVATE

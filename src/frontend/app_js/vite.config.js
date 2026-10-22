@@ -12,6 +12,10 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      '/qcrules': {
+        target: 'http://localhost:5180',
+        changeOrigin: true
+      },
       '/command': {
         target: 'http://localhost:5180',
         changeOrigin: true
