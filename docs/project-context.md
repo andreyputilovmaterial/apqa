@@ -4,12 +4,30 @@
 
 ## Last state
 
+- Removed the **`repoActions` layer + prop-drilling** (copied from another
+  project). `useErrorReporting()` now returns only `{ errors }`; `app.js` no longer
+  builds/passes `repoActions`; components import the module-level singletons
+  directly — `logError` from `common_components/_log_error_proxy` and `createModal`
+  from `common_components/modals/modals` (the same deferred-resolution pattern
+  already used by `logErr` throughout `common_components`).
+- Fixed the inverted `isValidDate` ternary in
+  `common_components/input_datetime_range/index.js` (`fromInputValue`): valid dates
+  now stay `Date`s and invalid ones become `null`; also added the missing `logErr`
+  import in `common_components/filter_records_form/index.js`.
 - Implemented the **UI "projects list"** in `src/frontend/app_js`: the list of QC
   rules (the home page is literally "Manage QC rule list"; here "projects" == the
-  QC-rule records). `app/projects_list/index.js` fetches `GET /qcrules`, flattens
-  each rule into a filterable record (`name`, `op`, `enabled`, `comment`, `tags`,
-  `created_at`, `modified_at`, plus formatted `left`/`right` cmdlet chains) and
-  renders them.
+  QC-rule records). `app/projects_list/index.js` fetches `GET /qcrules` and
+  flattens each rule into a filterable record (`name`, `op`, `enabled`, `comment`,
+  `tags`, `created_at`, `modified_at`, plus raw `left`/`right` cmdlet arrays).
+- Refactored the rule rendering into modular components under `app/projects_list/`:
+  `rule.js` (Rule), `cmdlet_chain.js` (CmdletChain), `cmdlet.js` (Cmdlet, with a
+  renderer registry — `registerCmdletRenderer` — so specific cmdlets can override
+  rendering; the `literal` cmdlet renders just its value), and `comparison.js`
+  (Comparison, which maps ops to symbols: `eq`→`=`, `lt`→`<`, `gt`→`>`, …). The
+  rule definition is a 3-column grid (`1fr max-content 1fr`) with left/right
+  top-aligned; `created_at` renders through `format_datetime` (`new Date(…)`, local
+  time) per `.clinerules/06-dates-and-time.md`. Pure helpers `cmdletText` and
+  `comparisonSymbol` are unit-tested in `cmdlet.spec.js`.
 - Ported the **RecordsFilter** component from apphotoassistant
   (`frontend/src/components/records-filter/RecordsFilter.vue`) into
   `common_components/records_filter/` as plain `.js` + `.css` (no `.vue`):
@@ -23,10 +41,11 @@
   existing `common_components/_log_error_proxy` (resolves `promiseResolve`).
 - Wired everything in `app.js` (root template now renders the error banner, the
   projects list, `background-navlinks-attachmodals` and `modals-site`; sets up
-  `useErrorReporting` and exposes `repoActions = { logError, createModal }`). Added
-  a `/qcrules` proxy entry to `vite.config.js` for dev mode.
-- Validated: `matchers.spec.js` (22 tests) passes; the self-written `py_js_bundler`
-  bundles `app.js` (110 KB); `vite build` transforms 57 modules with no errors.
+  `useErrorReporting`). Added a `/qcrules` proxy entry to `vite.config.js` for dev
+  mode.
+- Validated: `matchers.spec.js` (22) + `cmdlet.spec.js` (6) tests pass; the
+  self-written `py_js_bundler` bundles `app.js`; `vite build` transforms 61 modules
+  with no errors.
 
 ## Recent history (previous task)
 
@@ -75,13 +94,17 @@
 - `node_modules/.bin/{vite,vitest}` shims are broken in this checkout (they do
   `import './dist/cli.js'`); invoke directly: `node node_modules/vitest/vitest.mjs`
   and `node node_modules/vite/bin/vite.js`.
-- `common_components/input_datetime_range/index.js` has an inverted `isValidDate`
-  ternary in `fromInputValue`, so datetime-range filtering is broken; RecordsFilter
-  currently avoids `date`/`datetime` columns (the projects list uses `text` for
-  `created_at`/`modified_at`).
+- RecordsFilter currently avoids `date`/`datetime` columns (the projects list uses
+  `text` for `created_at`/`modified_at`); the `input_datetime_range` →
+  `filter_records_form/match/datetime_range` pipeline still needs end-to-end
+  validation before enabling `datetime` columns.
 
 ## Open questions / TODO
 
+- `filter_records_form/match/datetime_range.js` compares with `>=`/`<=` while
+  `input_datetime_range` emits `Date` objects and record fields may be ISO strings
+  (`created_at`/`modified_at`); end-to-end datetime-range filtering is untested and
+  needs a decision on the canonical value type before `datetime` columns are wired.
 - Compound scalar types (object with named fields, collection, tuple) still being
   finalized.
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.

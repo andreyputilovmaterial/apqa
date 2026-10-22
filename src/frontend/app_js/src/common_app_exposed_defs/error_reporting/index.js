@@ -23,9 +23,6 @@ function useErrorReporting() {
 
   return {
     errors,
-    repoActions: {
-      logError,
-    },
   };
 }
 

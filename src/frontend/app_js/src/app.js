@@ -23,7 +23,7 @@ import ComponentLoaderInProgress from './common_components/loader_inprogress/ind
 import './common_components/css_grid/styles.css';
 
 // all "system" components - modals, pages, environment for showing errors...
-import { ModalsSite, createModal } from './common_components/modals/modals';
+import { ModalsSite } from './common_components/modals/modals';
 import ManipulateNavLinksDummyWrapper from './app/background_navlinks_attachmodals/manipulate_links';
 
 // app-specific views and features
@@ -49,9 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
     <errorbanner :errors="errors"></errorbanner>
   </div>
   <div class="apqa-app-section-projects">
-    <component-projects-list :repo-actions="repoActions"></component-projects-list>
+    <component-projects-list></component-projects-list>
   </div>
-  <background-navlinks-attachmodals :repo-actions="repoActions"></background-navlinks-attachmodals>
+  <background-navlinks-attachmodals></background-navlinks-attachmodals>
   <modals-site></modals-site>
 </div>
 `,
@@ -62,12 +62,10 @@ document.addEventListener("DOMContentLoaded", () => {
       'modals-site': ModalsSite,
     },
     setup() {
-      const { errors, repoActions } = useErrorReporting();
-      repoActions.createModal = createModal;
+      const { errors } = useErrorReporting();
 
       return {
         errors,
-        repoActions,
       };
     }
   })

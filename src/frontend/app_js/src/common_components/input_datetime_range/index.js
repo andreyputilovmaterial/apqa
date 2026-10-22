@@ -177,8 +177,8 @@ const Component = {
            : (new Date(parts[1].trim()));
 
        return {
-         from: isValidDate(from) ? null : (new Date(from)),
-         to: isValidDate(to) ? null : (new Date(to)),
+         from: isValidDate(from) ? from : null,
+         to: isValidDate(to) ? to : null,
        };
      }
 

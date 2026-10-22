@@ -5,6 +5,7 @@ import { ref, computed, onMounted, watch, toRaw } from 'vue';
 import matchText from './match/text';
 import matchNumericRange from './match/numeric_range';
 import matchDatetimeRange from './match/datetime_range';
+import logErr from '../_log_error_proxy';
 
 // import { genId } from './helpers';
 

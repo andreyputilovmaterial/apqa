@@ -1,4 +1,5 @@
 
+import datetime
 import json
 import sqlite3
 import threading
@@ -8,8 +9,15 @@ from .dbfile_base import DBFile as DBFileBase
 from .rule_base import Rule
 
 
+class _RuleEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.isoformat()
+        return super().default(obj)
+
+
 def _dumps(value):
-    return json.dumps(value, ensure_ascii=False)
+    return json.dumps(value, ensure_ascii=False, cls=_RuleEncoder)
 
 
 def _loads(text, default):
@@ -37,6 +45,10 @@ class DBFileSqlite(DBFileBase):
     ``meta``, ``"left"`` and ``"right"`` are serialized as JSON; ``op`` is a
     plain text name. ``"left"``/``"right"`` are quoted because they are SQL
     keywords.
+
+    Date/time values inside the JSON columns are serialized to ISO-8601 strings
+    (JSON has no native date type), so ``meta`` entries like ``created_at``
+    round-trip as text.
     """
 
     def __init__(self, resource_path):

@@ -3,14 +3,13 @@ import { defineComponent, h, markRaw, onMounted } from 'vue';
 
 import Window from './window_component';
 import safetyUrlCheck from './safetycheck';
+import logError from '../../common_components/_log_error_proxy';
+import { createModal } from '../../common_components/modals/modals';
 
 
 const LinksSiteComponent = {
-  props: [
-    'repoActions',
-  ],
   template: `<span class="gitgui-navlinks-manipulate-component"></span>`, // empty is raising warning
-  setup(props) {
+  setup() {
 
     const init = () => {
 
@@ -34,12 +33,12 @@ const LinksSiteComponent = {
                     url,
                   } );
                 } catch( e ) {
-                  props.repoActions.logError( e );
+                  logError( e );
                   throw e;
                 }
               }
             } catch( e ) {
-              props.repoActions.logError( e );
+              logError( e );
               throw e;
             }
           },
@@ -47,7 +46,7 @@ const LinksSiteComponent = {
         return function( event ) {
           event.preventDefault();
           ( async function() {
-            await props.repoActions.createModal( MyWindowSpecificToThisUrl )
+            await createModal( MyWindowSpecificToThisUrl )
           } )();
           return false;
         }
@@ -62,7 +61,7 @@ const LinksSiteComponent = {
 
         } catch( e ) {
           try {
-            props.repoActions.logError( e );
+            logError( e );
           } catch( ee ) {
             // ok to ignore
           }

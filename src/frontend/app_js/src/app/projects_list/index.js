@@ -2,6 +2,8 @@ import { ref, onMounted } from 'vue';
 
 import RecordsFilter from '../../common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '../../common_defs/helper_functions';
+import logError from '../../common_components/_log_error_proxy';
+import Rule from './rule';
 
 import './styles.css';
 
@@ -14,23 +16,6 @@ const COLUMNS = {
   created_at: { label: 'Created', type: 'text' },
   modified_at: { label: 'Modified', type: 'text' },
 };
-
-function formatCmdlet(cmdlet) {
-  const name = cmdlet?.cmdlet || '';
-  const args = cmdlet?.args || {};
-  const parts = [name];
-  for (const [key, value] of Object.entries(args)) {
-    if (value === true) parts.push(key);
-    else if (value == null || value === false) parts.push(`${key}=${value}`);
-    else if (typeof value === 'object') parts.push(`${key}=${JSON.stringify(value)}`);
-    else parts.push(`${key}=${String(value)}`);
-  }
-  return parts.join(' ');
-}
-
-function formatChain(chain) {
-  return (Array.isArray(chain) ? chain : []).map(formatCmdlet).join(' | ');
-}
 
 function toRecord(rule) {
   const meta = rule.meta || {};
@@ -45,16 +30,15 @@ function toRecord(rule) {
     created_at: meta.created_at || '',
     modified_at: meta.modified_at || '',
     markers: Array.isArray(meta.markers) ? meta.markers : [],
-    leftText: formatChain(rule.left),
-    rightText: formatChain(rule.right),
+    left: Array.isArray(rule.left) ? rule.left : [],
+    right: Array.isArray(rule.right) ? rule.right : [],
   };
 }
 
 const ProjectsList = {
-  props: ['repoActions'],
-
   components: {
     'component-records-filter': RecordsFilter,
+    'rule': Rule,
   },
 
   template: `
@@ -70,35 +54,7 @@ const ProjectsList = {
   >
     <template #default="{ records: visibleRecords }">
       <ul v-if="visibleRecords.length" class="apqa-projects-list-items">
-        <li
-          v-for="record in visibleRecords"
-          :key="record.id"
-          class="apqa-projects-list-item"
-          :class="record._filterMeta.cssClasses"
-        >
-          <div class="apqa-projects-list-item-head">
-            <span class="apqa-projects-list-item-name">{{ record.name }}</span>
-            <span v-if="record.op" class="apqa-projects-list-item-op">{{ record.op }}</span>
-            <span
-              v-if="record.enabled"
-              class="apqa-projects-list-item-enabled"
-              :class="{ 'is-disabled': record.enabled === 'no' }"
-            >{{ record.enabled === 'yes' ? 'enabled' : 'disabled' }}</span>
-          </div>
-          <div v-if="record.comment" class="apqa-projects-list-item-comment">{{ record.comment }}</div>
-          <div class="apqa-projects-list-item-definition">
-            <code class="apqa-projects-list-item-chain">{{ record.leftText || '(empty)' }}</code>
-            <span class="apqa-projects-list-item-definition-op">{{ record.op || '?' }}</span>
-            <code class="apqa-projects-list-item-chain">{{ record.rightText || '(empty)' }}</code>
-          </div>
-          <div v-if="record.markers.length" class="apqa-projects-list-item-markers">
-            <span v-for="marker in record.markers" :key="marker" class="apqa-projects-list-item-marker">{{ marker }}</span>
-          </div>
-          <div class="apqa-projects-list-item-meta">
-            <span v-if="record.tags" class="apqa-projects-list-item-tags">{{ record.tags }}</span>
-            <span v-if="record.created_at" class="apqa-projects-list-item-created">created {{ record.created_at }}</span>
-          </div>
-        </li>
+        <rule v-for="record in visibleRecords" :key="record.id" :record="record" />
       </ul>
       <div v-else class="apqa-projects-list-state apqa-projects-list-empty">No QC rules match the current filter.</div>
     </template>
@@ -106,7 +62,7 @@ const ProjectsList = {
 </div>
 `,
 
-  setup(props) {
+  setup() {
     const records = ref([]);
     const loading = ref(true);
     const loadError = ref('');
@@ -123,7 +79,7 @@ const ProjectsList = {
         records.value = (data.rules || []).map(toRecord);
       } catch (e) {
         loadError.value = `Failed to load QC rules: ${e}`;
-        if (props.repoActions?.logError) props.repoActions.logError(loadError.value);
+        logError(loadError.value);
       } finally {
         loading.value = false;
       }

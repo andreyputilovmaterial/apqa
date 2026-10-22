@@ -1,5 +1,6 @@
 """Round-trip and CRUD tests for the SQLite rules database."""
 
+import datetime as dt
 import json
 import sqlite3
 import sys
@@ -180,3 +181,13 @@ def test_detects_sqlite_by_extension(tmp_path):
     _insert_raw(db_file, SAMPLE)
     dbfile = DBFile(str(db_file))
     assert "wave69-counts-equal-9002" in dbfile
+
+
+def test_meta_datetime_roundtrip_as_iso_string(dbfile):
+    dbfile.add_rule({
+        "name": "with-dates",
+        "meta": {"created_at": dt.datetime(2026, 10, 14, 12, 0, 0)},
+    })
+    reloaded = DBFile(str(dbfile.resource_path))
+    meta = reloaded.get_rule("with-dates").meta
+    assert meta["created_at"] == "2026-10-14T12:00:00"

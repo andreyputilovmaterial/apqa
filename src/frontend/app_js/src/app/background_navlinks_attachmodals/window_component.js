@@ -3,6 +3,7 @@
 import { ref, reactive, onMounted } from 'vue';
 
 import safetyUrlCheck from './safetycheck';
+import logError from '../../common_components/_log_error_proxy';
 
 
 const Window = {
@@ -38,8 +39,8 @@ const Window = {
          isBusy.value = true;
          return props.resolve('Yes!')
        } catch (err) {
-         props.repoActions.logError(err);
-         props.repoActions.logError('Failed submitting ajax page view form');
+         logError(err);
+         logError('Failed submitting ajax page view form');
          console.error('Failed submitting ajax page view form',err);
          isBusy.value = false;
          return props.reject(err);
