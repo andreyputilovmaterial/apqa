@@ -4,8 +4,12 @@
 
 ## Last state
 
-- Initialized the project-context workflow: added `.clinerules/00-project-context.md`
-  (rule to read/update this file on every task) and mentioned it in `README.md`.
+- Consolidated `dev-working-cline` back into `main` (fast-forward, both at `e6ba3d6`).
+  `main` is now **2 commits ahead of `origin/main`** and not yet pushed.
+- `main` now includes the QC-rules DB schema work and the qcrule CRUD endpoint
+  (`src/frontend/endpoints_rule_crud.py` + tests), plus the project-context workflow
+  (`docs/project-context.md`, `.clinerules/00-project-context.md`).
+- Untracked, not yet committed: `.clinerules/08-commit-messages.md`.
 
 ## Repo overview
 
