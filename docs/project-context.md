@@ -4,6 +4,14 @@
 
 ## Last state
 
+- Resolved the "Review if `@` alias is working in frontend" TODO: the self-written
+  JS bundler **does** resolve the `@` alias (app root, from `jsconfig.json`
+  `compilerOptions.paths`). Verified by swapping a deep `../../` for `@` and
+  building the JS distributable successfully. Relative imports remain the default in
+  JS (self-contained, liftable components); use `@/...` when reaching up to an outer
+  level. Removed the stale "bundler does not resolve `@/`" note below and the roadmap
+  item.
+
 - Removed the **`repoActions` layer + prop-drilling** (copied from another
   project). `useErrorReporting()` now returns only `{ errors }`; `app.js` no longer
   builds/passes `repoActions`; components import the module-level singletons
@@ -90,7 +98,10 @@
   the base class, not per-backend.
 - Frontend components are plain `.js` + `.css` objects (`{ template, props, setup }`)
   that `import './styles.css'` (the self-written bundler inlines CSS via a `<style>`
-  injection). Use **relative imports** (the bundler does not resolve `@/`).
+  injection). Prefer **relative imports** (self-contained, liftable components); the
+  self-written bundler *does* resolve the `@` alias (app root, from `jsconfig.json`
+  `compilerOptions.paths`), so use `@/...` instead of deep `../../..` when reaching
+  up to an outer level.
 - `node_modules/.bin/{vite,vitest}` shims are broken in this checkout (they do
   `import './dist/cli.js'`); invoke directly: `node node_modules/vitest/vitest.mjs`
   and `node node_modules/vite/bin/vite.js`.

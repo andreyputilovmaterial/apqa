@@ -1,5 +1,5 @@
 import './style.css';
-import ComponentFormatDatetime from '../../common_components/format_datetime/index';
+import ComponentFormatDatetime from '@/common_components/format_datetime/index';
 
 const ErrorView = {
   props: ['errors'],

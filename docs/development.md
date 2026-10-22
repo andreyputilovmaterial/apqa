@@ -78,6 +78,11 @@ because it is beyond all recorded positions.
   asset), so it still satisfies the no-`.vue`/no-`.ts` rule.
 - The build must be possible **without Node installed**. Node/vite may be used only
   to speed up frontend development.
+- Prefer **relative imports** so components stay self-contained and liftable. The
+  `@` alias points at the app root (`src/frontend/app_js/src`, defined in
+  `jsconfig.json` → `compilerOptions.paths`) and is resolved by both Vite and the
+  self-written bundler; use `@/...` rather than deep `../../..` when a component must
+  reach up to an outer level.
 
 ## Testing
 
