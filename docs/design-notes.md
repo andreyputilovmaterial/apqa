@@ -1,3 +1,8 @@
+> **Historical design notes.** These are the author's original working notes for
+> APQA. The canonical developer/architecture guide is now
+> [`development.md`](development.md) — this file is kept for the original
+> rationale, examples, and gotchas that didn't make it into the other docs.
+
 # Goals
 
 This program is a helper application to define and manage QC rules for
