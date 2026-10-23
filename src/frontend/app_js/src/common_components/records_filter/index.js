@@ -100,9 +100,9 @@ const RecordsFilter = {
     const columnsSanitized = computed(() => {
       const out = {};
       for (const [key, def] of Object.entries(props.columns)) {
-        if (typeof def === 'string') out[key] = { type: 'text', label: def, options: [] };
-        else if (def && typeof def === 'object') out[key] = { type: def.type || 'text', label: def.label || key, options: def.options || [] };
-        else out[key] = { type: 'text', label: key, options: [] };
+        if (typeof def === 'string') out[key] = { type: 'text', label: def, options: [], description: '' };
+        else if (def && typeof def === 'object') out[key] = { type: def.type || 'text', label: def.label || key, options: def.options || [], description: def.description || '' };
+        else out[key] = { type: 'text', label: key, options: [], description: '' };
       }
       return out;
     });

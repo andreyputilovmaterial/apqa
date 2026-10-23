@@ -111,6 +111,10 @@ directly.
   `common.css` must be logged (with date + reason) in
   `src/frontend/template/templates/common.css.changelog.md` (see
   `.clinerules/09-frontend-common-css.md`).
+- Name UI modules after what they show: the QC-rule list lives in
+  `src/frontend/app_js/src/app/qcrules_list/` (component `QcRulesList`, CSS
+  classes `apqa-qcrules-list*`). Reserve the word "project" for an actual
+  project list, not for the QC-rule list.
 
 ## Testing
 

@@ -89,4 +89,13 @@ describe('RecordsFilter', () => {
 
     expect(wrapper.find('.apqa-records-filter-header').text()).toContain('Tags: hiking');
   });
+
+  it('preserves a column description for future help messages', () => {
+    const described = {
+      name: { label: 'Name', type: 'text', description: 'Unique rule name.' },
+    };
+    const wrapper = mountFilter({ columns: described });
+
+    expect(wrapper.vm.columnsSanitized.name.description).toBe('Unique rule name.');
+  });
 });

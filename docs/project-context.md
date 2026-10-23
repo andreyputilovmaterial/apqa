@@ -4,6 +4,19 @@
 
 ## Last state
 
+- Renamed the frontend "projects list" (which is actually the QC-rule list) to
+  `app/qcrules_list/`: directory, `QcRulesList` component, registration
+  `component-qcrules-list`, and CSS classes `apqa-qcrules-list*` (previously
+  `apqa-projects-list*`). `app.js` now imports/registers `QcRulesList` under
+  `apqa-app-section-qcrules`. "project" is now reserved for an actual project
+  list. Updated `records_filter/README.md` and `docs/project-context.md`.
+- Added a **Markers** multi-punch filter to the QC rules list: `COLUMNS.markers`
+  (options derived from the loaded records, like `tags`) so a user can filter to
+  rules with `skip`/`xfail` markers. `toRecord` already exposed `markers`.
+- Column defs now carry an optional `description` ("docstring"); `RecordsFilter`
+  preserves it in `columnsSanitized` (not rendered yet) for a future per-column
+  help message. `COLUMNS` in `qcrules_list/index.js` now includes descriptions.
+  Documented `description` in `records_filter/README.md` and added a spec.
 - Changed the multi-punch filter semantics from "any selected tag" (OR) to
   "all selected tags" (AND), so it behaves like the other filter boxes (each is
   AND-ed together). `matchMultipunch` now uses `selected.every(...)` against the
@@ -42,7 +55,7 @@
   to `[]`); it renders the global component for those columns. `matchers.js`
   gained `matchMultipunch` (matches when the record has *all* selected values;
   empty selection matches everything) and multipunch-aware `summarizeFilters`.
-  `projects_list` sets `tags` to `type: 'multipunch'`, keeps `meta.tags` as an
+  `qcrules_list` sets `tags` to `type: 'multipunch'`, keeps `meta.tags` as an
   array in `toRecord`, and computes the allowed tag options from the loaded
   records; `rule.js` renders `record.tags.join(', ')`. Removed the done roadmap
   item. Validated: 45 project JS tests pass (5 new multipunch + 36 matchers + 4
@@ -56,7 +69,7 @@
   `cmdletText()` = `cmdletParts().join(' ')`) and the `Cmdlet` component renders
   each part as a no-wrap `.apqa-cmdlet-part`; the chain wraps between parts and
   ellipsizes overlong parts (long `path=` params cut on the right). Kept the
-  style local to `projects_list/styles.css` (the report `common.css` is a
+  style local to `qcrules_list/styles.css` (the report `common.css` is a
   separate skin; a shared utility class can be extracted later if a second
   consumer appears). Left the "Windows Explorer-style path truncation" idea in
   the roadmap. Added `cmdletParts` tests.
@@ -77,13 +90,13 @@
 
 - Added a **compact QC-rule representation** alongside the existing full view.
   Decision: **two separate components**, not one parametrized component — the
-  full `app/projects_list/rule.js` stays as-is and a new
-  `app/projects_list/rule_compact.js` renders the compact view (one description
+  full `app/qcrules_list/rule.js` stays as-is and a new
+  `app/qcrules_list/rule_compact.js` renders the compact view (one description
   line = name + optional comment, one definition line = left chain · comparison
   op · right chain). Both reuse `cmdlet_chain.js` and `comparison.js`; compact
   styles (`.apqa-rule-compact*`) were added to `styles.css` and covered by
   `rule_compact.spec.js` (a `@vue/test-utils` mount test). **Default for future
-  rule-list panes is the compact view**; the current `projects_list` still uses
+  rule-list panes is the compact view**; the current `qcrules_list` still uses
   the full view until such a pane is built. Validated: 4 JS spec files (34 tests)
   pass; `vite build` transforms 61 modules with no errors.
 
@@ -185,12 +198,12 @@
   `common_components/input_datetime_range/index.js` (`fromInputValue`): valid dates
   now stay `Date`s and invalid ones become `null`; also added the missing `logErr`
   import in `common_components/filter_records_form/index.js`.
-- Implemented the **UI "projects list"** in `src/frontend/app_js`: the list of QC
+- Implemented the **UI "QC rules list"** in `src/frontend/app_js`: the list of QC
   rules (the home page is literally "Manage QC rule list"; here "projects" == the
-  QC-rule records). `app/projects_list/index.js` fetches `GET /qcrules` and
+  QC-rule records). `app/qcrules_list/index.js` fetches `GET /qcrules` and
   flattens each rule into a filterable record (`name`, `op`, `comment`,
   `tags`, `created_at`, `modified_at`, plus raw `left`/`right` cmdlet arrays).
-- Refactored the rule rendering into modular components under `app/projects_list/`:
+- Refactored the rule rendering into modular components under `app/qcrules_list/`:
   `rule.js` (Rule), `cmdlet_chain.js` (CmdletChain), `cmdlet.js` (Cmdlet, with a
   renderer registry — `registerCmdletRenderer` — so specific cmdlets can override
   rendering; the `literal` cmdlet renders just its value), and `comparison.js`
@@ -206,12 +219,12 @@
   (22 vitest tests, all passing), `styles.css`, `README.md`. It keeps the
   **two-level filtering** (css-class `.apqa-u-hidden` for recently-hidden records +
   physical removal after a 5-min TTL) so records aren't destroyed while the user is
-  typing. The projects list is wrapped in it.
+  typing. The QC rules list is wrapped in it.
 - Added an **error banner** (`app/apppane_errorview/`) plus an error-reporting
   composable (`common_app_exposed_defs/error_reporting/index.js`) that wires the
   existing `common_components/_log_error_proxy` (resolves `promiseResolve`).
 - Wired everything in `app.js` (root template now renders the error banner, the
-  projects list, `background-navlinks-attachmodals` and `modals-site`; sets up
+  QC rules list, `background-navlinks-attachmodals` and `modals-site`; sets up
   `useErrorReporting`). Added a `/qcrules` proxy entry to `vite.config.js` for dev
   mode.
 - Validated: `matchers.spec.js` (22) + `cmdlet.spec.js` (6) tests pass; the
@@ -278,20 +291,20 @@
 - `node_modules/.bin/{vite,vitest}` shims are broken in this checkout (they do
   `import './dist/cli.js'`); invoke directly: `node node_modules/vitest/vitest.mjs`
   and `node node_modules/vite/bin/vite.js`.
-- RecordsFilter currently avoids `date`/`datetime` columns (the projects list uses
+- RecordsFilter currently avoids `date`/`datetime` columns (the QC rules list uses
   `text` for `created_at`/`modified_at`). The canonical date type is now `Date`
   objects (see `.clinerules/06-dates-and-time.md`); the range inputs emit `Date`
   objects and the matchers normalize to `.getTime()`. Enabling `date`/`datetime`
   columns still needs end-to-end wiring (build record fields as `Date` objects in
-  `projects_list/toRecord`).
+  `qcrules_list/toRecord`).
 
 ## Open questions / TODO
 
-- End-to-end datetime-range filtering is still not wired in the projects list
+- End-to-end datetime-range filtering is still not wired in the QC rules list
   (`created_at`/`modified_at` remain `text` columns). The canonical value type is
   decided (`Date` objects) and the range inputs/matchers now comply, so wiring
   `date`/`datetime` columns should just mean building record fields as `Date`
-  objects in `projects_list/toRecord`.
+  objects in `qcrules_list/toRecord`.
 - Compound scalar types (object with named fields, collection, tuple) still being
   finalized.
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.

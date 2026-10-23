@@ -1,19 +1,19 @@
-.apqa-projects-list {
+.apqa-qcrules-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.apqa-projects-list-state {
+.apqa-qcrules-list-state {
   padding: 14px;
   color: #666;
 }
 
-.apqa-projects-list-state-error {
+.apqa-qcrules-list-state-error {
   color: #cc0000;
 }
 
-.apqa-projects-list-items {
+.apqa-qcrules-list-items {
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -22,7 +22,7 @@
   gap: 8px;
 }
 
-.apqa-projects-list-item {
+.apqa-qcrules-list-item {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 10px;
@@ -32,7 +32,7 @@
   gap: 6px;
 }
 
-.apqa-projects-list-item-head {
+.apqa-qcrules-list-item-head {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -40,17 +40,17 @@
   gap: 8px;
 }
 
-.apqa-projects-list-item-name {
+.apqa-qcrules-list-item-name {
   font-weight: 600;
   color: #333;
 }
 
-.apqa-projects-list-item-comment {
+.apqa-qcrules-list-item-comment {
   margin-top: -4px;
   color: #888;
 }
 
-.apqa-projects-list-item-definition {
+.apqa-qcrules-list-item-definition {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -95,14 +95,14 @@
   font-weight: 600;
 }
 
-.apqa-projects-list-item-markers {
+.apqa-qcrules-list-item-markers {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.apqa-projects-list-item-marker {
+.apqa-qcrules-list-item-marker {
   font-size: 0.8rem;
   padding: 1px 7px;
   background: #fff3cd;
@@ -110,7 +110,7 @@
   border-radius: 10px;
 }
 
-.apqa-projects-list-item-meta {
+.apqa-qcrules-list-item-meta {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -120,7 +120,7 @@
 }
 
 @media all and (min-width: 900px) {
-  .apqa-projects-list-item-definition {
+  .apqa-qcrules-list-item-definition {
     display: grid;
     grid-template-columns: 1fr max-content 1fr;
     align-items: start;

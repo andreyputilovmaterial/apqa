@@ -23,12 +23,15 @@ collected).
 
 Props:
 
-- `columns` (object) — `{ key: label | { label, type } }`. One filter box per
-  key. `type` is `'text' | 'number' | 'date' | 'datetime' | 'multipunch'`
-  (default `text`). Non-text types render a range input, except `multipunch`
-  which renders the globally registered `component-multipunch` drop down; a
-  `multipunch` column should also provide `options` (the allowed values), e.g.
+- `columns` (object) — `{ key: label | { label, type, description, options } }`.
+  One filter box per key. `type` is
+  `'text' | 'number' | 'date' | 'datetime' | 'multipunch'` (default `text`).
+  Non-text types render a range input, except `multipunch` which renders the
+  globally registered `component-multipunch` drop down; a `multipunch` column
+  should also provide `options` (the allowed values), e.g.
   `{ label: 'Tags', type: 'multipunch', options: ['counts', 'wave69'] }`.
+  `description` is an optional docstring kept for a future per-column help
+  message.
 - `records` (array) — the source records.
 - `keyField` (string) — unique key used to track per-record filter state.
 - `needSort` (boolean) — enable the sort controls.
@@ -50,7 +53,7 @@ Scoped slot:
   ```
 
 The component is registered locally by consumers (see
-`app/projects_list/index.js`). For the number/date/datetime range inputs it uses
+`app/qcrules_list/index.js`). For the number/date/datetime range inputs it uses
 the globally registered `component-input-numericrange` and
 `component-input-datetimerange` components; for `multipunch` columns it uses the
 globally registered `component-multipunch` component.

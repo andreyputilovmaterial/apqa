@@ -29,7 +29,7 @@ import ManipulateNavLinksDummyWrapper from './app/background_navlinks_attachmoda
 
 // app-specific views and features
 import ErrorView from './app/apppane_errorview/index';
-import ProjectsList from './app/projects_list/index';
+import QcRulesList from './app/qcrules_list/index';
 import useErrorReporting from './common_app_exposed_defs/error_reporting/index';
 
 
@@ -49,8 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
   <div class="apqa-app-section-errorbanner">
     <errorbanner :errors="errors"></errorbanner>
   </div>
-  <div class="apqa-app-section-projects">
-    <component-projects-list></component-projects-list>
+  <div class="apqa-app-section-qcrules">
+    <component-qcrules-list></component-qcrules-list>
   </div>
   <background-navlinks-attachmodals></background-navlinks-attachmodals>
   <modals-site></modals-site>
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 `,
     components: {
       'errorbanner': ErrorView,
-      'component-projects-list': ProjectsList,
+      'component-qcrules-list': QcRulesList,
       'background-navlinks-attachmodals': ManipulateNavLinksDummyWrapper,
       'modals-site': ModalsSite,
     },
