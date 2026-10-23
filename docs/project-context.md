@@ -4,6 +4,52 @@
 
 ## Last state
 
+- Changed the multi-punch filter semantics from "any selected tag" (OR) to
+  "all selected tags" (AND), so it behaves like the other filter boxes (each is
+  AND-ed together). `matchMultipunch` now uses `selected.every(...)` against the
+  record's value set; empty selection still matches everything. Updated
+  `matchers.spec.js` (36 tests) and the `records_filter/README.md` matching note.
+  Validated: 45 project JS tests pass.
+- Fixed the multi-punch dropdown misalignment. Root cause: the RecordsFilter
+  field styling selector `.apqa-records-filter-field input` was broad enough to
+  hit the checkboxes inside the child `component-multipunch` (forcing them to
+  `width: 100%` + input padding/border). Scoped it to
+  `input:not([type="checkbox"]):not([type="radio"])` in
+  `records_filter/styles.css` (both the box and `:focus` rules), so text and
+  number/date range inputs keep their styling while the multi-select checkboxes
+  stay native-size. Validated `vite build` (63 modules) and the self-written
+  `pack_js` bundle (contains the scoped selector).
+- Follow-up on the Tags multi-punch dropdown: investigated a layout/compactness
+  complaint and confirmed `src/frontend/template/templates/common.css` is **not**
+  the cause (its checkbox/label/input rules are all scoped to
+  `.mdmreport-controls`, which the dropdown never uses), so `common.css` was left
+  untouched. Made the dropdown compact in its own
+  `common_components/multipunch/styles.css` (menu padding 4→2px, option padding
+  `5px 6px`→`2px 6px`, option gap 8→6px, `line-height: 1.2`, checkbox
+  `flex: 0 0 auto` + `accent-color`). Added a forward-looking rule
+  `.clinerules/09-frontend-common-css.md`: `common.css` is the global skin — fix
+  per-component layout in the component `.css`, and any change to `common.css`
+  must be logged with date + reason in
+  `src/frontend/template/templates/common.css.changelog.md` (created, seeded with
+  "no changes yet"). The same policy is noted in `docs/development.md`.
+- Implemented the "Tags" multi-punch filter (roadmap item). Added a **global**
+  multi-select component at `common_components/multipunch/index.js`, registered
+  as `component-multipunch` in `app.js`. It is a single-line trigger that opens a
+  checkbox list on click and closes on an outside `pointerdown`; value is an
+  array (`v-model`), `options` may be strings or `{ value, label }` objects.
+  `RecordsFilter` now supports column `type: 'multipunch'` with an `options`
+  array (sanitized `columns` preserve `options`; `filters` init a multipunch key
+  to `[]`); it renders the global component for those columns. `matchers.js`
+  gained `matchMultipunch` (matches when the record has *all* selected values;
+  empty selection matches everything) and multipunch-aware `summarizeFilters`.
+  `projects_list` sets `tags` to `type: 'multipunch'`, keeps `meta.tags` as an
+  array in `toRecord`, and computes the allowed tag options from the loaded
+  records; `rule.js` renders `record.tags.join(', ')`. Removed the done roadmap
+  item. Validated: 45 project JS tests pass (5 new multipunch + 36 matchers + 4
+  records_filter), full `vitest` 60 passed (the 4 `src/lib/myers-diff` suites
+  still fail pre-existing), `vite build` transforms 63 modules, and the
+  self-written `py_js_bundler` `pack_js` still bundles `app.js` (bundle contains
+  `apqa-multipunch` / `component-multipunch`).
 - Fixed cmdlet-chain word wrapping. The chain no longer uses
   `word-break: break-all` (which broke words mid-token). `cmdlet.js` now
   exposes `cmdletParts(cmdlet)` (name + each argument as separate units;

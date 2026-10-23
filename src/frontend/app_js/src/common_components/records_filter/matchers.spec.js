@@ -3,6 +3,7 @@ import {
   matchText,
   matchNumericRange,
   matchDatetimeRange,
+  matchMultipunch,
   matchValue,
   compareValues,
   matchesRecord,
@@ -89,6 +90,30 @@ describe('matchValue', () => {
     expect(matchValue(10, { from: 5 }, 'number')).toBe(true)
     expect(matchValue('2024-06-01', { from: '2024-01-01' }, 'date')).toBe(true)
     expect(matchValue('2024-06-01T00:00:00Z', { from: '2024-01-01' }, 'datetime')).toBe(true)
+    expect(matchValue(['hiking'], ['hiking'], 'multipunch')).toBe(true)
+  })
+})
+
+describe('matchMultipunch', () => {
+  it('matches anything when the selected set is empty', () => {
+    expect(matchMultipunch(['hiking'], [])).toBe(true)
+    expect(matchMultipunch(['hiking'], null)).toBe(true)
+    expect(matchMultipunch(['hiking'], '')).toBe(true)
+  })
+
+  it('matches when the record has every selected value', () => {
+    expect(matchMultipunch(['hiking', 'friends'], ['hiking'])).toBe(true)
+    expect(matchMultipunch(['hiking', 'friends'], ['hiking', 'friends'])).toBe(true)
+  })
+
+  it('does not match when the record is missing any selected value', () => {
+    expect(matchMultipunch(['hiking', 'friends'], ['hiking', 'mountains'])).toBe(false)
+    expect(matchMultipunch(['hiking', 'friends'], ['mountains'])).toBe(false)
+  })
+
+  it('normalizes non-array field values', () => {
+    expect(matchMultipunch('hiking', ['hiking'])).toBe(true)
+    expect(matchMultipunch(null, ['hiking'])).toBe(false)
   })
 })
 
@@ -161,6 +186,19 @@ describe('matchesRecord (filter combinations)', () => {
       matchesRecord(record, { ...blank, name: 'alps', year: { from: 2026 } }, columns)
     ).toBe(false)
   })
+
+  it('matches multipunch columns only when all selected values are present', () => {
+    const multiColumns = {
+      name: { type: 'text' },
+      tags: { type: 'multipunch' },
+    }
+    const multiBlank = { name: '', tags: [] }
+
+    expect(matchesRecord(record, { ...multiBlank, tags: ['hiking'] }, multiColumns)).toBe(true)
+    expect(matchesRecord(record, { ...multiBlank, tags: ['hiking', 'friends'] }, multiColumns)).toBe(true)
+    expect(matchesRecord(record, { ...multiBlank, tags: ['friends', 'mountains'] }, multiColumns)).toBe(false)
+    expect(matchesRecord(record, { ...multiBlank, tags: ['mountains'] }, multiColumns)).toBe(false)
+  })
 })
 
 describe('summarizeFilters', () => {
@@ -215,6 +253,15 @@ describe('summarizeFilters', () => {
     expect(
       summarizeFilters({ name: 'alps', place: '', year: { from: 2020 }, eventDate: { to: new Date(2024, 11, 31) } }, columns)
     ).toEqual(['Name: alps', 'Year: ≥ 2020', 'Event date: ≤ 2024-12-31'])
+  })
+
+  it('summarizes a multipunch filter by joining the selected values', () => {
+    const multiColumns = {
+      name: { label: 'Name', type: 'text' },
+      tags: { label: 'Tags', type: 'multipunch' },
+    }
+    expect(summarizeFilters({ name: '', tags: [] }, multiColumns)).toEqual([])
+    expect(summarizeFilters({ name: '', tags: ['counts', 'wave69'] }, multiColumns)).toEqual(['Tags: counts, wave69'])
   })
 
   it('uses the key as a fallback label when no label is given', () => {

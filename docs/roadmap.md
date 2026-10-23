@@ -16,5 +16,4 @@ This sections is to capture everything that comes to mind that should ideally be
   truncation component that keeps the start and the trailing file name and collapses
   the middle, re-measuring on resize; (b) extract the `nowrap + ellipsis` style into
   a shared utility class once a second consumer appears.
-- "Tags", in records filtering component - make it a multi-punch drop down. So that, on click, it expands similar to "not sorted" and "descending", but when expanded user can put ticks at necessary labels. CLick outside to close the drop down. That multi-punch drop down should be implemented as global component, not some special functionality of records filtering component. The records filtering component should only receive a short hint on expected data type within column - if it's just text, numeric field, date/time, or multi-punch with provided set of possible values.
 

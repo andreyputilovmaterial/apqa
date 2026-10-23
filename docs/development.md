@@ -105,6 +105,12 @@ directly.
   `jsconfig.json` → `compilerOptions.paths`) and is resolved by both Vite and the
   self-written bundler; use `@/...` rather than deep `../../..` when a component must
   reach up to an outer level.
+- `src/frontend/template/templates/common.css` is the shared global "skin" loaded
+  by every page. It is broad by design, so do **not** use it for per-component
+  layout fixes — those belong in the component's own `.css`. Any change to
+  `common.css` must be logged (with date + reason) in
+  `src/frontend/template/templates/common.css.changelog.md` (see
+  `.clinerules/09-frontend-common-css.md`).
 
 ## Testing
 

@@ -1,0 +1,93 @@
+.apqa-multipunch {
+  position: relative;
+  width: 100%;
+}
+
+.apqa-multipunch-trigger {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.apqa-multipunch-trigger:hover {
+  border-color: #999;
+}
+
+.apqa-multipunch-trigger:focus-visible {
+  outline: none;
+  border-color: #6670bb;
+}
+
+.apqa-multipunch-trigger-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apqa-multipunch-trigger-value.is-placeholder {
+  color: #888;
+}
+
+.apqa-multipunch-trigger-caret {
+  flex: 0 0 auto;
+  color: #6670bb;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.apqa-multipunch-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 100%;
+  max-height: 240px;
+  overflow: auto;
+  padding: 2px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+}
+
+.apqa-multipunch-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.apqa-multipunch-option:hover {
+  background: #f0f1fb;
+}
+
+.apqa-multipunch-option input {
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: #6670bb;
+}
+
+.apqa-multipunch-option-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

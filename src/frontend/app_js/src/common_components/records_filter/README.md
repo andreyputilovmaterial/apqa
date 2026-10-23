@@ -24,8 +24,11 @@ collected).
 Props:
 
 - `columns` (object) — `{ key: label | { label, type } }`. One filter box per
-  key. `type` is `'text' | 'number' | 'date' | 'datetime'` (default `text`).
-  Non-text types render a range input.
+  key. `type` is `'text' | 'number' | 'date' | 'datetime' | 'multipunch'`
+  (default `text`). Non-text types render a range input, except `multipunch`
+  which renders the globally registered `component-multipunch` drop down; a
+  `multipunch` column should also provide `options` (the allowed values), e.g.
+  `{ label: 'Tags', type: 'multipunch', options: ['counts', 'wave69'] }`.
 - `records` (array) — the source records.
 - `keyField` (string) — unique key used to track per-record filter state.
 - `needSort` (boolean) — enable the sort controls.
@@ -49,7 +52,8 @@ Scoped slot:
 The component is registered locally by consumers (see
 `app/projects_list/index.js`). For the number/date/datetime range inputs it uses
 the globally registered `component-input-numericrange` and
-`component-input-datetimerange` components.
+`component-input-datetimerange` components; for `multipunch` columns it uses the
+globally registered `component-multipunch` component.
 
 ## Collapsible header
 
@@ -67,3 +71,8 @@ testable without Vue.
 
 `matchers.js` holds the pure matching/sorting functions, kept free of Vue so they
 can be unit-tested in isolation (`matchers.spec.js`).
+
+Filter boxes are AND-ed together: a record must match every filled box. A
+`multipunch` column follows the same rule internally — it matches only when the
+record contains **all** of the selected values (an empty selection matches
+everything).

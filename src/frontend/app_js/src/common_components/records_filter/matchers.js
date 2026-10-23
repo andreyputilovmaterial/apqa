@@ -35,9 +35,21 @@ export function matchDatetimeRange(fieldValue, matchValue) {
   return ok
 }
 
+export function matchMultipunch(fieldValue, matchValue) {
+  const selected = Array.isArray(matchValue)
+    ? matchValue.filter((value) => !isEmpty(value))
+    : []
+  if (selected.length === 0) return true
+
+  const values = Array.isArray(fieldValue) ? fieldValue : [fieldValue]
+  const valueSet = new Set(values.map((value) => String(value)))
+  return selected.every((value) => valueSet.has(String(value)))
+}
+
 export function matchValue(fieldValue, matchValue, type = 'text') {
   if (type === 'number') return matchNumericRange(fieldValue, matchValue)
   if (type === 'date' || type === 'datetime') return matchDatetimeRange(fieldValue, matchValue)
+  if (type === 'multipunch') return matchMultipunch(fieldValue, matchValue)
   return matchText(fieldValue, matchValue)
 }
 
@@ -103,6 +115,9 @@ function summarizeRangeValue(value, type) {
 function summarizeFilterValue(value, type) {
   if (type === 'number' || type === 'date' || type === 'datetime') {
     return summarizeRangeValue(value, type)
+  }
+  if (type === 'multipunch') {
+    return Array.isArray(value) ? value.filter((v) => !isEmpty(v)).join(', ') : ''
   }
   return value == null ? '' : String(value).trim()
 }

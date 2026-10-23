@@ -26,7 +26,7 @@ const Rule = {
     <span v-for="marker in record.markers" :key="marker" class="apqa-projects-list-item-marker">{{ marker }}</span>
   </div>
   <div class="apqa-projects-list-item-meta">
-    <span v-if="record.tags" class="apqa-projects-list-item-tags">{{ record.tags }}</span>
+    <span v-if="record.tags.length" class="apqa-projects-list-item-tags">{{ record.tags.join(', ') }}</span>
     <span v-if="record.created_at" class="apqa-projects-list-item-created">created <component-format-datetime :dt="record.created_at" /></span>
   </div>
 </li>

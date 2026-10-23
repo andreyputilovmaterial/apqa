@@ -42,6 +42,14 @@ const RecordsFilter = {
           :name="'filter-' + key"
           :placeholder="'Filter ' + def.label.toLowerCase() + '...'"
         />
+        <component
+          v-else-if="isMultipunchType(def.type)"
+          :is="'component-multipunch'"
+          v-model="filters[key]"
+          :options="def.options"
+          :name="'filter-' + key"
+          :placeholder="'Filter ' + def.label.toLowerCase() + '...'"
+        />
         <input
           v-else
           v-model="filters[key]"
@@ -92,15 +100,18 @@ const RecordsFilter = {
     const columnsSanitized = computed(() => {
       const out = {};
       for (const [key, def] of Object.entries(props.columns)) {
-        if (typeof def === 'string') out[key] = { type: 'text', label: def };
-        else if (def && typeof def === 'object') out[key] = { type: def.type || 'text', label: def.label || key };
-        else out[key] = { type: 'text', label: key };
+        if (typeof def === 'string') out[key] = { type: 'text', label: def, options: [] };
+        else if (def && typeof def === 'object') out[key] = { type: def.type || 'text', label: def.label || key, options: def.options || [] };
+        else out[key] = { type: 'text', label: key, options: [] };
       }
       return out;
     });
 
     const filters = reactive({});
-    for (const key of Object.keys(props.columns)) filters[key] = '';
+    for (const key of Object.keys(props.columns)) {
+      const type = columnsSanitized.value[key]?.type || 'text';
+      filters[key] = type === 'multipunch' ? [] : '';
+    }
 
     const sortingColumn = ref('');
     const sortingAscending = ref(true);
@@ -124,6 +135,10 @@ const RecordsFilter = {
 
     function isRangeType(type) {
       return type === 'number' || type === 'date' || type === 'datetime';
+    }
+
+    function isMultipunchType(type) {
+      return type === 'multipunch';
     }
 
     const matchedCount = computed(() => props.records.filter((record) => recordMatches(record)).length);
@@ -209,6 +224,7 @@ const RecordsFilter = {
       numPages,
       selectPage,
       isRangeType,
+      isMultipunchType,
       collapsed,
       filterSummaryText,
       view,

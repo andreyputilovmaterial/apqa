@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 import RecordsFilter from '../../common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '../../common_defs/helper_functions';
@@ -11,7 +11,7 @@ const COLUMNS = {
   name: { label: 'Name', type: 'text' },
   op: { label: 'Operator', type: 'text' },
   comment: { label: 'Comment', type: 'text' },
-  tags: { label: 'Tags', type: 'text' },
+  tags: { label: 'Tags', type: 'multipunch' },
   created_at: { label: 'Created', type: 'text' },
   modified_at: { label: 'Modified', type: 'text' },
 };
@@ -23,7 +23,7 @@ function toRecord(rule) {
     name: rule.name,
     op: rule.op || '',
     comment: meta.comment || '',
-    tags: Array.isArray(meta.tags) ? meta.tags.join(', ') : '',
+    tags: Array.isArray(meta.tags) ? meta.tags.slice() : [],
     created_at: meta.created_at || '',
     modified_at: meta.modified_at || '',
     markers: Array.isArray(meta.markers) ? meta.markers : [],
@@ -64,6 +64,21 @@ const ProjectsList = {
     const loading = ref(true);
     const loadError = ref('');
 
+    // Tags are a multi-punch column, so their allowed values depend on the
+    // loaded records. Start from the static column shape and fill in the
+    // distinct tag values as the `options` for the `component-multipunch`
+    // drop down.
+    const columns = computed(() => {
+      const tags = new Set();
+      for (const record of records.value) {
+        for (const tag of record.tags) tags.add(tag);
+      }
+      return {
+        ...COLUMNS,
+        tags: { ...COLUMNS.tags, options: Array.from(tags).sort() },
+      };
+    });
+
     async function load() {
       loading.value = true;
       loadError.value = '';
@@ -85,7 +100,7 @@ const ProjectsList = {
     onMounted(load);
 
     return {
-      columns: COLUMNS,
+      columns,
       records,
       loading,
       loadError,
