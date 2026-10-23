@@ -8,7 +8,6 @@ from datetime import datetime
 from importlib import resources
 from dataclasses import dataclass
 from pathlib import Path
-from bs4 import BeautifulSoup
 
 
 
@@ -17,18 +16,8 @@ from bs4 import BeautifulSoup
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    from src.frontend.template.minify_assets import minify_js, minify_css
-    from src.frontend.bundler_engine.lib.py_js_bundler.src.run import process as pack_js
-elif '.' in __name__:
-    # package
-    from .src.frontend.template.minify_assets import minify_js, minify_css
-    from .src.frontend.bundler_engine.lib.py_js_bundler.src.run import process as pack_js
-else:
-    # included with no parent package
-    from src.frontend.template.minify_assets import minify_js, minify_css
-    from src.frontend.bundler_engine.lib.py_js_bundler.src.run import process as pack_js
+from src.frontend.template.minify_assets import minify_js, minify_css
+from src.frontend.bundler_engine.lib.py_js_bundler.src.run import process as pack_js
 
 
 
@@ -58,30 +47,6 @@ class Resource:
 
 def sanitize(input):
     return f'{input}'.replace(r'"""',r'\"""')
-
-def sanitize_classname(s):
-    def err(i):
-        raise Exception(f'Not valid class name: {i}')
-    s = f'{s}'.split()
-    return ' '.join([part if re.match(r'^\s*\w[\w\-]*\w\s*$',part) else err(part) for part in s])
-
-def wrap_div(classname, txt) -> str:
-    soup = BeautifulSoup("<div></div>", "html.parser")
-    div = soup.div
-
-    fragment = BeautifulSoup(txt, "html.parser")
-
-    # IMPORTANT: iterate over a copy
-    for child in list(fragment.contents):
-        div.append(child)
-
-    div["class"] = sanitize_classname(classname).split()
-
-    return str(div)
-
-
-
-
 
 
 def scan_folder(path,is_binary=False):
@@ -121,7 +86,7 @@ def scan_folder(path,is_binary=False):
 
 
 
-def build_normalize_css() -> Resource:
+def build_normalize_css() -> list[Resource]:
     txt = resources.files("src.frontend.template.templates").joinpath("normalize.css").read_text('utf-8')
     txt = minify_css(txt)
     return [
@@ -131,7 +96,7 @@ def build_normalize_css() -> Resource:
         ),
     ]
 
-def build_common_css() -> Resource:
+def build_common_css() -> list[Resource]:
     txt = ''
     txt += resources.files("src.frontend.template.templates").joinpath("common.css").read_text('utf-8')
     txt += resources.files("src.frontend.template.templates").joinpath("common_tables.css").read_text('utf-8')
@@ -144,7 +109,7 @@ def build_common_css() -> Resource:
         ),
     ]
 
-def build_projectspecific_css() -> Resource:
+def build_projectspecific_css() -> list[Resource]:
     txt = ''
     txt += resources.files("src.frontend").joinpath("project_specific.css").read_text('utf-8')
     txt = minify_css(txt)
@@ -155,7 +120,7 @@ def build_projectspecific_css() -> Resource:
         ),
     ]
 
-def build_common_js() -> Resource:
+def build_common_js() -> list[Resource]:
     txt = ''
     txt += resources.files("src.frontend.template.templates").joinpath("common.js").read_text('utf-8')
     # txt += resources.files("src.frontend.template.templates").joinpath("app.js").read_text('utf-8')
@@ -167,7 +132,7 @@ def build_common_js() -> Resource:
         ),
     ]
 
-def build_vendorlibs() -> Resource:
+def build_vendorlibs() -> list[Resource]:
     def build_resource_vue():
         txt_vue = ''
         # # uncomment for dev build
@@ -242,7 +207,7 @@ def build_vendorlibs() -> Resource:
 
 
 
-def build_app_js() -> Resource:
+def build_app_js() -> list[Resource]:
     # txt = ''
     # txt += resources.files("src.frontend.app_js").joinpath("app.js").read_text('utf-8')
     txt = pack_js('./src/frontend/app_js/src/app.js')
@@ -269,7 +234,7 @@ def build_app_js() -> Resource:
 
 
 
-def build_py_dist() -> Resource:
+def build_py_dist() -> list[Resource]:
     raise Exception(f'Producing make_html.py: this should not be handled by build.py, call pinliner instead')
     # return [
     #     Resource(
@@ -278,7 +243,7 @@ def build_py_dist() -> Resource:
     #     ),
     # ]
 
-def build_html_template() -> Resource:
+def build_html_template() -> list[Resource]:
     # TEMPLATE_HTML_COPYBANNER = resources.files("src.frontend.template.templates").joinpath("copybanner.html").read_text('utf-8')
     TEMPLATE_HTML_TABLE_BEGIN = resources.files("src.frontend.template.templates").joinpath("table_begin.html").read_text('utf-8')
     TEMPLATE_HTML_TABLE_END = resources.files("src.frontend.template.templates").joinpath("table_end.html").read_text('utf-8')
@@ -304,7 +269,7 @@ def build_html_template() -> Resource:
         ),
     ]
 
-def build_blank() -> Resource:
+def build_blank() -> list[Resource]:
     return [
         Resource(
             filename = "__init__.py",
