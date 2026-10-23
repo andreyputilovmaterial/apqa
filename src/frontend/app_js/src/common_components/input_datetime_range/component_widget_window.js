@@ -13,9 +13,26 @@ function hasValue(value) {
     return !!value;
 }
 
-function isValidDate(value) {
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime());
+// Native <input type="datetime-local"> values are local-time strings in the
+// `YYYY-MM-DDTHH:mm` form. The app represents dates as `Date` objects, so we
+// convert at this DOM boundary only.
+function toLocalInputValue(value) {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    return '';
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}` +
+    `T${pad(value.getHours())}:${pad(value.getMinutes())}`
+  );
+}
+
+function fromLocalInputValue(value) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+  const date = new Date(value.trim());
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 
@@ -72,8 +89,8 @@ const mountToComponent = (targetEl,outerResolve,outerReject,oldValue,validationC
       const refInputHigh = ref(null);
 
       const formFields = reactive({
-        from: oldValue?.from,
-        to: oldValue?.to,
+        from: toLocalInputValue(oldValue?.from),
+        to: toLocalInputValue(oldValue?.to),
       });
 
       const handleCancel = async () => {
@@ -83,16 +100,20 @@ const mountToComponent = (targetEl,outerResolve,outerReject,oldValue,validationC
       const handleSubmit = async () => {
         try {
           isBusy.value = true;
-          const validationFailure = validationCb(formFields); // expected to return error message or null
+          const range = {
+            from: fromLocalInputValue(formFields.from),
+            to: fromLocalInputValue(formFields.to),
+          };
+          const validationFailure = validationCb(range); // expected to return error message or null
           if( validationFailure ) {
             validationaFailureMsg.value = validationFailure;
             return;
           } else
-            internalPromiseContext.resolve(formFields);
+            internalPromiseContext.resolve(range);
         } catch (error) {
           if(error instanceof Error) {
             error.value = error;
-            logErr('Error in numeric range picker component');
+            logErr('Error in datetime range picker component');
             logErr(error);
           } else {
             /* rejected - means "cancel" - ok */

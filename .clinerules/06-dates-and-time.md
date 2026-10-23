@@ -13,3 +13,10 @@
 - **No hardcoded dates.** Don't put dates in implementation code. Dates come
   from the database, or are generated when an object is created (e.g.
   `datetime.now(timezone.utc)`).
+- **Frontend values are `Date` objects.** Inside the JS app
+  (`src/frontend/app_js`), dates and timestamps are represented as native
+  `Date` objects (created with `new Date(...)`), not as ISO strings. Convert
+  backend ISO strings to `Date` at the boundary where record data is built, and
+  keep them as `Date` through comparison, sorting, and formatting. The only
+  place a raw date string is allowed is a native `<input type="datetime-local">`
+  (or similar DOM control); convert to/from `Date` immediately at that boundary.

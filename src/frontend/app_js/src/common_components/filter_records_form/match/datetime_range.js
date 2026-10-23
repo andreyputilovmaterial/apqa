@@ -9,9 +9,12 @@ function hasValue(value) {
     return !!value;
 }
 
-function isValidDate(value) {
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime());
+function toDate(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 
@@ -21,18 +24,18 @@ function parseInput(input) {
     return [ null, null ];
   const low = input?.from;
   const high = input?.to;
-  return [ hasValue(low) ? (new Date(low)) : null, hasValue(high) ? (new Date(high)) : null ];
+  return [ hasValue(low) ? toDate(low) : null, hasValue(high) ? toDate(high) : null ];
 }
 
 function match(fieldValue,matchValue) {
   const [low,high] = parseInput(matchValue);
+  const value = toDate(fieldValue);
   let isGood = true;
-  if( hasValue(low) )
-    isGood = isGood && isFinite(fieldValue) && (fieldValue>=low);
-  if( hasValue(high) )
-    isGood = isGood && isFinite(fieldValue) && (fieldValue<=high);
+  if( low )
+    isGood = isGood && !!value && (value.getTime() >= low.getTime());
+  if( high )
+    isGood = isGood && !!value && (value.getTime() <= high.getTime());
   return isGood;
-
 }
 
 export default match;

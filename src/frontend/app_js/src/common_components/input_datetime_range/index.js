@@ -5,6 +5,30 @@ import { ref, watch } from 'vue';
 import openNumericRangePicker from './widget'
 import logErr from '../_log_error_proxy';
 
+// Dates are represented as `Date` objects throughout the app. When a value needs
+// to be shown in the readonly range input, format it as a local `YYYY-MM-DDTHH:mm`
+// string (the same shape a native `datetime-local` input uses).
+function formatDateTimeForInput(value) {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    return '';
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}` +
+    `T${pad(value.getHours())}:${pad(value.getMinutes())}`
+  );
+}
+
+function formatEndpointForInput(value) {
+  if (value == null || value === '') {
+    return '';
+  }
+  if (value instanceof Date) {
+    return formatDateTimeForInput(value);
+  }
+  return String(value);
+}
+
 const Component = {
 
   inheritAttrs: false,
@@ -128,8 +152,8 @@ const Component = {
          return String(value);
        }
        if (typeof value === 'object') {
-         const from = value.from ?? '';
-         const to = value.to ?? '';
+         const from = formatEndpointForInput(value.from);
+         const to = formatEndpointForInput(value.to);
          if (from === '' && to === '') {
            return '';
          }

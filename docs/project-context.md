@@ -4,6 +4,20 @@
 
 ## Last state
 
+- Decided the frontend canonical date type and fixed the datetime-range
+  comparison. Added a `.clinerules/06-dates-and-time.md` rule: inside
+  `src/frontend/app_js`, dates/timestamps are native `Date` objects (built with
+  `new Date(...)`), never ISO strings; convert at the data boundary and at the
+  native `<input type="datetime-local">` boundary. Fixed
+  `filter_records_form/match/datetime_range.js` (was comparing `>=`/`<=` against
+  `Date` bounds with a possibly-string `fieldValue`; now normalizes to `Date` and
+  compares via `.getTime()`). Fixed
+  `input_datetime_range/component_widget_window.js` (the `datetime-local` picker
+  returned strings; now converts to/from `Date` at that boundary so the
+  component always emits `Date` objects) and `input_datetime_range/index.js`
+  (`toInputValue` now formats `Date` endpoints as local `YYYY-MM-DDTHH:mm`).
+  Added `filter_records_form/match/datetime_range.spec.js`; JS suite 32 passed.
+
 - Added `/functionality/...` endpoints in a new `src/frontend/endpoints_functionality.py`
   (`handle_functionality`, registered as `re.compile(r'^/functionality(?=$|/)')`).
   `GET /functionality/config` returns the root config as JSON with `iface` dropped
@@ -171,16 +185,19 @@
   `import './dist/cli.js'`); invoke directly: `node node_modules/vitest/vitest.mjs`
   and `node node_modules/vite/bin/vite.js`.
 - RecordsFilter currently avoids `date`/`datetime` columns (the projects list uses
-  `text` for `created_at`/`modified_at`); the `input_datetime_range` →
-  `filter_records_form/match/datetime_range` pipeline still needs end-to-end
-  validation before enabling `datetime` columns.
+  `text` for `created_at`/`modified_at`). The canonical date type is now `Date`
+  objects (see `.clinerules/06-dates-and-time.md`); the range inputs emit `Date`
+  objects and the matchers normalize to `.getTime()`. Enabling `date`/`datetime`
+  columns still needs end-to-end wiring (build record fields as `Date` objects in
+  `projects_list/toRecord`).
 
 ## Open questions / TODO
 
-- `filter_records_form/match/datetime_range.js` compares with `>=`/`<=` while
-  `input_datetime_range` emits `Date` objects and record fields may be ISO strings
-  (`created_at`/`modified_at`); end-to-end datetime-range filtering is untested and
-  needs a decision on the canonical value type before `datetime` columns are wired.
+- End-to-end datetime-range filtering is still not wired in the projects list
+  (`created_at`/`modified_at` remain `text` columns). The canonical value type is
+  decided (`Date` objects) and the range inputs/matchers now comply, so wiring
+  `date`/`datetime` columns should just mean building record fields as `Date`
+  objects in `projects_list/toRecord`.
 - Compound scalar types (object with named fields, collection, tuple) still being
   finalized.
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.
