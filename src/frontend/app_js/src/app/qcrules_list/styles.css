@@ -1,16 +1,71 @@
-.apqa-qcrules-list {
+.apqa-qcrules-page {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.apqa-qcrules-list-state {
+.apqa-qcrules-page-state {
   padding: 14px;
   color: #666;
 }
 
-.apqa-qcrules-list-state-error {
+.apqa-qcrules-page-state-error {
   color: #cc0000;
+}
+
+.apqa-qcrules-page-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.apqa-qcrules-page-button {
+  padding: 6px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.apqa-qcrules-page-button:hover {
+  border-color: #999;
+}
+
+.apqa-qcrules-page-button-primary {
+  background: #6670bb;
+  border-color: #6670bb;
+  color: #fff;
+}
+
+.apqa-qcrules-page-button-primary:hover {
+  background: #51599f;
+  border-color: #51599f;
+}
+
+.apqa-qcrules-page-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-qcrules-page-section-title {
+  margin: 0;
+  padding: 0 0 2px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #555;
+  border-bottom: 1px solid #ddd;
+}
+
+.apqa-qcrules-page-empty {
+  padding: 8px 2px;
+  color: #888;
 }
 
 .apqa-qcrules-list-items {
@@ -34,10 +89,10 @@
 
 .apqa-qcrules-list-item-head {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
 }
 
 .apqa-qcrules-list-item-name {
@@ -46,7 +101,6 @@
 }
 
 .apqa-qcrules-list-item-comment {
-  margin-top: -4px;
   color: #888;
 }
 
@@ -57,8 +111,8 @@
   padding: 12px;
   background: #f6f6f6;
   border-radius: 4px;
-  margin-top: 11px;
-  margin-bottom: 7px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .apqa-cmdlet-chain {
@@ -146,6 +200,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   min-width: 0;
+  cursor: pointer;
 }
 
 .apqa-rule-compact-name {
@@ -174,5 +229,90 @@
 
 .apqa-rule-compact-definition .apqa-comparison {
   align-self: baseline;
+}
+
+/* Global aliases (definitions) list: raw "NAME = value" rows, Excel-like. */
+.apqa-qcrules-definition-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apqa-definition-record {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  background: #fafafa;
+  min-width: 0;
+}
+
+.apqa-definition-record-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.apqa-definition-record-eq {
+  color: #999;
+}
+
+.apqa-definition-record-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apqa-definition-record-comment {
+  color: #888;
+}
+
+.apqa-definition-record-comment::before {
+  content: "—";
+  margin-right: 6px;
+  color: #bbb;
+}
+
+/* Rule record wrapper: the `<li>` in the list. The bordered card is rendered by
+   the inner compact/full rule views; this unit only participates in list flow. */
+.apqa-rule-record {
+  list-style-type: none;
+}
+
+.apqa-rule-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-rule-body-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.apqa-rule-body-action {
+  padding: 4px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.apqa-rule-body-action:hover {
+  border-color: #999;
 }
 

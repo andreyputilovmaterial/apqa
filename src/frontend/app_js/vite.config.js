@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/qcrules': {
+      '/qc': {
         target: 'http://localhost:5180',
         changeOrigin: true
       },

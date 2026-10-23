@@ -210,13 +210,21 @@ The rules database is a format-agnostic interface
 `detect_type`:
 
 - **SQLite** (`.sqlite3`/`.sqlite`) — the default. Each rule is one row; `meta`,
-  `left` and `right` are stored as JSON text, `name`/`op` as plain text.
-- **YAML** (`.yaml`/`.yml`) — a list of rule mappings.
+  `left` and `right` are stored as JSON text, `name`/`op` as plain text. A
+  parallel `definitions` table stores project-level aliases (`name`, `value`,
+  `meta`).
+- **YAML** (`.yaml`/`.yml`) — a mapping with two optional lists, `definitions`
+  and `rules`. A legacy top-level list of rules is still accepted (read as
+  rules only).
 
-Both backends implement the same CRUD contract (`list_rules`, `get_rule`,
-`has_rule`, `add_rule`, `update_rule`, `rename_rule`, `delete_rule`, `save`) and
-return `Rule` objects. The SQLite backend is thread-safe (the web server is a
-`ThreadingHTTPServer`) via a re-entrant lock around a single shared connection.
+Both backends implement the same CRUD contract for rules (`list_rules`,
+`get_rule`, `has_rule`, `add_rule`, `update_rule`, `rename_rule`,
+`delete_rule`, `save`) and the matching definition contract (`list_definitions`,
+`get_definition`, `has_definition`, `add_definition`, `update_definition`,
+`rename_definition`, `delete_definition`). Rules return `Rule` objects;
+definitions return `Definition` objects (`name`, `value`, `meta`). The SQLite
+backend is thread-safe (the web server is a `ThreadingHTTPServer`) via a
+re-entrant lock around a single shared connection.
 
 ## Code style & error handling
 

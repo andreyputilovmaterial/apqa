@@ -6,7 +6,7 @@ from .common_functions import JSONEncoder
 
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
-# All requests under /qcrules... arrive here (any HTTP method); method+path routing
+# All requests under /qc/rules... arrive here (any HTTP method); method+path routing
 # is done below with simple if...elif, following the pattern used in this codebase.
 def handle_rule_crud(net_request_handler, config: dict, added_data=None):
 
@@ -69,7 +69,7 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
         changes = dict(payload)
         if 'name' in changes:
             if changes['name'] != name:
-                return json_response(400, {'error': f"use POST /qcrules/{name}/rename to change a rule's name"})
+                return json_response(400, {'error': f"use POST /qc/rules/{name}/rename to change a rule's name"})
             changes.pop('name')
         try:
             rule = db_file.update_rule(name, **changes)
@@ -112,22 +112,22 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
 
     renderer = None
 
-    if path_parsed == '/qcrules':
+    if path_parsed == '/qc/rules':
         if method == 'GET':
             renderer = handle_list_rules
         elif method == 'POST':
             renderer = handle_create_rule
-    elif len(path_parts) == 3 and path_parts[1] == 'qcrules':
-        name = path_parts[2]
+    elif len(path_parts) == 4 and path_parts[1] == 'qc' and path_parts[2] == 'rules':
+        name = path_parts[3]
         if method == 'GET':
             renderer = partial(handle_get_rule, name)
         elif method == 'PUT':
             renderer = partial(handle_update_rule, name)
         elif method == 'DELETE':
             renderer = partial(handle_delete_rule, name)
-    elif len(path_parts) == 4 and path_parts[1] == 'qcrules' and path_parts[3] == 'rename':
+    elif len(path_parts) == 5 and path_parts[1] == 'qc' and path_parts[2] == 'rules' and path_parts[4] == 'rename':
         if method == 'POST':
-            renderer = partial(handle_rename_rule, path_parts[2])
+            renderer = partial(handle_rename_rule, path_parts[3])
 
     if renderer is None:
         return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})

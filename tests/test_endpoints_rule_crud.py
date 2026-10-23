@@ -1,4 +1,4 @@
-"""Tests for the rule CRUD HTTP endpoint (/qcrules...)."""
+"""Tests for the rule CRUD HTTP endpoint (/qc/rules...)."""
 
 import json
 import sys
@@ -49,102 +49,102 @@ def call(config, method, path, body=None):
 
 
 def test_list_empty(config):
-    status, data = call(config, 'GET', '/qcrules')
+    status, data = call(config, 'GET', '/qc/rules')
     assert status == 200
     assert data == {'rules': []}
 
 
 def test_create_and_list(config):
-    status, data = call(config, 'POST', '/qcrules', {'name': 'r1', 'op': 'eq'})
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
     assert status == 201
     assert data['rule']['name'] == 'r1'
 
-    status, data = call(config, 'GET', '/qcrules')
+    status, data = call(config, 'GET', '/qc/rules')
     assert status == 200
     assert [r['name'] for r in data['rules']] == ['r1']
 
 
 def test_create_duplicate(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1'})
-    status, data = call(config, 'POST', '/qcrules', {'name': 'r1'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1'})
     assert status == 409
 
 
 def test_create_missing_name(config):
-    status, data = call(config, 'POST', '/qcrules', {'op': 'eq'})
+    status, data = call(config, 'POST', '/qc/rules', {'op': 'eq'})
     assert status == 400
 
 
 def test_create_invalid_json(config):
-    status, data = call(config, 'POST', '/qcrules', b'{not json')
+    status, data = call(config, 'POST', '/qc/rules', b'{not json')
     assert status == 400
 
 
 def test_get_rule(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1', 'op': 'eq'})
-    status, data = call(config, 'GET', '/qcrules/r1')
+    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
+    status, data = call(config, 'GET', '/qc/rules/r1')
     assert status == 200
     assert data['rule']['op'] == 'eq'
 
 
 def test_get_rule_missing(config):
-    status, data = call(config, 'GET', '/qcrules/nope')
+    status, data = call(config, 'GET', '/qc/rules/nope')
     assert status == 404
 
 
 def test_update_rule(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1', 'op': 'eq'})
-    status, data = call(config, 'PUT', '/qcrules/r1', {'op': 'lt'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
+    status, data = call(config, 'PUT', '/qc/rules/r1', {'op': 'lt'})
     assert status == 200
     assert data['rule']['op'] == 'lt'
 
 
 def test_update_rule_rejects_name_change(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1'})
-    status, data = call(config, 'PUT', '/qcrules/r1', {'name': 'r2'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'PUT', '/qc/rules/r1', {'name': 'r2'})
     assert status == 400
 
 
 def test_delete_rule(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1'})
-    status, data = call(config, 'DELETE', '/qcrules/r1')
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'DELETE', '/qc/rules/r1')
     assert status == 200
     assert data['rule']['name'] == 'r1'
 
-    status, data = call(config, 'GET', '/qcrules/r1')
+    status, data = call(config, 'GET', '/qc/rules/r1')
     assert status == 404
 
 
 def test_delete_rule_missing(config):
-    status, data = call(config, 'DELETE', '/qcrules/nope')
+    status, data = call(config, 'DELETE', '/qc/rules/nope')
     assert status == 404
 
 
 def test_rename_rule(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1'})
-    status, data = call(config, 'POST', '/qcrules/r1/rename', {'new_name': 'r2'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'POST', '/qc/rules/r1/rename', {'new_name': 'r2'})
     assert status == 200
     assert data['rule']['name'] == 'r2'
 
 
 def test_rename_rule_duplicate(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1'})
-    call(config, 'POST', '/qcrules', {'name': 'r2'})
-    status, data = call(config, 'POST', '/qcrules/r1/rename', {'new_name': 'r2'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    call(config, 'POST', '/qc/rules', {'name': 'r2'})
+    status, data = call(config, 'POST', '/qc/rules/r1/rename', {'new_name': 'r2'})
     assert status == 409
 
 
 def test_rename_rule_missing_new_name(config):
-    call(config, 'POST', '/qcrules', {'name': 'r1'})
-    status, data = call(config, 'POST', '/qcrules/r1/rename', {})
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'POST', '/qc/rules/r1/rename', {})
     assert status == 400
 
 
 def test_unknown_method(config):
-    status, data = call(config, 'PATCH', '/qcrules')
+    status, data = call(config, 'PATCH', '/qc/rules')
     assert status == 405
 
 
 def test_unknown_path(config):
-    status, data = call(config, 'GET', '/qcrules/r1/extra')
+    status, data = call(config, 'GET', '/qc/rules/r1/extra')
     assert status == 405

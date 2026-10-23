@@ -4,6 +4,27 @@
 
 ## Last state
 
+- Implemented "Reformat the page with qc rules" (roadmap item). Added project-level
+  **definitions (aliases)** stored in the same DB file as rules: a `Definition`
+  dataclass (`src/db_processors/definition_base.py`) with `name`/`value`/`meta`,
+  matching CRUD on `DBFile` (`list_definitions`, `get_definition`, `has_definition`,
+  `add_definition`, `update_definition`, `rename_definition`, `delete_definition`,
+  plus the `.definitions` accessor). SQLite gained a `definitions` table; YAML now
+  reads/writes a `{ definitions: [...], rules: [...] }` mapping while still accepting
+  a legacy top-level list (rules only). Added a definitions CRUD endpoint
+  (`src/frontend/endpoints_definition_crud.py`) + route, and unified both DB resources
+  under a shared `/qc/` namespace (`/qc/rules` and `/qc/definitions`). Reformatted the QC-rules page:
+  top toolbar ("Create new QC rule" / "Add alias", both functional via `window.prompt`),
+  then a **Global aliases** section (own `RecordsFilter`), then a **QC rules** section.
+  Rules now render a `RuleRecord` wrapper (`<li>`) around a `RuleBody` inner wrapper,
+  which shows the compact view by default and switches to the full view (plus
+  placeholder Edit/Run buttons) when the rule header (name/comment) is clicked; the
+  same header collapses it back. `rule.js`/`rule_compact.js` roots changed `<li>` →
+  `<div>` (they now nest inside the record `<li>`) and emit `toggle`. Added specs for
+  `RuleRecord` and updated `rule_compact.spec.js`. Validated: 144 pytest, 66 JS tests
+  pass (4 pre-existing myers-diff suites still fail), `vite build` (67 modules) and the
+  self-written `py_js_bundler` both bundle the new components.
+
 - Finalized the cmdlet data-format spec (`docs/cmdlet-data-formats.md`): named the
   compound type **array** (was "loop/grid/array"), chose shape-agnostic cmdlet
   names mirroring PowerShell (`select-property`, `select-properties`,
@@ -345,7 +366,10 @@
   to exist (currently it matches YAML's fail-early behavior).
 - `.db` extension is intentionally **not** mapped to SQLite (ambiguous); add it
   only if a concrete need appears.
-- The UI only *lists* QC rules so far; the rule CRUD UI (add/edit/delete/rename) is
-  not implemented yet — the `/qcrules` endpoints exist and are exercised by
-  `tests/test_endpoints_rule_crud.py`, but the frontend doesn't call them yet.
+- The QC-rules page can now *create* a rule and *add* an alias (via `window.prompt`,
+  hitting `/qc/rules`/`/qc/definitions`), but full rule/definition CRUD UI (edit, delete,
+  rename, and the Edit/Run action buttons) is still not implemented — the endpoints
+  exist and are exercised by `tests/test_endpoints_rule_crud.py` and
+  `tests/test_endpoints_definition_crud.py`, but the frontend's Edit/Run buttons are
+  placeholders.
 

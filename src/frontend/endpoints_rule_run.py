@@ -7,7 +7,7 @@ from .common_functions import JSONEncoder
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
 # POST /functionality/run-rule runs an *arbitrary* rule passed as JSON. It does
-# not address a rule that lives in the rules database (that is the /qcrules...
+# not address a rule that lives in the rules database (that is the /qc/rules...
 # namespace), so it deliberately lives under /functionality/ instead.
 def handle_rule_run(net_request_handler, config: dict, added_data=None):
 

@@ -36,4 +36,10 @@ describe('RuleCompact', () => {
     });
     expect(withoutComment.text()).not.toContain('check the count');
   });
+
+  it('emits toggle when the description line is clicked', async () => {
+    const wrapper = mount(RuleCompact, { props: { record: makeRecord() } });
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+    expect(wrapper.emitted('toggle')).toHaveLength(1);
+  });
 });

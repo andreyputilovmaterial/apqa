@@ -61,6 +61,32 @@ class DBFile:
     def save(self):
         raise NotImplementedError
 
+    # ---- definitions CRUD contract -----------------------------------------
+    # Definitions (aliases) are stored in the same database file as the rules.
+    # They give a short name to a reusable value (e.g. a path) so rules can
+    # reference the name instead of repeating the value.
+
+    def list_definitions(self):
+        raise NotImplementedError
+
+    def get_definition(self,name):
+        raise NotImplementedError
+
+    def has_definition(self,name):
+        raise NotImplementedError
+
+    def add_definition(self,definition):
+        raise NotImplementedError
+
+    def update_definition(self,name,**changes):
+        raise NotImplementedError
+
+    def rename_definition(self,name,new_name):
+        raise NotImplementedError
+
+    def delete_definition(self,name):
+        raise NotImplementedError
+
     # ---- pythonic helpers -------------------------------------------------
 
     def __len__(self):
@@ -77,6 +103,10 @@ class DBFile:
     @property
     def rules(self):
         return self.list_rules()
+
+    @property
+    def definitions(self):
+        return self.list_definitions()
 
 
 

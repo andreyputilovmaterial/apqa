@@ -54,6 +54,15 @@ Rules are stored in the project's **database file**, in one of two formats:
 The format is chosen by the file extension. To start a new project, create an
 empty file with the extension you want (for example, `project.sqlite3`).
 
+## Global aliases
+
+You can define project-wide **aliases** that give a short name to a long, reused
+value (usually a file path). For example, define
+`/project/p123/data/datafile.db` as `PROCESSED_DATA`, then use `PROCESSED_DATA`
+as a command parameter instead of repeating the full path everywhere. Aliases are
+stored in the same database file as the rules and are shown in their own section
+above the rule list.
+
 ## Running the QC tests
 
 Once your rules are defined, run the tests to check the project data against them.

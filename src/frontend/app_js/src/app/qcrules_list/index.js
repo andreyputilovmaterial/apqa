@@ -3,7 +3,8 @@ import { computed, ref, onMounted } from 'vue';
 import RecordsFilter from '../../common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '../../common_defs/helper_functions';
 import logError from '../../common_components/_log_error_proxy';
-import Rule from './rule';
+import DefinitionRecord from './definition_record';
+import RuleRecord from './rule_record';
 
 import './styles.css';
 
@@ -15,6 +16,12 @@ const COLUMNS = {
   markers: { label: 'Markers', type: 'multipunch', description: 'Pytest markers that change how the rule runs, e.g. skip or xfail.' },
   created_at: { label: 'Created', type: 'text', description: 'When the rule was created.' },
   modified_at: { label: 'Modified', type: 'text', description: 'When the rule was last modified.' },
+};
+
+const DEFINITION_COLUMNS = {
+  name: { label: 'Name', type: 'text', description: 'Unique alias name.' },
+  value: { label: 'Value', type: 'text', description: 'Value the alias resolves to (e.g. a path).' },
+  comment: { label: 'Comment', type: 'text', description: 'Short human-readable note about the alias.' },
 };
 
 function toRecord(rule) {
@@ -33,35 +40,63 @@ function toRecord(rule) {
   };
 }
 
+function toDefinitionRecord(definition) {
+  const meta = definition.meta || {};
+  return {
+    id: definition.name,
+    name: definition.name,
+    value: definition.value || '',
+    comment: meta.comment || '',
+  };
+}
+
 const QcRulesList = {
   components: {
     'component-records-filter': RecordsFilter,
-    'rule': Rule,
+    'definition-record': DefinitionRecord,
+    'rule-record': RuleRecord,
   },
 
   template: `
-<div class="apqa-qcrules-list">
-  <div v-if="loading" class="apqa-qcrules-list-state">Loading QC rules...</div>
-  <div v-else-if="loadError" class="apqa-qcrules-list-state apqa-qcrules-list-state-error">{{ loadError }}</div>
-  <component-records-filter
-    v-else
-    :columns="columns"
-    :records="records"
-    key-field="id"
-    need-sort
-  >
-    <template #default="{ records: visibleRecords }">
-      <ul v-if="visibleRecords.length" class="apqa-qcrules-list-items">
-        <rule v-for="record in visibleRecords" :key="record.id" :record="record" />
-      </ul>
-      <div v-else class="apqa-qcrules-list-state apqa-qcrules-list-empty">No QC rules match the current filter.</div>
-    </template>
-  </component-records-filter>
+<div class="apqa-qcrules-page">
+  <div v-if="loading" class="apqa-qcrules-page-state">Loading QC rules...</div>
+  <div v-else-if="loadError" class="apqa-qcrules-page-state apqa-qcrules-page-state-error">{{ loadError }}</div>
+  <template v-else>
+    <div class="apqa-qcrules-page-toolbar">
+      <button type="button" class="apqa-qcrules-page-button apqa-qcrules-page-button-primary" @click="createRule">Create new QC rule</button>
+      <button type="button" class="apqa-qcrules-page-button" @click="createDefinition">Add alias</button>
+    </div>
+
+    <section class="apqa-qcrules-page-section">
+      <h2 class="apqa-qcrules-page-section-title">Global aliases</h2>
+      <component-records-filter :columns="definitionColumns" :records="definitions" key-field="id" :records-per-page="0">
+        <template #default="{ records: visibleDefinitions }">
+          <ul v-if="visibleDefinitions.length" class="apqa-qcrules-definition-list">
+            <definition-record v-for="definition in visibleDefinitions" :key="definition.id" :record="definition" />
+          </ul>
+          <div v-else class="apqa-qcrules-page-empty">No aliases defined.</div>
+        </template>
+      </component-records-filter>
+    </section>
+
+    <section class="apqa-qcrules-page-section">
+      <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
+      <component-records-filter :columns="columns" :records="records" key-field="id" need-sort>
+        <template #default="{ records: visibleRecords }">
+          <ul v-if="visibleRecords.length" class="apqa-qcrules-list-items">
+            <rule-record v-for="record in visibleRecords" :key="record.id" :record="record" @edit="onEditRule" @run="onRunRule" />
+          </ul>
+          <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
+        </template>
+      </component-records-filter>
+    </section>
+  </template>
 </div>
 `,
 
   setup() {
     const records = ref([]);
+    const definitions = ref([]);
     const loading = ref(true);
     const loadError = ref('');
 
@@ -82,16 +117,26 @@ const QcRulesList = {
       };
     });
 
+    const definitionColumns = computed(() => DEFINITION_COLUMNS);
+
+    async function requestJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(await makeFetchResponseErrorMessage(response));
+      }
+      return response.json();
+    }
+
     async function load() {
       loading.value = true;
       loadError.value = '';
       try {
-        const response = await fetch('/qcrules');
-        if (!response.ok) {
-          throw new Error(await makeFetchResponseErrorMessage(response));
-        }
-        const data = await response.json();
-        records.value = (data.rules || []).map(toRecord);
+        const [rulesData, definitionsData] = await Promise.all([
+          requestJson('/qc/rules'),
+          requestJson('/qc/definitions'),
+        ]);
+        records.value = (rulesData.rules || []).map(toRecord);
+        definitions.value = (definitionsData.definitions || []).map(toDefinitionRecord);
       } catch (e) {
         loadError.value = `Failed to load QC rules: ${e}`;
         logError(loadError.value);
@@ -100,14 +145,69 @@ const QcRulesList = {
       }
     }
 
+    async function postJson(url, payload) {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(await makeFetchResponseErrorMessage(response));
+      }
+    }
+
+    async function createRule() {
+      const name = window.prompt('New QC rule name');
+      if (name == null || name.trim() === '') return;
+      try {
+        await postJson('/qc/rules', { name: name.trim() });
+        await load();
+      } catch (e) {
+        window.alert(`Failed to create QC rule: ${e}`);
+        logError(`Failed to create QC rule: ${e}`);
+      }
+    }
+
+    async function createDefinition() {
+      const name = window.prompt('New alias name');
+      if (name == null || name.trim() === '') return;
+      const value = window.prompt('Alias value (e.g. a path)');
+      if (value == null) return;
+      try {
+        await postJson('/qc/definitions', { name: name.trim(), value });
+        await load();
+      } catch (e) {
+        window.alert(`Failed to add alias: ${e}`);
+        logError(`Failed to add alias: ${e}`);
+      }
+    }
+
+    // Placeholders for the rule actions. The edit/run UI is a separate roadmap
+    // item; for now the buttons just surface the selected rule to the console.
+    function onEditRule(record) {
+      // TODO(roadmap): open the rule editor once the CRUD UI is implemented.
+      console.debug('edit rule (not implemented yet):', record.name);
+    }
+
+    function onRunRule(record) {
+      // TODO(roadmap): run the rule once the runner UI is implemented.
+      console.debug('run rule (not implemented yet):', record.name);
+    }
+
     onMounted(load);
 
     return {
       columns,
+      definitionColumns,
       records,
+      definitions,
       loading,
       loadError,
       load,
+      createRule,
+      createDefinition,
+      onEditRule,
+      onRunRule,
     };
   },
 };
