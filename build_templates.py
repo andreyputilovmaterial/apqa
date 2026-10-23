@@ -97,10 +97,7 @@ def build_normalize_css() -> list[Resource]:
     ]
 
 def build_common_css() -> list[Resource]:
-    txt = ''
-    txt += resources.files("src.frontend.template.templates").joinpath("common.css").read_text('utf-8')
-    txt += resources.files("src.frontend.template.templates").joinpath("common_tables.css").read_text('utf-8')
-    # txt += resources.files("src.frontend.template.templates").joinpath("project_specific.css").read_text('utf-8')
+    txt = resources.files("src.frontend.template.templates").joinpath("common.css").read_text('utf-8')
     txt = minify_css(txt)
     return [
         Resource(

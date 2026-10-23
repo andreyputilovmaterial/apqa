@@ -4,6 +4,14 @@
 
 ## Last state
 
+- Consolidated the report CSS into a single `src/frontend/template/templates/common.css`
+  by adopting the updated `gitgui` version, which already merges the old
+  `common.css` + `common_tables.css` into one file (adds a `:root` token scale,
+  `.mdm-btn*` / `.mdm-link*` / `.mdm-table*` components, and refactors spacing to CSS
+  variables). Deleted `common_tables.css` and removed its read in
+  `build_templates.py build_common_css()` (now reads only `common.css`). Verified the
+  `common_css` build resource still minifies (15,210 bytes).
+
 - Made the `run_*.sh` / `run_*.bat` scripts work from the repo root: they launch the
   program via `python -m src.launcher` and point at `tests-real-sensitive-data/`.
   `build.sh` now transforms them for `dist/` (`-m src.launcher` → `apqa_bundle.py`,
