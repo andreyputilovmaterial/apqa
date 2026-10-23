@@ -23,14 +23,21 @@ function formatArgs(args) {
   return parts;
 }
 
-function defaultCmdletText(cmdlet) {
-  const name = cmdlet?.cmdlet || '';
-  return [name, ...formatArgs(cmdlet?.args)].filter((part) => part !== '').join(' ');
+// Display parts of a cmdlet: the name followed by each argument ("key=value"
+// or a bare flag), or the opaque output of a custom renderer. Each part is
+// rendered as its own no-wrap unit so the chain wraps between them (never in
+// the middle of a word); overlong parts (e.g. a long path param) are cut with
+// an ellipsis on the right.
+export function cmdletParts(cmdlet) {
+  const renderer = cmdletRenderers[cmdlet?.cmdlet];
+  const parts = renderer
+    ? [renderer(cmdlet)]
+    : [cmdlet?.cmdlet || '', ...formatArgs(cmdlet?.args)];
+  return parts.filter((part) => part !== '');
 }
 
 export function cmdletText(cmdlet) {
-  const renderer = cmdletRenderers[cmdlet?.cmdlet];
-  return renderer ? renderer(cmdlet) : defaultCmdletText(cmdlet);
+  return cmdletParts(cmdlet).join(' ');
 }
 
 // Built-in overrides.
@@ -43,10 +50,16 @@ registerCmdletRenderer('literal', (cmdlet) => {
 
 const Cmdlet = {
   props: ['cmdlet'],
-  template: `<span class="apqa-cmdlet">{{ text }}</span>`,
+  template: `
+<span class="apqa-cmdlet">
+  <template v-for="(part, index) in parts" :key="index">
+    <span class="apqa-cmdlet-part">{{ part }}</span><span v-if="index < parts.length - 1">{{ ' ' }}</span>
+  </template>
+</span>
+`,
   setup(props) {
-    const text = computed(() => cmdletText(props.cmdlet));
-    return { text };
+    const parts = computed(() => cmdletParts(props.cmdlet));
+    return { parts };
   },
 };
 

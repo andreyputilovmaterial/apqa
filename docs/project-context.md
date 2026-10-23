@@ -4,6 +4,17 @@
 
 ## Last state
 
+- Fixed cmdlet-chain word wrapping. The chain no longer uses
+  `word-break: break-all` (which broke words mid-token). `cmdlet.js` now
+  exposes `cmdletParts(cmdlet)` (name + each argument as separate units;
+  `cmdletText()` = `cmdletParts().join(' ')`) and the `Cmdlet` component renders
+  each part as a no-wrap `.apqa-cmdlet-part`; the chain wraps between parts and
+  ellipsizes overlong parts (long `path=` params cut on the right). Kept the
+  style local to `projects_list/styles.css` (the report `common.css` is a
+  separate skin; a shared utility class can be extracted later if a second
+  consumer appears). Left the "Windows Explorer-style path truncation" idea in
+  the roadmap. Added `cmdletParts` tests.
+
 - Made the **RecordsFilter** component collapsible into a compact one-line
   header. It now starts **collapsed**: a clickable header
   (`.apqa-records-filter-header`) shows `▸ Filter` plus a summary of any active

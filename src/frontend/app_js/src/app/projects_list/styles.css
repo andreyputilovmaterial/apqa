@@ -64,8 +64,20 @@
 .apqa-cmdlet-chain {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;
-  word-break: break-all;
   min-width: 0;
+}
+
+/* Each cmdlet part (name or one argument) is a no-wrap unit. The chain wraps
+   between parts, never in the middle of a word; a part that is longer than the
+   available width (e.g. a long path param) is cut with an ellipsis on the
+   right. */
+.apqa-cmdlet-part {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .apqa-cmdlet-chain-pipe {
