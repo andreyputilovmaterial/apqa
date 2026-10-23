@@ -4,6 +4,18 @@
 
 ## Last state
 
+- Added a **compact QC-rule representation** alongside the existing full view.
+  Decision: **two separate components**, not one parametrized component — the
+  full `app/projects_list/rule.js` stays as-is and a new
+  `app/projects_list/rule_compact.js` renders the compact view (one description
+  line = name + optional comment, one definition line = left chain · comparison
+  op · right chain). Both reuse `cmdlet_chain.js` and `comparison.js`; compact
+  styles (`.apqa-rule-compact*`) were added to `styles.css` and covered by
+  `rule_compact.spec.js` (a `@vue/test-utils` mount test). **Default for future
+  rule-list panes is the compact view**; the current `projects_list` still uses
+  the full view until such a pane is built. Validated: 4 JS spec files (34 tests)
+  pass; `vite build` transforms 61 modules with no errors.
+
 - Removed the `enabled` field from QC rules (roadmap item). It was never a
   dedicated DB column — it lived in `meta` — but it is now gone from the model
   docs, the YAML/SQLite test fixtures, and the UI (`COLUMNS`, `toRecord`, the

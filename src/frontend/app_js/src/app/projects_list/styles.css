@@ -115,3 +115,52 @@
     gap: 12px;
   }
 }
+
+/* Compact QC-rule representation (rule_compact.js):
+   a single description line + a single definition line. */
+.apqa-rule-compact {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 10px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apqa-rule-compact-description {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.apqa-rule-compact-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.apqa-rule-compact-comment {
+  color: #888;
+}
+
+.apqa-rule-compact-comment::before {
+  content: "—";
+  margin: 0 6px;
+  color: #bbb;
+}
+
+.apqa-rule-compact-definition {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.apqa-rule-compact-definition .apqa-comparison {
+  align-self: baseline;
+}
+
