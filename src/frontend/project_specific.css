@@ -55,10 +55,10 @@ h1 {
 
 
 
-/* .gitgui-page-home .header {
+/* .apqaui-page-home .header {
   / * display: none; * /
 } */
-.gitgui-page-home h1 {
+.apqaui-page-home h1 {
   color: #678;
   font-size: 20px;
   font-weight: 500;
@@ -70,10 +70,9 @@ h1 {
   color: #666;
 }
 .banner-global-folder-props {
-  margin-top: -7px;
-  margin-bottom: -7px;
+  margin: 0;
 }
-.gitgui-html-page-header-outer .banner-global-folder-props p {
+.apqaui-html-page-header-outer .banner-global-folder-props p {
   margin-left: 0;
 }
 
@@ -90,42 +89,40 @@ h1 {
 
 
 
-.gitgui-html-page-header {
+.apqaui-html-page-header {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   width: 100%;
 }
-.gitgui-html-page-header .gitgui-html-pagename {
+.apqaui-html-page-header .apqaui-html-pagename {
   margin-right: auto;
-}
-.gitgui-html-page-header .gitgui-html-pagename {
   color: #888;
   font-weight: 100;
   font-size: 20px;
   padding-top: 20px;
   padding-bottom: 12px;
 }
-.gitgui-html-page-header .gitgui-html-page-navigation > ul {
+.apqaui-html-page-header .apqaui-html-page-navigation > ul {
   display: flex;
   flex-direction: row;
-  flex-wrap: true;
+  flex-wrap: wrap;
 }
-.gitgui-html-page-header .gitgui-html-page-navigation > ul, .gitgui-html-page-header .gitgui-html-page-navigation > ul > li {
+.apqaui-html-page-header .apqaui-html-page-navigation > ul, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li {
   margin: 0; padding: 0; list-style-type: none;
 }
-.gitgui-html-page-header .gitgui-html-page-navigation > ul > li {
+.apqaui-html-page-header .apqaui-html-page-navigation > ul > li {
   padding: .5em;
 }
-.gitgui-html-page-header .gitgui-html-page-navigation > ul > li a, .gitgui-html-page-header .gitgui-html-page-navigation > ul > li a:hover, .gitgui-html-page-header .gitgui-html-page-navigation > ul > li a:visited, .gitgui-html-page-header .gitgui-html-page-navigation > ul > li a:link, .gitgui-html-page-header .gitgui-html-page-navigation > ul > li a:active {
+.apqaui-html-page-header .apqaui-html-page-navigation > ul > li a, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:hover, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:visited, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:link, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:active {
   color: #6670bb;
   text-decoration: none;
   transition: all 600ms ease;
 }
-.gitgui-html-page-header .gitgui-html-page-navigation > ul > li a:hover {
+.apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:hover {
   color: #385;
 }
-.gitgui-page-home .gitgui-html-page-header .gitgui-html-page-navigation [navigation-role="home"] {
+.apqaui-page-home .apqaui-html-page-header .apqaui-html-page-navigation [navigation-role="home"] {
   display: none;
 }
 
@@ -142,13 +139,13 @@ h1 {
 
 
 
-.gitgui-page-header-narrow .header, .main {
+.apqaui-page-header-narrow .header, .main {
   padding: 0 0;
 }
-.gitgui-page-header-narrow .section.section-h1 {
+.apqaui-page-header-narrow .section.section-h1 {
   margin-bottom: 0;
 }
-.gitgui-page-header-narrow .header .gitgui-html-pagename {
+.apqaui-page-header-narrow .header .apqaui-html-pagename {
   padding: .5em;
   padding-left: 0;
   margin: 0;
@@ -157,16 +154,16 @@ h1 {
   font-weight: 500;
   color: rgba(66,66,66,.1)
 }
-.gitgui-page-header-narrow .gitgui-html-page-header .gitgui-html-page-navigation > ul {
+.apqaui-page-header-narrow .apqaui-html-page-header .apqaui-html-page-navigation > ul {
   margin-right: -0.5em;
 }
-.gitgui-page-header-narrow .banner-global-folder-props p {
+.apqaui-page-header-narrow .banner-global-folder-props p {
   margin: 3px 0 3px;
 }
-.gitgui-page-header-narrow .banner-global-folder-props {
-  padding-bottom: 4px;
+.apqaui-page-header-narrow .banner-global-folder-props {
+  /* padding-bottom: 4px; */
 }
-.gitgui-page-header-narrow.gitgui-page-home h1 {
+.apqaui-page-header-narrow.apqaui-page-home h1 {
   margin: 0;
   padding: 6px 0 9px;
   color: #000;

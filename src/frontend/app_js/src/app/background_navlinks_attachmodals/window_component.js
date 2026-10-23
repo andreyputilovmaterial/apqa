@@ -3,7 +3,7 @@
 import { ref, reactive, onMounted } from 'vue';
 
 import safetyUrlCheck from './safetycheck';
-import logError from '../../common_components/_log_error_proxy';
+import logError from '@/common_components/_log_error_proxy';
 
 
 const Window = {
@@ -13,15 +13,15 @@ const Window = {
     'url',
   ],
   template: `
-<div class="gitgui-ajax-pageview-form gitgui-modal-form">
+<div class="apqa-ajax-pageview-form apqa-modal-form">
   <form  @submit.prevent="handleSubmit" :class="\`mdmreport-controls \${isBusy ? 'mdmreport-form-busy' : ''}\`">
-    <fieldset class="mdmreport-controls">
-      <div class="gitgui-fetched-content">
-        <div class="error" style="color: #990000;">{{ error }}</div>
-        <iframe :srcdoc="content" :key="\`fetch-\${lastFetchCounter}\`"></iframe>
-      </div>
-      <div><input type="submit" value="Close" class="gitgui-button-close"></input></div>
-    </fieldset>
+    <div class="apqa-fetched-content">
+      <div class="error" v-if="error">{{ error }}</div>
+      <iframe :srcdoc="content" :key="\`fetch-\${lastFetchCounter}\`"></iframe>
+    </div>
+    <div class="apqa-modal-actions">
+      <input type="submit" value="Close" class="apqa-button-close">
+    </div>
   </form>
 </div>
 `,

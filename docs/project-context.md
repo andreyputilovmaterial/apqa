@@ -4,6 +4,34 @@
 
 ## Last state
 
+- Fixed the blank bundle version. `build.sh` generated `src/GENERATED/VERSION.py` via
+  plain `git describe`, which emitted nothing when no annotated tag was reachable from
+  HEAD (and silently swallowed the failure because the pipeline had no `pipefail`).
+  Now it uses `git describe --tags --long --always --dirty`: `--tags` also matches
+  lightweight tags, `--long` always prints the commit-count + short hash (even when
+  exactly on a tag), `--always` falls back to the bare commit hash when there are no
+  tags, and `--dirty` appends `-dirty` when the working tree differs from the commit.
+  A non-git / no-tags fallback of `unknown` is set explicitly so `_VERSION` is never
+  empty. `git fetch --tags || true` was already present.
+
+- Fixed `header.header` rendering shorter than its `.container` child (its bottom
+  border was cutting into the navbar's bottom padding). Cause: the always-empty
+  `.banner-global-folder-props` placeholder had `margin-top: -7px; margin-bottom: -7px`,
+  which made the header's flex-basis (auto/content size) compute ~6px smaller than the
+  actually-rendered content. Changed it to `margin: 0`; the header now wraps its
+  content (37.5px instead of 23.5px) and leaves proper space below the navbar links.
+
+- Addressed the "Format navbar links" roadmap item. In `src/frontend/project_specific.css`
+  the navbar rules were moved from the stale `gitgui-*` classnames to the real
+  `apqaui-*` markup classes (right-aligned links via `margin-right: auto` on the page
+  name, `list-style-type: none`, and fixed the invalid `flex-wrap: true` → `wrap`).
+  Fixed the in-page popup layer in `src/frontend/app_js`:
+  `app/background_navlinks_attachmodals/window_component.js` now uses `apqa-*` classes
+  (matching `common_components/modals/styles.css`), and the modal was made to fill most
+  of the viewport (`top`/`bottom: 24px`, flex column) with a scrollable content iframe
+  and a pinned Close button — so an embedded page scrolls inside the popup while the
+  fixed backdrop still lets the page behind scroll.
+
 - Consolidated the report CSS into a single `src/frontend/template/templates/common.css`
   by adopting the updated `gitgui` version, which already merges the old
   `common.css` + `common_tables.css` into one file (adds a `:root` token scale,

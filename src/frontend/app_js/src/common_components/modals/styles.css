@@ -27,21 +27,27 @@
   container-type: inline-size;
 }
 .mdm-ui-modals-site .mdm-git-ui-modal-wrapper {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: fixed;
   background: #ffffff;
   border: 1px solid #dddddd;
   border-radius: 17px;
   z-index: 1001;
   left: 50%;
-  top: 56px;
+  top: 24px;
+  bottom: 24px;
   width: 92%;
   transform: translateX(-50%);
   padding: 15px;
-  container-type: inline-size;
+  box-sizing: border-box;
 }
-.mdm-ui-modals-site .mdm-git-ui-modal-wrapper  iframe {
-  margin: -4px -15px 0 -15px;
+.mdm-ui-modals-site .mdm-git-ui-modal-wrapper .mdm-git-ui-modal-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 @media all and (min-width: 1300px) {
     .mdm-ui-modals-site .mdm-git-ui-modal-wrapper {
@@ -86,8 +92,38 @@
 
 
 
+.apqa-modal-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.apqa-modal-form > form.mdmreport-controls {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
 .apqa-modal-form .apqa-fetched-content {
-  min-height: 300px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.apqa-modal-form .apqa-fetched-content iframe {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  border: none;
+  margin: 0;
+}
+.apqa-modal-form .apqa-modal-actions {
+  flex: 0 0 auto;
+  padding-top: 10px;
 }
 .apqa-modal-form .apqa-button-close {
   display: block;

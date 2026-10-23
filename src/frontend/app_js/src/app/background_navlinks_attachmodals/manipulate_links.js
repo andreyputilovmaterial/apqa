@@ -8,7 +8,7 @@ import { createModal } from '../../common_components/modals/modals';
 
 
 const LinksSiteComponent = {
-  template: `<span class="gitgui-navlinks-manipulate-component"></span>`, // empty is raising warning
+  template: `<span class="apqa-navlinks-manipulate-component"></span>`, // empty is raising warning
   setup() {
 
     const init = () => {
