@@ -40,7 +40,7 @@
     --mdm-border-radius: 4px;
     --mdm-transition: 350ms ease;
 
-    --mdm-color-primary: #6670bb;
+    --mdm-color-primary: #385;
     --mdm-color-confirm: #2c7d51;
     --mdm-color-reject: #c0392b;
     --mdm-color-muted: #666;
@@ -255,8 +255,8 @@ ol > li {
 }
 .mdm-btn-primary:hover,
 .mdm-btn-primary:focus {
-    background: #5560a8;
-    border-color: #5560a8;
+    background: #217346;
+    border-color: #217346;
     color: #fff;
 }
 
@@ -316,7 +316,7 @@ ol > li {
     text-decoration: none;
 }
 .mdm-btn-link:hover {
-    color: #385;
+    color: #217346;
     text-decoration: underline;
 }
 

@@ -85,7 +85,7 @@
   line-height: 14px;
   text-align: center;
   cursor: pointer;
-  color: #6670bb;
+  color: #385;
   -webkit-appearance: none;
   appearance: none;
   border: 1px solid #d0d0d0;
@@ -97,7 +97,7 @@
   transition: all 600ms ease;
 }
 .mdm-ui-pages-site .mdm-git-ui-page-wrapper .mdm-git-ui-page-dismiss:hover {
-  color: #7780cc;
+  color: #217346;
 }
 
 

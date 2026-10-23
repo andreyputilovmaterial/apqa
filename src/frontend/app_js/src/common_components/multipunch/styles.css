@@ -27,7 +27,7 @@
 
 .apqa-multipunch-trigger:focus-visible {
   outline: none;
-  border-color: #6670bb;
+  border-color: #385;
 }
 
 .apqa-multipunch-trigger-value {
@@ -44,7 +44,7 @@
 
 .apqa-multipunch-trigger-caret {
   flex: 0 0 auto;
-  color: #6670bb;
+  color: #385;
   font-size: 0.8rem;
   line-height: 1;
 }
@@ -78,13 +78,13 @@
 }
 
 .apqa-multipunch-option:hover {
-  background: #f0f1fb;
+  background: #eaf6ef;
 }
 
 .apqa-multipunch-option input {
   flex: 0 0 auto;
   margin: 0;
-  accent-color: #6670bb;
+  accent-color: #385;
 }
 
 .apqa-multipunch-option-label {

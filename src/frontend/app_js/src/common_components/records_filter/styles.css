@@ -29,7 +29,7 @@
 }
 
 .apqa-records-filter-header-toggle {
-  color: #6670bb;
+  color: #385;
   font-size: 0.8rem;
   line-height: 1;
 }
@@ -88,7 +88,7 @@
 .apqa-records-filter-field input:not([type="checkbox"]):not([type="radio"]):focus,
 .apqa-records-filter-field .apqa-records-filter-field-input:focus {
   outline: none;
-  border-color: #6670bb;
+  border-color: #385;
 }
 
 /* ~3 boxes fit -> 33% each (fills the row, aligned to the right edge). */
@@ -170,7 +170,7 @@
 }
 
 .apqa-records-filter-page.is-active {
-  border-color: #6670bb;
+  border-color: #385;
   border-width: 3px;
   padding: 0 4px;
 }

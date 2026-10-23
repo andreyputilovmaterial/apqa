@@ -115,12 +115,12 @@ h1 {
   padding: .5em;
 }
 .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:hover, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:visited, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:link, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:active {
-  color: #6670bb;
+  color: #385;
   text-decoration: none;
   transition: all 600ms ease;
 }
 .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:hover {
-  color: #385;
+  color: #217346;
 }
 .apqaui-page-home .apqaui-html-page-header .apqaui-html-page-navigation [navigation-role="home"] {
   display: none;

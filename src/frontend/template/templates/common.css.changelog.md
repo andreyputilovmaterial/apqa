@@ -6,5 +6,7 @@ order, with the date and a short reason for the change. See
 
 ## 2026-10-23
 
-- No changes recorded yet. This log was created to formalize the rule: modify
-  `common.css` only for genuinely global changes, and log every such change here.
+- Changed the primary color token `--mdm-color-primary` from purple `#6670bb`
+  to green `#385` (hover shade `#217346`) per user request. Global change: the
+  token feeds primary buttons, checked checkbox/radio states, and link-buttons,
+  so those now render green.

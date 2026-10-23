@@ -4,6 +4,18 @@
 
 ## Last state
 
+- Changed the UI primary color from purple `#6670bb` to green `#385`
+  (`#338855`), hover shade `#217346` (reusing `--mdm-color-green-hover`), and
+  light tint `#eaf6ef`. Updated `--mdm-color-primary` in `common.css` plus its
+  primary/link-button hover shades, and replaced every hardcoded `#6670bb`
+  (and its `#51599f`/`#5560a8`/`#7780cc`/`#f0f1fb` variants) in
+  `project_specific.css`, `qcrules_list`, `records_filter`, `multipunch`, and
+  `pages` styles. Regenerated the frontend `GENERATED/` assets
+  (`build_templates.py --resource common_css/projectspecific_css/app_js`) and
+  verified no purple remains in the bundle. Left the periwinkle accent family
+  (`#6c78ff`/`#4d56cc` links, `#6a77ff` spinner, `#7067ff` legacy pagination)
+  unchanged — a distinct blue accent, not the purple primary.
+
 - Implemented "Reformat the page with qc rules" (roadmap item). Added project-level
   **definitions (aliases)** stored in the same DB file as rules: a `Definition`
   dataclass (`src/db_processors/definition_base.py`) with `name`/`value`/`meta`,
