@@ -251,7 +251,7 @@ from src import tstsuite
 tst_load_error = None
 tst_cases = []
 try:
-    tst_cases = [ t for t in tstsuite.load_cases() ]
+    tst_cases = [ t for t in tstsuite.load_case_params() ]
 except Exception as e:
     tst_load_error = e
 

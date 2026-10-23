@@ -18,8 +18,8 @@ APQA runs in two ways:
    served from `localhost`) where you add, edit, rename, and delete rules. Changes
    are saved to the project's rules database file.
 2. **Run the QC tests.** The same program is invoked through `pytest`, which
-   executes every enabled rule against the source data and reports which rules
-   passed and which failed.
+   executes every rule against the source data and reports which rules passed
+   and which failed.
 
 ## Quick start
 

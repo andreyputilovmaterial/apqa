@@ -10,7 +10,6 @@ import './styles.css';
 const COLUMNS = {
   name: { label: 'Name', type: 'text' },
   op: { label: 'Operator', type: 'text' },
-  enabled: { label: 'Enabled', type: 'text' },
   comment: { label: 'Comment', type: 'text' },
   tags: { label: 'Tags', type: 'text' },
   created_at: { label: 'Created', type: 'text' },
@@ -19,12 +18,10 @@ const COLUMNS = {
 
 function toRecord(rule) {
   const meta = rule.meta || {};
-  const enabled = meta.enabled === true ? 'yes' : (meta.enabled === false ? 'no' : '');
   return {
     id: rule.name,
     name: rule.name,
     op: rule.op || '',
-    enabled,
     comment: meta.comment || '',
     tags: Array.isArray(meta.tags) ? meta.tags.join(', ') : '',
     created_at: meta.created_at || '',

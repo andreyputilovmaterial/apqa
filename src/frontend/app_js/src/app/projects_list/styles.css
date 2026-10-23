@@ -45,19 +45,6 @@
   color: #333;
 }
 
-.apqa-projects-list-item-enabled {
-  font-size: 0.8rem;
-  padding: 1px 7px;
-  border-radius: 10px;
-  background: #e6f4e6;
-  color: #1a7f37;
-}
-
-.apqa-projects-list-item-enabled.is-disabled {
-  background: #eee;
-  color: #888;
-}
-
 .apqa-projects-list-item-comment {
   margin-top: -4px;
   color: #888;

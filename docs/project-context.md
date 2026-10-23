@@ -4,6 +4,17 @@
 
 ## Last state
 
+- Removed the `enabled` field from QC rules (roadmap item). It was never a
+  dedicated DB column — it lived in `meta` — but it is now gone from the model
+  docs, the YAML/SQLite test fixtures, and the UI (`COLUMNS`, `toRecord`, the
+  "enabled/disabled" badge, and its CSS). Disabling a rule is now expressed as a
+  pytest modifier in `meta.markers`: `skip` means "do not run". Added
+  `src/tstsuite.py` helpers `markers_for`, `pytest_param_for`, and
+  `load_case_params` so the bundle's parametrized entry point maps
+  `skip`→`pytest.mark.skip` and `xfail`→`pytest.mark.xfail` (strict=False); the
+  bundle's `build.sh` appended code now uses `load_case_params()`. Added
+  `tests/test_tstsuite.py`; full suite 63 passed, JS suite 6 passed.
+
 - Decided the frontend canonical date type and fixed the datetime-range
   comparison. Added a `.clinerules/06-dates-and-time.md` rule: inside
   `src/frontend/app_js`, dates/timestamps are native `Date` objects (built with
@@ -94,7 +105,7 @@
 - Implemented the **UI "projects list"** in `src/frontend/app_js`: the list of QC
   rules (the home page is literally "Manage QC rule list"; here "projects" == the
   QC-rule records). `app/projects_list/index.js` fetches `GET /qcrules` and
-  flattens each rule into a filterable record (`name`, `op`, `enabled`, `comment`,
+  flattens each rule into a filterable record (`name`, `op`, `comment`,
   `tags`, `created_at`, `modified_at`, plus raw `left`/`right` cmdlet arrays).
 - Refactored the rule rendering into modular components under `app/projects_list/`:
   `rule.js` (Rule), `cmdlet_chain.js` (CmdletChain), `cmdlet.js` (Cmdlet, with a

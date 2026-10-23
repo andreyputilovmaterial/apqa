@@ -18,7 +18,7 @@ from src.db_processors.rule_base import Rule
 
 SAMPLE = {
     "name": "wave69-counts-equal-9002",
-    "meta": {"enabled": True, "tags": ["counts", "wave69"], "markers": []},
+    "meta": {"tags": ["counts", "wave69"], "markers": []},
     "left": [
         {"cmdlet": "get-content", "args": {"path": "/path/to/specs.sav"}},
         {"cmdlet": "count"},
@@ -69,7 +69,7 @@ def test_load_rules(dbfile):
     rule = dbfile.get_rule("wave69-counts-equal-9002")
     assert isinstance(rule, Rule)
     assert rule.op == "eq"
-    assert rule.meta["enabled"] is True
+    assert rule.meta["tags"] == ["counts", "wave69"]
     assert len(rule.left) == 2
     assert rule.left[0]["cmdlet"] == "get-content"
 

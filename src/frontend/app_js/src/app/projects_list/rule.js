@@ -15,11 +15,6 @@ const Rule = {
 <li class="apqa-projects-list-item" :class="record._filterMeta.cssClasses">
   <div class="apqa-projects-list-item-head">
     <span class="apqa-projects-list-item-name">{{ record.name }}</span>
-    <span
-      v-if="record.enabled"
-      class="apqa-projects-list-item-enabled"
-      :class="{ 'is-disabled': record.enabled === 'no' }"
-    >{{ record.enabled === 'yes' ? 'enabled' : 'disabled' }}</span>
   </div>
   <div v-if="record.comment" class="apqa-projects-list-item-comment">{{ record.comment }}</div>
   <div class="apqa-projects-list-item-definition">

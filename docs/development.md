@@ -16,7 +16,7 @@ rules** for a research project. It has two run modes:
 1. **Desktop app (edit rules)** — a Python backend + Vue frontend served from
    `localhost` (`--program ui --db-file <path>`).
 2. **Run the QC rules** — the program is invoked through `pytest`, which runs every
-   enabled rule against the source data and reports pass/fail.
+   rule against the source data and reports pass/fail.
 
 The project is selected by pointing the program at a **rules database file**
 (SQLite by default; YAML also supported): `--db-file` in the desktop app, or the
@@ -163,8 +163,8 @@ A QC rule has three essential parts: **left side**, **comparison op**, **right s
 - Stored shape of a cmdlet: `{ cmdlet: <name>, args: { <param>: <value>, ... } }`.
   `args` is always a named mapping (flags like `-Recurse` become `{ recurse: true }`)
   and may be omitted when empty.
-- Stored shape of a rule: `name` (unique), `meta` (extensible: `enabled`,
-  `created_by`, `created_at`, `modified_at`, `comment`, `tags`, `markers`, …),
+- Stored shape of a rule: `name` (unique), `meta` (extensible: `created_by`,
+  `created_at`, `modified_at`, `comment`, `tags`, `markers`, …),
   `left` (list of cmdlets), `op` (string), `right` (list of cmdlets).
 - `op` is a registered comparison op name, always scalar vs scalar
   (e.g. `eq`, `lt`, `gt`, `contains`).
@@ -190,7 +190,8 @@ collection of uniform objects, tuple) are still being finalized.
 `false`.
 
 The same design principles apply to the DB storage format, the UI, and what flows
-through the pipe. Rules may carry pytest modifiers (e.g. `xfail`) in `meta.markers`.
+through the pipe. Rules may carry pytest modifiers in `meta.markers`: `skip`
+(do not run) and `xfail` (a failure is expected and treated as normal).
 
 ### Rules database storage
 

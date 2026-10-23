@@ -13,7 +13,9 @@ class Rule:
 
     ``op`` is the name of a registered comparison op (always scalar vs scalar).
     ``meta`` is an extensible bag of descriptive fields
-    (enabled, created_by, created_at, tags, markers, ...).
+    (created_by, created_at, comment, tags, markers, ...). ``meta.markers`` may
+    carry pytest modifiers: ``skip`` (do not run the rule) or ``xfail``
+    (a failure is expected and treated as normal).
 
     Only ``name`` is strictly required; the other fields default to empty values
     so that a rule can be created incrementally in the ui. Validation of the

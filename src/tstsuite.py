@@ -35,3 +35,27 @@ def run_tst_case(rule):
     return None
 
 
+def markers_for(rule):
+    meta = getattr(rule, 'meta', None) or {}
+    markers = meta.get('markers') or []
+    if isinstance(markers, str):
+        markers = [markers]
+    return [f'{marker}' for marker in markers]
+
+
+def pytest_param_for(rule):
+    import pytest
+    markers = markers_for(rule)
+    marks = []
+    if 'skip' in markers:
+        marks.append(pytest.mark.skip(reason="rule marked 'skip'"))
+    if 'xfail' in markers:
+        marks.append(pytest.mark.xfail(reason="rule marked 'xfail'", strict=False))
+    return pytest.param(rule, id=rule.name, marks=marks)
+
+
+def load_case_params(resource_path=None) -> Iterable:
+    for rule in load_cases(resource_path):
+        yield pytest_param_for(rule)
+
+

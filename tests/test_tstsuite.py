@@ -1,0 +1,58 @@
+"""Tests for the QC-rule pytest entry-point helpers."""
+
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.db_processors.rule_base import Rule
+from src.tstsuite import load_case_params, markers_for, pytest_param_for
+
+
+def _rule(markers):
+    return Rule(name='r', meta={'markers': markers})
+
+
+def test_markers_for_normalizes_values():
+    assert markers_for(_rule(['skip'])) == ['skip']
+    assert markers_for(_rule('xfail')) == ['xfail']
+    assert markers_for(_rule([])) == []
+    assert markers_for(_rule(None)) == []
+
+
+def test_skip_marker_becomes_skip_mark():
+    param = pytest_param_for(_rule(['skip']))
+    assert param.id == 'r'
+    assert any(m.name == 'skip' for m in param.marks)
+
+
+def test_xfail_marker_becomes_xfail_mark():
+    param = pytest_param_for(_rule(['xfail']))
+    assert any(m.name == 'xfail' for m in param.marks)
+
+
+def test_no_markers_produce_no_marks():
+    param = pytest_param_for(_rule([]))
+    assert list(param.marks) == []
+
+
+def test_load_case_params_from_yaml(tmp_path):
+    db_file = tmp_path / 'projects.yaml'
+    db_file.write_text(
+        '\n'.join([
+            '- name: skip-rule',
+            '  meta:',
+            '    markers: [skip]',
+            '- name: normal-rule',
+        ]),
+        encoding='utf-8',
+    )
+
+    params = list(load_case_params(str(db_file)))
+
+    assert [p.id for p in params] == ['skip-rule', 'normal-rule']
+    assert any(m.name == 'skip' for m in params[0].marks)
+    assert list(params[1].marks) == []
+

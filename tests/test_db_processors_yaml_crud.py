@@ -16,7 +16,6 @@ from src.db_processors.rule_base import Rule
 SAMPLE = """\
 - name: wave69-counts-equal-9002
   meta:
-    enabled: true
     tags: [counts, wave69]
     markers: []
   left:
@@ -45,7 +44,7 @@ def test_load_rules(dbfile):
     rule = dbfile.get_rule("wave69-counts-equal-9002")
     assert isinstance(rule, Rule)
     assert rule.op == "eq"
-    assert rule.meta["enabled"] is True
+    assert rule.meta["tags"] == ["counts", "wave69"]
     assert len(rule.left) == 2
     assert rule.left[0]["cmdlet"] == "get-content"
 
@@ -145,4 +144,4 @@ def test_rule_to_dict(dbfile):
     rule = dbfile.get_rule("wave69-counts-equal-9002")
     d = rule.to_dict()
     assert d["name"] == "wave69-counts-equal-9002"
-    assert d["meta"]["enabled"] is True
+    assert d["meta"]["tags"] == ["counts", "wave69"]
