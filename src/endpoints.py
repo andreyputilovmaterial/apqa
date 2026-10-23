@@ -9,6 +9,7 @@ from .frontend.endpoints import (
     render_page_test,
     renderer_assets,
     handle_rule_crud,
+    handle_functionality,
 )
 
 
@@ -21,6 +22,7 @@ endpoints = {
     '/help': render_page_help,
     '/testpage': render_page_test,
     re.compile(r'^/qcrules(?=$|/)'): handle_rule_crud,
+    re.compile(r'^/functionality(?=$|/)'): handle_functionality,
 
     re.compile('^/assets/.*'): renderer_assets,
 }

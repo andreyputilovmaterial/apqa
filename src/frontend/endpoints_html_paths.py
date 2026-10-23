@@ -220,12 +220,12 @@ try {
         target.append(style);
     }
     async function fetchHelpPage() {
-        const response = await fetch('/functionality/config');
+        const response = await fetch('/functionality/help-pages');
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        const config = await response.json();
-        return config.help_pages;
+        const payload = await response.json();
+        return payload.help_pages;
     };
     const promisePageReady = new Promise((resolve,reject) => {
         document.addEventListener("DOMContentLoaded", () => {

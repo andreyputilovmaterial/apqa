@@ -50,6 +50,10 @@ STDOUT_COLOR_GREEN = "\033[32m"
 
 
 
+def get_help_pages():
+    return help_md
+
+
 def main(*argcs,**kwargs):
     time_start = datetime.now(timezone.utc)
     script_name = 'apqa ui script'
@@ -74,8 +78,6 @@ def main(*argcs,**kwargs):
         'credentials:name': credentials_str,
         'credentials:version': script_version,
 
-        'help_pages': help_md,
-
         'db_file': None,
 
         'http_host': None,
@@ -93,6 +95,7 @@ def main(*argcs,**kwargs):
             'WebResponse': WebResponse,
             'HTTP403': HTTP403,
             'HTTP404': HTTP404,
+            'get_help_pages': get_help_pages,
         },
     }
 

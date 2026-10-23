@@ -4,6 +4,17 @@
 
 ## Last state
 
+- Added `/functionality/...` endpoints in a new `src/frontend/endpoints_functionality.py`
+  (`handle_functionality`, registered as `re.compile(r'^/functionality(?=$|/)')`).
+  `GET /functionality/config` returns the root config as JSON with `iface` dropped
+  (callables/classes/DBFile handle are not meant for JSON) and datetimes ISO-ified via
+  the existing `JSONEncoder` (UTC-aware `time_start` → `...+00:00`). Help text is no
+  longer part of the config: `main_ui_program.py` now exposes `get_help_pages()` in
+  `config['iface']` (a callback closing over the already-imported `help_md`), served by
+  `GET /functionality/help-pages` as `{"help_pages": <md>}`. `render_page_help` (`/help`)
+  now fetches `/functionality/help-pages` instead of reading `config.help_pages`. Added
+  `tests/test_endpoints_functionality.py`; full suite 58 passed.
+
 - Fixed the blank bundle version. `build.sh` generated `src/GENERATED/VERSION.py` via
   plain `git describe`, which emitted nothing when no annotated tag was reachable from
   HEAD (and silently swallowed the failure because the pipeline had no `pipefail`).

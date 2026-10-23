@@ -12,3 +12,6 @@ from .endpoints_assets_delivery_path import (
 from .endpoints_rule_crud import (
     handle_rule_crud,
 )
+from .endpoints_functionality import (
+    handle_functionality,
+)
