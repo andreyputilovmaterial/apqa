@@ -55,11 +55,13 @@ class Rule:
         return cls(name=name, meta=meta, left=left, op=op, right=right)
 
     def run(self):
-        """Execution entry point.
+        """Run this rule and return ``True``/``False``.
 
-        Implemented once the cmdlet registry and comparison ops are in place.
+        Delegates to the single top-level runner so that the "run QC tests" mode
+        and the UI both execute rules through the exact same code path.
         """
-        raise NotImplementedError('rule execution is not implemented yet')
+        from ..rule_runner import run_rule
+        return run_rule(self.to_dict())
 
     def update(self, **changes):
         unknown = set(changes) - {f.name for f in fields(self)}

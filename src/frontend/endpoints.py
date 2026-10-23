@@ -15,3 +15,6 @@ from .endpoints_rule_crud import (
 from .endpoints_functionality import (
     handle_functionality,
 )
+from .endpoints_rule_run import (
+    handle_rule_run,
+)

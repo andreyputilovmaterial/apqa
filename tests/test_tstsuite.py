@@ -7,8 +7,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import pytest
+
 from src.db_processors.rule_base import Rule
-from src.tstsuite import load_case_params, markers_for, pytest_param_for
+from src.tstsuite import load_case_params, markers_for, pytest_param_for, run_tst_case
 
 
 def _rule(markers):
@@ -36,6 +38,21 @@ def test_xfail_marker_becomes_xfail_mark():
 def test_no_markers_produce_no_marks():
     param = pytest_param_for(_rule([]))
     assert list(param.marks) == []
+
+
+def _lit(value):
+    return {'cmdlet': 'literal', 'args': {'value': value}}
+
+
+def test_run_tst_case_passes_on_true():
+    rule = Rule(name='r', left=[_lit(1)], op='eq', right=[_lit(1)])
+    assert run_tst_case(rule) is None
+
+
+def test_run_tst_case_fails_on_false():
+    rule = Rule(name='r', left=[_lit(1)], op='eq', right=[_lit(2)])
+    with pytest.raises(AssertionError):
+        run_tst_case(rule)
 
 
 def test_load_case_params_from_yaml(tmp_path):

@@ -4,6 +4,22 @@
 
 ## Last state
 
+- Implemented the "Tests runner" (roadmap item). Added a global cmdlet registry
+  package `src/cmdlets/` (`registry.py` + `sysmissing.py` sentinel +
+  `builtin_cmdlets.py` with `literal`/`count` + `comparison_ops.py` with
+  `eq`/`ne`/`lt`/`le`/`gt`/`ge`/`contains`), and a single top-level runner
+  `src/rule_runner.py` (`run_rule(rule) -> bool`): runs the `left` chain, the
+  `right` chain, then the comparison `op`; returns `False` on a false comparison
+  and raises on any error. Wired `Rule.run()` to delegate to it (single source of
+  truth), made `tstsuite.run_tst_case` raise `AssertionError` on a false result,
+  exposed `run_rule` on `config.iface` in `main_ui_program.py`, and added a
+  `POST /functionality/run-rule` endpoint (`frontend/endpoints_rule_run.py`) that
+  runs arbitrary rule JSON (deliberately outside the `/qcrules/...` DB-resource
+  namespace) and returns a 4xx + the exception message on error. Created
+  `docs/cmdlet-data-formats.md` — a draft spec of the cmdlet value type system
+  (scalars + `sysmissing` + block / named collection / loop-grid-array) to review
+  before building the full cmdlet set on top of it.
+
 - Renamed the frontend "projects list" (which is actually the QC-rule list) to
   `app/qcrules_list/`: directory, `QcRulesList` component, registration
   `component-qcrules-list`, and CSS classes `apqa-qcrules-list*` (previously
@@ -305,8 +321,12 @@
   decided (`Date` objects) and the range inputs/matchers now comply, so wiring
   `date`/`datetime` columns should just mean building record fields as `Date`
   objects in `qcrules_list/toRecord`.
-- Compound scalar types (object with named fields, collection, tuple) still being
-  finalized.
+- The cmdlet value type system is **not yet implemented** — the runner and
+  comparison ops work on plain Python values plus the `sysmissing` sentinel. A
+  draft spec lives in `docs/cmdlet-data-formats.md` (scalars, `sysmissing`,
+  block / named collection / loop-grid-array) and awaits review. The full cmdlet
+  set (source readers, `select-*`, `map`, `to-string`, …) will be built on top of
+  it once aligned — the current built-ins are only `literal` and `count`.
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.
   Decide whether SQLite should auto-create a missing file instead of requiring it
   to exist (currently it matches YAML's fail-early behavior).

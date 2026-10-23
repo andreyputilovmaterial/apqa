@@ -31,7 +31,9 @@ def load_cases(resource_path=None) -> Iterable:
 
 
 def run_tst_case(rule):
-    rule.run()
+    result = rule.run()
+    if result is not True:
+        raise AssertionError(f'QC rule failed: {rule.name} (result: {result})')
     return None
 
 
