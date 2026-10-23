@@ -4,6 +4,18 @@
 
 ## Last state
 
+- Finalized the cmdlet data-format spec (`docs/cmdlet-data-formats.md`): named the
+  compound type **array** (was "loop/grid/array"), chose shape-agnostic cmdlet
+  names mirroring PowerShell (`select-property`, `select-properties`,
+  `select-item`, `where`, `map`), defined comparison semantics (bool ≠ number,
+  numeric text coerces: `"0" == 0` → true, `None`/sysmissing rules), and defined
+  missing/duplicate-name rules (provisional names; `state`, `state_2`, … dedup).
+  Changed `sysmissing` to be represented as Python `None` (`sysmissing = None`,
+  `is_sysmissing(v) := v is None`) and rewrote `comparison_ops.py` to be
+  type-strict per the spec (bool distinct from numbers, int/float unify, numeric
+  text coerces, ordering/contains with `None` → false, date/time compared
+  timezone-aware).
+
 - Implemented the "Tests runner" (roadmap item). Added a global cmdlet registry
   package `src/cmdlets/` (`registry.py` + `sysmissing.py` sentinel +
   `builtin_cmdlets.py` with `literal`/`count` + `comparison_ops.py` with
@@ -321,12 +333,13 @@
   decided (`Date` objects) and the range inputs/matchers now comply, so wiring
   `date`/`datetime` columns should just mean building record fields as `Date`
   objects in `qcrules_list/toRecord`.
-- The cmdlet value type system is **not yet implemented** — the runner and
-  comparison ops work on plain Python values plus the `sysmissing` sentinel. A
-  draft spec lives in `docs/cmdlet-data-formats.md` (scalars, `sysmissing`,
-  block / named collection / loop-grid-array) and awaits review. The full cmdlet
-  set (source readers, `select-*`, `map`, `to-string`, …) will be built on top of
-  it once aligned — the current built-ins are only `literal` and `count`.
+- The cmdlet value-type *objects* (categoricals, and the block / named collection
+  / array wrappers) are still **not implemented** — until then, the plain-Python
+  rules in `docs/cmdlet-data-formats.md` apply (`None` for `sysmissing`, `dict`
+  for block, `list` for array). Remaining to build: typed value objects, source
+  readers (`get-content`), and the full cmdlet set (`select-property`,
+  `select-properties`, `select-item`, `where`, `map`, `to-string`, …). Current
+  built-ins are only `literal` and `count`.
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.
   Decide whether SQLite should auto-create a missing file instead of requiring it
   to exist (currently it matches YAML's fail-early behavior).
