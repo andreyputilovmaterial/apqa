@@ -6,6 +6,7 @@ import {
   matchValue,
   compareValues,
   matchesRecord,
+  summarizeFilters,
 } from './matchers.js'
 
 describe('matchText', () => {
@@ -159,5 +160,65 @@ describe('matchesRecord (filter combinations)', () => {
     expect(
       matchesRecord(record, { ...blank, name: 'alps', year: { from: 2026 } }, columns)
     ).toBe(false)
+  })
+})
+
+describe('summarizeFilters', () => {
+  const columns = {
+    name: { label: 'Name', type: 'text' },
+    place: { label: 'Place', type: 'text' },
+    year: { label: 'Year', type: 'number' },
+    eventDate: { label: 'Event date', type: 'date' },
+  }
+
+  it('returns an empty list when every filter is blank', () => {
+    expect(summarizeFilters({ name: '', place: '  ', year: '', eventDate: '' }, columns)).toEqual([])
+    expect(summarizeFilters({ name: '', place: '', year: null, eventDate: {} }, columns)).toEqual([])
+  })
+
+  it('summarizes text filters by trimming the entered value', () => {
+    expect(summarizeFilters({ name: 'alps', place: '', year: '', eventDate: '' }, columns)).toEqual(['Name: alps'])
+    expect(summarizeFilters({ name: '', place: '  swiss  ', year: '', eventDate: '' }, columns)).toEqual(['Place: swiss'])
+  })
+
+  it('summarizes a numeric range with both endpoints', () => {
+    expect(summarizeFilters({ name: '', place: '', year: { from: 2020, to: 2025 }, eventDate: '' }, columns)).toEqual([
+      'Year: 2020..2025',
+    ])
+  })
+
+  it('summarizes a one-sided numeric range', () => {
+    expect(summarizeFilters({ name: '', place: '', year: { from: 2020, to: null }, eventDate: '' }, columns)).toEqual([
+      'Year: ≥ 2020',
+    ])
+    expect(summarizeFilters({ name: '', place: '', year: { from: null, to: 2025 }, eventDate: '' }, columns)).toEqual([
+      'Year: ≤ 2025',
+    ])
+  })
+
+  it('summarizes a date range using local Date objects', () => {
+    const from = new Date(2024, 0, 1)
+    const to = new Date(2024, 11, 31)
+    expect(summarizeFilters({ name: '', place: '', year: '', eventDate: { from, to } }, columns)).toEqual([
+      'Event date: 2024-01-01..2024-12-31',
+    ])
+  })
+
+  it('summarizes a one-sided date range', () => {
+    const from = new Date(2024, 0, 1)
+    expect(summarizeFilters({ name: '', place: '', year: '', eventDate: { from, to: null } }, columns)).toEqual([
+      'Event date: ≥ 2024-01-01',
+    ])
+  })
+
+  it('lists several active filters in column order', () => {
+    expect(
+      summarizeFilters({ name: 'alps', place: '', year: { from: 2020 }, eventDate: { to: new Date(2024, 11, 31) } }, columns)
+    ).toEqual(['Name: alps', 'Year: ≥ 2020', 'Event date: ≤ 2024-12-31'])
+  })
+
+  it('uses the key as a fallback label when no label is given', () => {
+    const noLabel = { name: { type: 'text' } }
+    expect(summarizeFilters({ name: 'x' }, noLabel)).toEqual(['name: x'])
   })
 })

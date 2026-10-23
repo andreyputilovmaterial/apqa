@@ -4,6 +4,20 @@
 
 ## Last state
 
+- Made the **RecordsFilter** component collapsible into a compact one-line
+  header. It now starts **collapsed**: a clickable header
+  (`.apqa-records-filter-header`) shows `▸ Filter` plus a summary of any active
+  filters (e.g. `Name: alps · Year: 2020..2025`) in both collapsed and expanded
+  states; clicking it expands the full
+  filter boxes + sort/pagination toolbar (left visually unchanged) and clicking
+  again collapses. Added a pure `summarizeFilters(filters, columns)` helper to
+  `matchers.js` (text → trimmed value; number/date/datetime ranges →
+  `from..to` / `≥ from` / `≤ to` with local `Date` formatting). Added
+  `records_filter/index.spec.js` (component toggle + summary) and extended
+  `matchers.spec.js`. Removed the now-done roadmap item. Validated: 45 project
+  JS tests pass; `vite build` transforms 61 modules with no errors. (The 4
+  failing `src/lib/myers-diff` suites are pre-existing and unrelated.)
+
 - Added a **compact QC-rule representation** alongside the existing full view.
   Decision: **two separate components**, not one parametrized component — the
   full `app/projects_list/rule.js` stays as-is and a new

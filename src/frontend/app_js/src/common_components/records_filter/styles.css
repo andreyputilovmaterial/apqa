@@ -5,6 +5,51 @@
   gap: 10px;
 }
 
+/* Collapsible header: one line, expands/collapses the filter form + toolbar. */
+.apqa-records-filter-header {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.apqa-records-filter-header:hover {
+  border-color: #999;
+}
+
+.apqa-records-filter-header-toggle {
+  color: #6670bb;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.apqa-records-filter-header-label {
+  font-weight: 600;
+}
+
+.apqa-records-filter-header-summary {
+  color: #666;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.apqa-records-filter-header-summary::before {
+  content: "—";
+  margin-right: 6px;
+  color: #bbb;
+}
+
 .apqa-records-filter-fields {
   display: flex;
   flex-wrap: wrap;

@@ -63,3 +63,60 @@ export function matchesRecord(record, filters, columns) {
     matchValue(record[key], filters[key], columns[key]?.type || 'text')
   )
 }
+
+// ---- Compact filter summary -------------------------------------------------
+// Used by RecordsFilter's collapsed one-line header. Kept here (rather than in
+// the component) so it stays free of Vue and can be unit-tested alongside the
+// matchers.
+
+const pad2 = (n) => String(n).padStart(2, '0')
+
+function formatDateEndpoint(value) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function formatDateTimeEndpoint(value) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return `${formatDateEndpoint(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+}
+
+function formatRangeEndpoint(value, type) {
+  if (type === 'number') return String(value)
+  return type === 'datetime' ? formatDateTimeEndpoint(value) : formatDateEndpoint(value)
+}
+
+function summarizeRangeValue(value, type) {
+  if (!value || typeof value !== 'object') return ''
+  const hasFrom = !isEmpty(value.from)
+  const hasTo = !isEmpty(value.to)
+  if (!hasFrom && !hasTo) return ''
+  const fromText = hasFrom ? formatRangeEndpoint(value.from, type) : ''
+  const toText = hasTo ? formatRangeEndpoint(value.to, type) : ''
+  if (hasFrom && hasTo) return `${fromText}..${toText}`
+  if (hasFrom) return `≥ ${fromText}`
+  return `≤ ${toText}`
+}
+
+function summarizeFilterValue(value, type) {
+  if (type === 'number' || type === 'date' || type === 'datetime') {
+    return summarizeRangeValue(value, type)
+  }
+  return value == null ? '' : String(value).trim()
+}
+
+// One "<label>: <value>" entry per non-empty filter, in column order. An empty
+// array means "no filter applied".
+export function summarizeFilters(filters, columns) {
+  const parts = []
+  for (const key of Object.keys(columns)) {
+    const def = columns[key] || {}
+    const type = def.type || 'text'
+    const label = def.label || key
+    const text = summarizeFilterValue(filters[key], type)
+    if (text) parts.push(`${label}: ${text}`)
+  }
+  return parts
+}

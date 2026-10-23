@@ -1,6 +1,6 @@
 import { computed, reactive, ref, watch } from 'vue';
 
-import { compareValues, matchesRecord } from './matchers';
+import { compareValues, matchesRecord, summarizeFilters } from './matchers';
 
 import './styles.css';
 
@@ -20,7 +20,18 @@ const RecordsFilter = {
 
   template: `
 <div class="apqa-records-filter">
-  <form class="apqa-records-filter-form" @submit.prevent>
+  <button
+    type="button"
+    class="apqa-records-filter-header"
+    :aria-expanded="String(!collapsed)"
+    @click="collapsed = !collapsed"
+  >
+    <span class="apqa-records-filter-header-toggle" aria-hidden="true">{{ collapsed ? '▸' : '▾' }}</span>
+    <span class="apqa-records-filter-header-label">Filter</span>
+    <span v-if="filterSummaryText" class="apqa-records-filter-header-summary">{{ filterSummaryText }}</span>
+  </button>
+
+  <form v-if="!collapsed" class="apqa-records-filter-form" @submit.prevent>
     <div class="apqa-records-filter-fields">
       <label v-for="(def, key) in columnsSanitized" :key="key" class="apqa-records-filter-field">
         <span class="apqa-records-filter-field-label">{{ def.label }}</span>
@@ -43,7 +54,7 @@ const RecordsFilter = {
     </div>
   </form>
 
-  <div class="apqa-records-filter-toolbar">
+  <div v-if="!collapsed" class="apqa-records-filter-toolbar">
     <label class="apqa-records-filter-sort">
       <span class="apqa-records-filter-sort-label">Sort by</span>
       <select v-model="sortingColumn" name="sort-column" class="apqa-records-filter-select">
@@ -94,6 +105,13 @@ const RecordsFilter = {
     const sortingColumn = ref('');
     const sortingAscending = ref(true);
     const page = ref(0);
+
+    // Collapsed = one-line header with a summary of active filters; expanded =
+    // the full set of filter boxes plus the sort/pagination toolbar.
+    const collapsed = ref(true);
+    const filterSummaryText = computed(() =>
+      summarizeFilters(filters, columnsSanitized.value).join(' · '),
+    );
 
     const perPage = computed(() => {
       if (props.recordsPerPage === 0) return props.records.length || 1;
@@ -191,6 +209,8 @@ const RecordsFilter = {
       numPages,
       selectPage,
       isRangeType,
+      collapsed,
+      filterSummaryText,
       view,
     };
   },

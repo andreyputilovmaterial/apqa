@@ -51,6 +51,18 @@ The component is registered locally by consumers (see
 the globally registered `component-input-numericrange` and
 `component-input-datetimerange` components.
 
+## Collapsible header
+
+The filter form starts **collapsed** into a single clickable header line so it
+does not dominate the screen. Clicking the header expands the full set of
+filter boxes plus the sort/pagination toolbar; clicking it again collapses back
+to one line. The header always shows a short summary of the currently applied
+filters (e.g. `Name: alps · Year: 2020..2025`), in both the collapsed and the
+expanded state; when nothing is filtered it just reads `Filter`. The summary is
+produced by the pure
+`summarizeFilters(filters, columns)` helper in `matchers.js`, so it stays
+testable without Vue.
+
 ## Matching & sorting
 
 `matchers.js` holds the pure matching/sorting functions, kept free of Vue so they
