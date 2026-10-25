@@ -156,7 +156,7 @@ conversion (native errors propagate):
 | `as-real` | `float(value)` |
 | `as-boolean` | `bool(value)` — `sysmissing`/empty/zero → `false`, a stored non-empty value → `true` |
 | `as-path` | `pathlib.Path(value)` |
-| `as-date` | timezone-aware `datetime`; naive or date-only input fails with an explicit error |
+| `as-date` | timezone-aware `datetime`; uses `args['tz']` (IANA name or UTC offset) for naive/date-only text, else fails |
 
 Logical operators coerce operands to boolean and always return a boolean:
 
@@ -168,7 +168,7 @@ Logical operators coerce operands to boolean and always return a boolean:
 
 Bitwise operators require integer operands (bool excluded) and use
 `args['operands']` for the binary/n-ary ones: `bit-not` (unary), `bit-and`,
-`bit-or`, `bit-xor`.
+`bit-or`, `bit-xor`, `bit-lshift`, `bit-rshift`.
 
 String helpers: `length` returns the text length; `matches` searches text for
 `args['pattern']` with optional `case_insensitive` / `regex` flags (default:

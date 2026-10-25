@@ -6,11 +6,13 @@
 
 - Added a set of **standard scalar cmdlets**: type conversions
   (`as-text`, `as-integer`, `as-real`, `as-boolean`, `as-path`, `as-date` — the
-  `as-` prefix delegates to Python's natural conversion; `as-date` rejects
-  naive/date-only input with an explicit error), logical operators (`not`,
+  `as-` prefix delegates to Python's natural conversion; `as-date` resolves the
+  timezone from the value or `args['tz']` (IANA name or UTC offset) and fails
+  only when it can't), logical operators (`not`,
   `and`, `or`, `any`, `all` — `and`/`or` combine operand cmdlet chains in
   `args['operands']`, all coerce operands to boolean, `sysmissing` → `false`),
-  bitwise operators (`bit-not`, `bit-and`, `bit-or`, `bit-xor` — integer-only),
+  bitwise operators (`bit-not`, `bit-and`, `bit-or`, `bit-xor`, `bit-lshift`,
+  `bit-rshift` — integer-only),
   and string helpers (`length`, `matches` with `pattern`/`case_insensitive`/
   `regex` args). Moved `run_chain` from `src/rule_runner.py` into
   `src/cmdlets/chain_runner.py` (with `src/cmdlets/operands.py` helpers) so

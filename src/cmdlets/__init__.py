@@ -11,8 +11,10 @@ from . import as_path  # noqa: F401 - import registers the cmdlet
 from . import as_real  # noqa: F401 - import registers the cmdlet
 from . import as_text  # noqa: F401 - import registers the cmdlet
 from . import bit_and  # noqa: F401 - import registers the cmdlet
+from . import bit_lshift  # noqa: F401 - import registers the cmdlet
 from . import bit_not  # noqa: F401 - import registers the cmdlet
 from . import bit_or  # noqa: F401 - import registers the cmdlet
+from . import bit_rshift  # noqa: F401 - import registers the cmdlet
 from . import bit_xor  # noqa: F401 - import registers the cmdlet
 from . import count  # noqa: F401 - import registers the cmdlet
 from . import get_content_excel  # noqa: F401 - import registers the optional-dep cmdlet

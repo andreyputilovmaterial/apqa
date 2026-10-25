@@ -1,7 +1,7 @@
 """Tests for the standard scalar cmdlets (conversions, logical, bitwise, string)."""
 
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -90,6 +90,28 @@ def test_as_date_rejects_bare_date():
         cmdlets.get('as-date')(date(2025, 7, 15), {})
 
 
+def test_as_date_uses_tz_arg_for_naive_datetime():
+    result = cmdlets.get('as-date')(
+        datetime(2025, 7, 15, 10, 0), {'tz': 'Europe/Berlin'}
+    )
+    assert result.hour == 10
+    assert result.tzinfo is not None
+
+
+def test_as_date_uses_tz_arg_for_naive_text():
+    result = cmdlets.get('as-date')(
+        '2025-07-15T10:00:00', {'tz': '+02:00'}
+    )
+    assert result.utcoffset() == timedelta(hours=2)
+
+
+def test_as_date_rejects_invalid_tz_arg():
+    with pytest.raises(ValueError):
+        cmdlets.get('as-date')(
+            datetime(2025, 7, 15, 10, 0), {'tz': 'Not/AZone'}
+        )
+
+
 # ---- logical ---------------------------------------------------------------
 
 def test_not():
@@ -148,6 +170,11 @@ def test_bitwise_rejects_non_integer():
         cmdlets.get('bit-not')(True, {})
     with pytest.raises(TypeError):
         cmdlets.get('bit-and')(None, _operands(1, 1.5))
+
+
+def test_bit_shifts():
+    assert cmdlets.get('bit-lshift')(None, _operands(1, 3)) == 8
+    assert cmdlets.get('bit-rshift')(None, _operands(8, 2)) == 2
 
 
 # ---- string ----------------------------------------------------------------
