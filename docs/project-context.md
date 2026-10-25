@@ -4,6 +4,19 @@
 
 ## Last state
 
+- Added a terminal **`validate-xml-compatible`** cmdlet
+  (`src/cmdlets/validate_xml_compatible/`, registered under the `validate-`
+  validation prefix) that checks whether a value can be embedded in XML unchanged.
+  Only `text` values are validated (wrapped in a dummy root and parsed); every
+  other scalar (`sysmissing`, booleans, numbers, dates, paths) is not XML markup
+  and simply passes. Blocks/arrays run the same check per field/item and AND the
+  results (empty compound = vacuously valid). Follows the optional-dependency
+  pattern with a guarded `xml.etree.ElementTree` import (stdlib, so
+  `requirements.txt` is comment-only — `build.sh`/`run_init.*` still
+  discover/copy/install it as a no-op). Documented in
+  `docs/cmdlet-data-formats.md` "Validation cmdlets"; tests in
+  `tests/test_cmdlets.py` + `tests/test_optional_dependencies.py`.
+
 - Introduced **optional per-cmdlet dependencies** (encapsulated, best-effort,
   "fail only when used"): each optional cmdlet lives in its own folder
   (`src/cmdlets/get_content_excel/` — a demonstration Excel source reader needing
@@ -419,8 +432,9 @@
   full middle/terminal cmdlet set (`select-property`, `select-properties`,
   `select-item`, `where`, `map`, `to-string`, …), and further source readers.
   Built-ins are `literal`, `count`, `sort`; `get-content-excel` is a first
-  (optional-dependency) source reader — see `docs/development.md` "Optional
-  dependencies".
+  (optional-dependency) source reader and `validate-xml-compatible` a first
+  (optional-dependency, `validate-` prefixed) terminal validation cmdlet — see
+  `docs/development.md` "Optional dependencies".
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.
   Decide whether SQLite should auto-create a missing file instead of requiring it
   to exist (currently it matches YAML's fail-early behavior).

@@ -113,6 +113,21 @@ array is a workbook, a sheet, a table, or a query result:
 | `ForEach-Object { … }` | map/transform each iteration | `map` |
 | `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
 
+## Validation cmdlets
+
+A **validation** cmdlet is a terminal cmdlet that answers a yes/no question about
+the piped value instead of producing a value for comparison. The common prefix is
+`validate-`:
+
+- `validate-xml-compatible` — check whether the value can be embedded in an XML
+  document unchanged. Only `text` values are actually checked (wrapped in a dummy
+  root element and parsed); every other scalar (`sysmissing`, booleans, numbers,
+  dates, paths) is not XML markup and simply passes. A bare `&` or an unbalanced
+  tag in a text value yields `false`. Compound values (blocks/arrays) validate
+  every field/item and combine the results with a logical `AND` (an empty compound
+  is vacuously valid). Uses the stdlib `xml.etree.ElementTree`, guarded as an
+  optional dependency (see `docs/development.md` "Optional dependencies").
+
 ## Shape-changing operations
 
 On an **array**:

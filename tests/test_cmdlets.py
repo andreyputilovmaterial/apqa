@@ -1,7 +1,7 @@
 """Tests for the cmdlet registry, built-in cmdlets, comparison ops, and sysmissing."""
 
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -88,6 +88,66 @@ def test_sort_blocks_requires_by():
 def test_sort_rejects_non_array():
     with pytest.raises(TypeError):
         cmdlets.get('sort')(5, {})
+
+
+# ---- terminal validation cmdlets -------------------------------------------
+
+def test_validate_xml_compatible_accepts_valid_text():
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate('hello', {}) is True
+    assert validate('a <b>bold</b> text', {}) is True
+    assert validate('fish &amp; chips', {}) is True
+
+
+def test_validate_xml_compatible_rejects_unescaped_ampersand():
+    assert cmdlets.get('validate-xml-compatible')('a & b', {}) is False
+
+
+def test_validate_xml_compatible_rejects_unbalanced_markup():
+    assert cmdlets.get('validate-xml-compatible')('a <b>bold', {}) is False
+
+
+def test_validate_xml_compatible_non_string_scalars_pass():
+    # Non-text scalars are not XML markup, so they are not validated (a path or a
+    # date must never break XML validity just because of how it is spelled).
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate(42, {}) is True
+    assert validate(3.14, {}) is True
+    assert validate(True, {}) is True
+    assert validate(False, {}) is True
+    assert validate(date(2025, 7, 15), {}) is True
+    assert validate(datetime(2025, 7, 15, 10, 0, tzinfo=timezone.utc), {}) is True
+    assert validate(sysmissing, {}) is True
+    assert validate(Path('/tmp/plain-name'), {}) is True
+    assert validate(Path('/tmp/a&b'), {}) is True
+
+
+def test_validate_xml_compatible_block_ands_fields():
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate({'a': 'ok', 'b': 'also ok'}, {}) is True
+    assert validate({'a': 'ok', 'b': 'a & b'}, {}) is False
+
+
+def test_validate_xml_compatible_array_ands_items():
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate(['ok', 'also ok'], {}) is True
+    assert validate(['ok', 'a & b'], {}) is False
+
+
+def test_validate_xml_compatible_empty_compound_is_vacuously_true():
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate({}, {}) is True
+    assert validate([], {}) is True
+
+
+def test_validate_xml_compatible_ands_nested_compounds_recursively():
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate([{'a': 'ok'}, {'b': 'nested & bad'}], {}) is False
+
+
+def test_validate_xml_compatible_compound_of_non_strings_passes():
+    validate = cmdlets.get('validate-xml-compatible')
+    assert validate({'a': 1, 'b': Path('/tmp/x&y')}, {}) is True
 
 
 # ---- comparison ops -------------------------------------------------------
