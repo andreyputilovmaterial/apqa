@@ -145,3 +145,15 @@ def test_rule_to_dict(dbfile):
     d = rule.to_dict()
     assert d["name"] == "wave69-counts-equal-9002"
     assert d["meta"]["tags"] == ["counts", "wave69"]
+
+
+def test_op_args_roundtrip(dbfile):
+    dbfile.add_rule({
+        "name": "unordered-rule",
+        "op": "eq",
+        "op_args": {"unordered_arrays": True},
+    })
+    dbfile.save()
+
+    reloaded = DBFile(str(dbfile.resource_path))
+    assert reloaded.get_rule("unordered-rule").op_args == {"unordered_arrays": True}

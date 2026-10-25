@@ -4,6 +4,28 @@
 
 ## Last state
 
+- Implemented order-agnostic array comparison (all three approaches from the
+  design pass): comparison ops now take an optional `args` mapping
+  (`(left, right, args=None) -> bool`); `eq`/`ne` accept
+  `op_args: { unordered_arrays: true }` (recursive multiset array equality); a
+  dedicated `eq-unordered` op hard-wires that flag; and a `sort` cmdlet
+  (`args.by`, `args.descending`) canonicalizes array order for a strict compare.
+  Added `op_args` to the rule model (`Rule`, SQLite column + migration for
+  pre-existing DBs, YAML via `from_dict`/`to_dict`, and the runner). Made
+  `docs/cmdlet-data-formats.md` the primary spec and aligned
+  `docs/development.md` + `.clinerules/05-domain-model.md` (`select-column` →
+  `select-property`, plus a pointer to the canonical doc). 166 pytest tests pass.
+- Reviewed and tightened the cmdlet data-format spec (`docs/cmdlet-data-formats.md`)
+  after a design pass: (1) `eq`/`ne` now compare **compound values deeply** (blocks
+  by field name, order-insensitive; arrays in strict position order) while the
+  ordering ops stay scalar-only; (2) `named collection` is now marked
+  **provisional** (avoid it initially; drop or promote once readers/cmdlets exist);
+  (3) duplicate column dedup now follows pandas' default `state.1`/`state.2`
+  (was `state_2`/`state_3`); (4) added a **`path`** scalar type (path-aware
+  equality); (5) confirmed `args` values are not restricted to strings and can be
+  nested chains, and proposed a `map` shape (`args.transform` = a cmdlet chain).
+  Implemented recursive deep equality in `src/cmdlets/comparison_ops.py` and added
+  tests.
 - Changed the UI primary color from purple `#6670bb` to green `#385`
   (`#338855`), hover shade `#217346` (reusing `--mdm-color-green-hover`), and
   light tint `#eaf6ef`. Updated `--mdm-color-primary` in `common.css` plus its
@@ -361,6 +383,9 @@
 
 ## Open questions / TODO
 
+- `named collection` is provisional — see `docs/cmdlet-data-formats.md`; decide
+  whether to drop it or promote it once source readers and the full cmdlet set
+  are implemented.
 - End-to-end datetime-range filtering is still not wired in the QC rules list
   (`created_at`/`modified_at` remain `text` columns). The canonical value type is
   decided (`Date` objects) and the range inputs/matchers now comply, so wiring

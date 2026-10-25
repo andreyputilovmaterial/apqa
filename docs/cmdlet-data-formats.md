@@ -29,6 +29,7 @@ A cmdlet may produce/accept these scalar values:
 | integer | |
 | real / floating-point | |
 | boolean | |
+| path | a filesystem path; two paths may be equal even when spelled differently (e.g. Windows `\` vs `/`, a UNC share vs a mapped drive) when they resolve to the same location |
 | date/time | always timezone-aware, stored in UTC; naive datetimes are not allowed; the UI shows local time |
 | categorical (single-punch) | carries the set of available options |
 | categorical (multi-punch) | carries the list of available punches |
@@ -65,6 +66,17 @@ Three compound types, which may nest (a field may itself be scalar or compound):
    selected by index **and** by name (Python `namedtuple` analog). Python
    representation: `dict` plus an explicit field-order list.
 
+   > **Provisional — do not rely on it yet.** We are not yet sure this type
+   > earns its place. A row read from a sheet is most naturally a *named
+   > collection* (its fields have a fixed order), but an array's iterations must
+   > be *blocks* — so a row would have to be either a block whose single field
+   > is the named collection, or simply a block (in which case a named
+   > collection is never needed). The provisional plan is to **avoid `named
+   > collection` at the initial stage** and see whether blocks + arrays cover
+   > the cases. If they do, we drop the type; if named collections prove to fit
+   > better once readers and cmdlets are implemented, we promote them back and
+   > update this spec.
+
 3. **array** — a **block** repeated for each iteration. Each iteration:
    - is always a block of fields (an "array of ints" is **not** possible — to
      represent it you define a block with one integer field and an array of such
@@ -96,23 +108,28 @@ array is a workbook, a sheet, a table, or a query result:
 | --- | --- | --- |
 | `Select-Object -ExpandProperty Name` | extract one field from every iteration → flat list | `select-property` |
 | `Select-Object -Property A, B` | keep a subset of fields (narrower blocks) | `select-properties` |
-| `Select-Object -First/-Last/-Skip/-Index` | pick specific iterations by position | `select-item` |
+| `Select-Object -First/-Last/-Skip/-Index` | pick specific iterations (by position or by name) | `select-item` |
 | `Where-Object { … }` | filter iterations by a condition | `where` |
 | `ForEach-Object { … }` | map/transform each iteration | `map` |
+| `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
 
 ## Shape-changing operations
 
 On an **array**:
 
 - `where` (filter iterations) → an array again, same field shape.
-- `select-item` (pick one iteration) → a **block** (one field per column).
+- `select-item` (pick one iteration, by name or by position) → a **block** (one
+  field per column).
 - `select-properties` (filter fields) → an array again, smaller field shape.
 - `select-property` (extract one field) → a flat list of that field's values
   (this is what `… | select-property "B" | count` uses).
+- `sort` (reorder iterations) → an array again, same field shape. `args.by`
+  (optional) sorts blocks by a field; without it an array of scalars sorts
+  naturally. `args.descending: true` reverses the order.
 
 ## Comparison semantics
 
-`op` compares two scalars and returns `true`/`false` (never an error for a
+`op` compares two values and returns `true`/`false` (never an error for a
 *false comparison*). Coercion is minimal:
 
 - `bool` is its own type: `False` ≠ `0`, `True` ≠ `1`, `False` ≠ `0.0`; a `bool`
@@ -127,9 +144,46 @@ On an **array**:
 - date/time vs date/time: chronological (timezone-aware). A calendar date and a
   full timestamp are not directly comparable (Python raises); a naive datetime is
   invalid per "Dates & time".
-- arrays/blocks: structural equality for `eq`.
 
 Net effect: `0 == false` → `false`, while `"0" == 0` → `true`.
+
+### Compound comparison (`eq` / `ne`)
+
+`eq` and `ne` also compare compound values **deeply**: the comparison recurses
+into fields/iterations and re-applies the scalar rules above to each leaf. Two
+compound values of different kinds are never equal (a block ≠ an array ≠ a
+scalar).
+
+- **block vs block** — equal iff they have the same set of field names **and**
+  each field's value compares equal by name. Field order does **not** matter:
+  `{ Name, FullName }` equals `{ FullName, Name }`.
+- **array vs array** — equal iff they have the same length and each iteration
+  compares equal **in position order**. The same iterations at different
+  positions are **not** equal by default.
+
+`lt`/`le`/`gt`/`ge` stay **scalar-only**: ordering has no meaning for a compound
+value, so a compound value on either side returns `false` (they never recurse).
+`contains` keeps its membership semantics (substring for text, membership for
+arrays) and does not deep-compare.
+
+### Order-agnostic arrays
+
+Two arrays that contain the same iterations in a different order (e.g. two
+workbooks listing the same US states, one alphabetically, one by zip) can be
+compared as equal **sets** — strictly, as *multisets* (duplicates still matter).
+Array equality is strict-order by default; order-agnostic comparison is opt-in,
+spelled in either of two equivalent ways:
+
+- **an argument on the comparison** — `eq`/`ne` accept
+  `args: { unordered_arrays: true }`, stored on the rule as
+  `op_args: { unordered_arrays: true }`; or
+- **a dedicated op** — `eq-unordered`, which is `eq` with
+  `unordered_arrays: true` hard-wired.
+
+The flag is recursive (nested arrays inside blocks are also compared
+order-agnostically) and has no effect on blocks or scalars. A `sort` cmdlet is
+also available for the related but different job of *canonicalizing* an array's
+order before a strict comparison (see "Shape-changing operations").
 
 ## Missing & duplicate names
 
@@ -139,8 +193,9 @@ Net effect: `0 == false` → `false`, while `"0" == 0` → `true`.
   provisional name.
 - **Non-unique column names** → never drop or overwrite; deduplicate in order.
   First occurrence keeps the name, later duplicates get a numeric suffix:
-  `state`, `state_2`, `state_3`, … (pandas' `state.1` is the alternative). This
-  happens at the source reader, producing unique field names in the block.
+  `state`, `state.1`, `state.2`, … (pandas' default `mangle_dupe_cols`
+  behaviour; the underscore form `state_2` is the alternative). This happens at
+  the source reader, producing unique field names in the block.
 
 ## Representation (Python / JSON / DB / UI)
 

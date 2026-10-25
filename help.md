@@ -13,7 +13,7 @@ expected result. Each rule has three parts:
 For example, the rule *“Title details count equals 15”* could be written as:
 
 ```
-get-content Specs.xlsx | select-sheet "Title Details" | select-column "B" | count  =  15
+get-content Specs.xlsx | select-item "Title Details" | select-property "B" | count  =  15
 ```
 
 - The **left side** opens the Excel file, picks the “Title Details” sheet and

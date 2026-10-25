@@ -11,7 +11,11 @@ class Rule:
 
         {'cmdlet': <name>, 'args': {<param>: <value>, ...}}
 
-    ``op`` is the name of a registered comparison op (always scalar vs scalar).
+    ``op`` is the name of a registered comparison op. ``eq``/``ne`` compare
+    compound values deeply (blocks by name, arrays in order); ordering ops are
+    scalar-only. ``op_args`` is an optional mapping of op-specific options
+    (e.g. ``eq`` accepts ``{'unordered_arrays': True}`` for order-agnostic
+    array comparison).
     ``meta`` is an extensible bag of descriptive fields
     (created_by, created_at, comment, tags, markers, ...). ``meta.markers`` may
     carry pytest modifiers: ``skip`` (do not run the rule) or ``xfail``
@@ -26,6 +30,7 @@ class Rule:
     meta: dict = field(default_factory=dict)
     left: list = field(default_factory=list)
     op: str = ''
+    op_args: dict = field(default_factory=dict)
     right: list = field(default_factory=list)
 
     @classmethod
@@ -52,7 +57,13 @@ class Rule:
         op = data.get('op') or ''
         op = f'{op}'
 
-        return cls(name=name, meta=meta, left=left, op=op, right=right)
+        op_args = data.get('op_args') or {}
+        if not isinstance(op_args, dict):
+            raise ValueError(f'rule {name!r}: op_args must be a mapping')
+
+        return cls(
+            name=name, meta=meta, left=left, op=op, op_args=op_args, right=right
+        )
 
     def run(self):
         """Run this rule and return ``True``/``False``.

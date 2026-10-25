@@ -191,3 +191,25 @@ def test_meta_datetime_roundtrip_as_iso_string(dbfile):
     reloaded = DBFile(str(dbfile.resource_path))
     meta = reloaded.get_rule("with-dates").meta
     assert meta["created_at"] == "2026-10-14T12:00:00"
+
+
+def test_op_args_roundtrip(dbfile):
+    dbfile.add_rule({
+        "name": "unordered-rule",
+        "op": "eq",
+        "op_args": {"unordered_arrays": True},
+        "left": [{"cmdlet": "literal", "args": {"value": [1, 2]}}],
+        "right": [{"cmdlet": "literal", "args": {"value": [2, 1]}}],
+    })
+    dbfile.save()
+
+    reloaded = DBFile(str(dbfile.resource_path))
+    assert reloaded.get_rule("unordered-rule").op_args == {"unordered_arrays": True}
+
+
+def test_migrates_old_schema_adds_op_args(tmp_path):
+    db_file = tmp_path / "old.sqlite3"
+    _insert_raw(db_file, SAMPLE)  # old schema without an op_args column
+
+    dbfile = DBFile(str(db_file))
+    assert dbfile.get_rule("wave69-counts-equal-9002").op_args == {}

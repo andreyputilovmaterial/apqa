@@ -70,6 +70,26 @@ def test_count_rejects_sysmissing():
         cmdlets.get('count')(sysmissing, {})
 
 
+def test_sort_scalars():
+    assert cmdlets.get('sort')([3, 1, 2], {}) == [1, 2, 3]
+    assert cmdlets.get('sort')([3, 1, 2], {'descending': True}) == [3, 2, 1]
+
+
+def test_sort_blocks_by_field():
+    rows = [{'state': 'B'}, {'state': 'A'}]
+    assert cmdlets.get('sort')(rows, {'by': 'state'}) == [{'state': 'A'}, {'state': 'B'}]
+
+
+def test_sort_blocks_requires_by():
+    with pytest.raises(TypeError):
+        cmdlets.get('sort')([{'state': 'A'}, {'state': 'B'}], {})
+
+
+def test_sort_rejects_non_array():
+    with pytest.raises(TypeError):
+        cmdlets.get('sort')(5, {})
+
+
 # ---- comparison ops -------------------------------------------------------
 
 def test_eq():
@@ -105,6 +125,75 @@ def test_eq_numeric_text_coerces_to_number():
 def test_eq_non_numeric_text_vs_number_is_false():
     assert comparisons.get('eq')('abc', 5) is False
     assert comparisons.get('eq')(5, 'abc') is False
+
+
+def test_eq_blocks_are_order_insensitive():
+    a = {'Name': 'x', 'FullName': 'y'}
+    b = {'FullName': 'y', 'Name': 'x'}
+    assert comparisons.get('eq')(a, b) is True
+
+
+def test_eq_blocks_compare_by_name():
+    a = {'Name': 'x', 'FullName': 'y'}
+    b = {'Name': 'x', 'FullName': 'z'}
+    assert comparisons.get('eq')(a, b) is False
+
+
+def test_eq_blocks_apply_scalar_rules_to_fields():
+    # bool vs number must stay distinct even when nested.
+    assert comparisons.get('eq')({'flag': True}, {'flag': 1}) is False
+
+
+def test_eq_arrays_are_strict_order():
+    assert comparisons.get('eq')([1, 2], [1, 2]) is True
+    assert comparisons.get('eq')([1, 2], [2, 1]) is False
+
+
+def test_eq_arrays_recurse_into_blocks():
+    a = [{'n': 1}, {'n': 2}]
+    b = [{'n': 2}, {'n': 1}]
+    assert comparisons.get('eq')(a, b) is False
+
+
+def test_eq_mixed_compound_kinds_are_not_equal():
+    assert comparisons.get('eq')({'a': 1}, [1]) is False
+    assert comparisons.get('eq')([1], 1) is False
+
+
+def test_ne_compound():
+    assert comparisons.get('ne')([1, 2], [2, 1]) is True
+    assert comparisons.get('ne')({'a': 1}, {'a': 1}) is False
+
+
+def test_ordering_on_compound_is_false():
+    assert comparisons.get('lt')([1, 2], [1, 3]) is False
+    assert comparisons.get('gt')({'a': 1}, {'a': 0}) is False
+
+
+def test_eq_unordered_arrays_arg():
+    eq = comparisons.get('eq')
+    assert eq([1, 2, 3], [3, 1, 2]) is False
+    assert eq([1, 2, 3], [3, 1, 2], {'unordered_arrays': True}) is True
+
+
+def test_eq_unordered_arrays_is_multiset():
+    eq = comparisons.get('eq')
+    assert eq([1, 1, 2], [1, 2, 1], {'unordered_arrays': True}) is True
+    assert eq([1, 1, 2], [1, 2, 2], {'unordered_arrays': True}) is False
+
+
+def test_eq_unordered_recurses_into_blocks():
+    eq = comparisons.get('eq')
+    a = [{'n': 1}, {'n': 2}]
+    b = [{'n': 2}, {'n': 1}]
+    assert eq(a, b) is False
+    assert eq(a, b, {'unordered_arrays': True}) is True
+
+
+def test_eq_unordered_op():
+    eq_unordered = comparisons.get('eq-unordered')
+    assert eq_unordered([1, 2, 3], [3, 2, 1]) is True
+    assert eq_unordered([1, 2], [1, 3]) is False
 
 
 def test_ne():

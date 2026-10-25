@@ -166,33 +166,62 @@ replaced or migrated away if a concrete reason appears.
 
 ## QC rule domain model
 
+> The authoritative specification for cmdlet value formats, comparison
+> semantics, and cmdlet naming is
+> [`cmdlet-data-formats.md`](cmdlet-data-formats.md); this section summarizes
+> the domain model that the runner and storage follow.
+
 A QC rule has three essential parts: **left side**, **comparison op**, **right side**.
 
 - Left and right sides are **chains of cmdlets** (PowerShell-like pipes), e.g.:
-  `get-content Specs.xlsx | select-sheet "Title Details" | select-column "B" | count`.
+  `get-content Specs.xlsx | select-item "Title Details" | select-property "B" | count`.
 - Stored shape of a cmdlet: `{ cmdlet: <name>, args: { <param>: <value>, ... } }`.
   `args` is always a named mapping (flags like `-Recurse` become `{ recurse: true }`)
-  and may be omitted when empty.
+  and may be omitted when empty. `args` values are **not restricted to strings**:
+  they are JSON-serializable, so a value may be a number, a boolean, a list, an
+  object, or even a nested cmdlet / chain of cmdlets (see `map` below).
 - Stored shape of a rule: `name` (unique), `meta` (extensible: `created_by`,
   `created_at`, `modified_at`, `comment`, `tags`, `markers`, …),
-  `left` (list of cmdlets), `op` (string), `right` (list of cmdlets).
-- `op` is a registered comparison op name, always scalar vs scalar
-  (e.g. `eq`, `lt`, `gt`, `contains`).
+  `left` (list of cmdlets), `op` (string), `op_args` (optional mapping,
+  JSON-serializable), `right` (list of cmdlets).
+- `op` is a registered comparison op name (e.g. `eq`, `ne`, `eq-unordered`,
+  `lt`, `gt`, `contains`). `eq`/`ne` compare compound values deeply (blocks by
+  field name, order-insensitive; arrays in strict position order); the ordering
+  ops (`lt`/`le`/`gt`/`ge`) are scalar-only. `op_args` (optional) passes
+  op-specific options, e.g. `eq`/`ne` accept
+  `op_args: { unordered_arrays: true }` for order-agnostic array comparison;
+  `eq-unordered` is that flag hard-wired.
 
 Three cmdlet types:
 
 1. **Source readers** — read source data (Excel, SPSS, CSV, text, databases, …).
-2. **Middle processors** — `select-column`, `map`, `count`, `to-string`, …
-3. **Terminal** — produce a scalar for comparison.
+2. **Middle processors** — `select-property`, `select-properties`,
+   `select-item`, `where`, `map`, `sort`, `count`, `to-string`, …
+3. **Terminal** — produce a value for comparison.
 
 Cmdlets are defined through a **global registry** (plugin-like) and are
 extensible — especially type-1 source readers. Prefer a minimal but flexible set of
 middle/terminal cmdlets and avoid source-specific cmdlets (no dedicated
 “read-excel-sheet”): one generic operation should work across Excel/SPSS/DB/etc.
 
-Scalar types a cmdlet can return: text, int, float, bool, date/time, single-punch
-categorical, multi-punch categorical. Compound types (object with named fields,
-collection of uniform objects, tuple) are still being finalized.
+Scalar types a cmdlet can return: text, int, float, bool, path, date/time,
+single-punch categorical, multi-punch categorical. Compound types: **block**
+(named fields), **named collection** (provisional — see
+`cmdlet-data-formats.md`), and **array** (a block repeated per iteration).
+
+**`map` (ForEach-Object).** `map` transforms each iteration of an array. Its
+argument is a **chain of cmdlets** (or a single cmdlet) run once per iteration,
+with the iteration threaded through as the piped value. A chain is a list of
+`{ cmdlet, args }` mappings, so it is JSON-serializable and stores in the DB
+without special handling. Proposed shape:
+
+    { "cmdlet": "map", "args": { "transform": [ { "cmdlet": "...", "args": {} }, … ] } }
+
+`args["transform"]` may also be a single cmdlet mapping (not wrapped in a list).
+
+**`sort`.** `sort` reorders an array: `args.by` (optional) sorts blocks by a
+field, without it an array of scalars sorts naturally, and
+`args.descending: true` reverses the result. See `cmdlet-data-formats.md`.
 
 **`sysmissing`:** every value may be `sysmissing`, regardless of type. In comparison,
 `sysmissing` is undefined/uncertain — it equals only another `sysmissing`. Comparing

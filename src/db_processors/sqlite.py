@@ -37,15 +37,16 @@ class DBFileSqlite(DBFileBase):
     The rule is stored one-per-row, mirroring the rule shape from
     :class:`~.rule_base.Rule`:
 
-    - ``name``   (TEXT PRIMARY KEY)
-    - ``meta``   (JSON text)
-    - ``"left"``  (JSON text)
-    - ``op``     (TEXT)
-    - ``"right"`` (JSON text)
+    - ``name``     (TEXT PRIMARY KEY)
+    - ``meta``     (JSON text)
+    - ``"left"``   (JSON text)
+    - ``op``       (TEXT)
+    - ``op_args``  (JSON text)
+    - ``"right"``  (JSON text)
 
-    ``meta``, ``"left"`` and ``"right"`` are serialized as JSON; ``op`` is a
-    plain text name. ``"left"``/``"right"`` are quoted because they are SQL
-    keywords.
+    ``meta``, ``"left"``, ``op_args`` and ``"right"`` are serialized as JSON;
+    ``op`` is a plain text name. ``"left"``/``"right"`` are quoted because they
+    are SQL keywords.
 
     Date/time values inside the JSON columns are serialized to ISO-8601 strings
     (JSON has no native date type), so ``meta`` entries like ``created_at``
@@ -77,10 +78,20 @@ class DBFileSqlite(DBFileBase):
                     meta   TEXT NOT NULL DEFAULT '{}',
                     "left"  TEXT NOT NULL DEFAULT '[]',
                     op     TEXT NOT NULL DEFAULT '',
+                    op_args TEXT NOT NULL DEFAULT '{}',
                     "right" TEXT NOT NULL DEFAULT '[]'
                 )
                 '''
             )
+            # Migrate databases created before ``op_args`` existed.
+            columns = [
+                row['name']
+                for row in self._conn.execute('PRAGMA table_info(rules)').fetchall()
+            ]
+            if 'op_args' not in columns:
+                self._conn.execute(
+                    'ALTER TABLE rules ADD COLUMN op_args TEXT NOT NULL DEFAULT \'{}\''
+                )
             self._conn.execute(
                 '''
                 CREATE TABLE IF NOT EXISTS definitions (
@@ -130,13 +141,14 @@ class DBFileSqlite(DBFileBase):
             raise ValueError(f'rule already exists: {rule.name}')
         with self._lock:
             self._conn.execute(
-                'INSERT INTO rules (name, meta, "left", op, "right") '
-                'VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO rules (name, meta, "left", op, op_args, "right") '
+                'VALUES (?, ?, ?, ?, ?, ?)',
                 (
                     rule.name,
                     _dumps(rule.meta),
                     _dumps(rule.left),
                     rule.op,
+                    _dumps(rule.op_args),
                     _dumps(rule.right),
                 ),
             )
@@ -151,12 +163,13 @@ class DBFileSqlite(DBFileBase):
         rule.update(**changes)
         with self._lock:
             self._conn.execute(
-                'UPDATE rules SET meta = ?, "left" = ?, op = ?, "right" = ? '
+                'UPDATE rules SET meta = ?, "left" = ?, op = ?, op_args = ?, "right" = ? '
                 'WHERE name = ?',
                 (
                     _dumps(rule.meta),
                     _dumps(rule.left),
                     rule.op,
+                    _dumps(rule.op_args),
                     _dumps(rule.right),
                     name,
                 ),
@@ -282,6 +295,7 @@ class DBFileSqlite(DBFileBase):
             'meta': _loads(row['meta'], {}),
             'left': _loads(row['left'], []),
             'op': row['op'],
+            'op_args': _loads(row['op_args'], {}),
             'right': _loads(row['right'], []),
         })
 

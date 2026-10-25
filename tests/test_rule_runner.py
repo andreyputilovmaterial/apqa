@@ -52,6 +52,36 @@ def test_sysmissing_eq_zero_is_false():
     assert run_rule(rule) is False
 
 
+def test_op_args_passed_to_eq():
+    rule = {
+        'left': [_literal([1, 2, 3])],
+        'op': 'eq',
+        'op_args': {'unordered_arrays': True},
+        'right': [_literal([3, 1, 2])],
+    }
+    assert run_rule(rule) is True
+
+
+def test_op_args_must_be_mapping():
+    rule = {
+        'left': [_literal(1)],
+        'op': 'eq',
+        'op_args': 'not-a-mapping',
+        'right': [_literal(1)],
+    }
+    with pytest.raises(ValueError):
+        run_rule(rule)
+
+
+def test_eq_unordered_dedicated_op():
+    rule = {
+        'left': [_literal([1, 2, 3])],
+        'op': 'eq-unordered',
+        'right': [_literal([3, 1, 2])],
+    }
+    assert run_rule(rule) is True
+
+
 def test_unknown_op_raises():
     rule = {'left': [_literal(1)], 'op': 'nope', 'right': [_literal(1)]}
     with pytest.raises(KeyError):

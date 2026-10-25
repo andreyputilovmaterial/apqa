@@ -5,7 +5,7 @@ APQA is a tool for **defining, managing, and running quality-control (QC) rules*
 A QC rule is a small, named check written as a pipeline of commands, for example:
 
 ```
-get-content Specs.xlsx | select-sheet "Title Details" | select-column "B" | count
+get-content Specs.xlsx | select-item "Title Details" | select-property "B" | count
 ```
 
 …compared against an expected result (here, a number). A rule describes *where* the

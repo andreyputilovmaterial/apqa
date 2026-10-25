@@ -8,8 +8,10 @@ from .sysmissing import is_sysmissing
 class ComparisonRegistry:
     """Global registry of comparison ops, keyed by op name.
 
-    A comparison op is a plain function ``(left, right) -> bool`` comparing two
-    scalars. Register an op with ``@comparisons.register('<name>')``.
+    A comparison op is a plain function ``(left, right, args=None) -> bool``
+    comparing two values. ``args`` is an optional mapping of op-specific options
+    (e.g. ``eq`` accepts ``{'unordered_arrays': True}``). Register an op with
+    ``@comparisons.register('<name>')``.
     """
 
     def __init__(self):
@@ -49,6 +51,29 @@ def _is_datetime_like(value):
     return isinstance(value, (date, datetime))
 
 
+def _is_block(value):
+    return isinstance(value, dict)
+
+
+def _is_array(value):
+    return isinstance(value, list)
+
+
+def _arrays_equal_unordered(left, right, args):
+    """Order-agnostic (multiset) array equality under recursive ``eq``."""
+    if len(left) != len(right):
+        return False
+    remaining = list(right)
+    for item in left:
+        for i, candidate in enumerate(remaining):
+            if eq(item, candidate, args):
+                remaining.pop(i)
+                break
+        else:
+            return False
+    return True
+
+
 def _to_number(value):
     """Return the numeric value of ``value`` if it is a number or a numeric
     string (e.g. ``"42"``, ``"3.14"``), otherwise ``None``.
@@ -73,9 +98,25 @@ def _to_number(value):
 
 
 @comparisons.register('eq')
-def eq(left, right):
+def eq(left, right, args=None):
+    unordered = bool(args and args.get('unordered_arrays'))
     if is_sysmissing(left) or is_sysmissing(right):
         return is_sysmissing(left) and is_sysmissing(right)
+    if _is_block(left) or _is_block(right):
+        return (
+            _is_block(left) and _is_block(right)
+            and left.keys() == right.keys()
+            and all(eq(left[key], right[key], args) for key in left)
+        )
+    if _is_array(left) or _is_array(right):
+        if not (_is_array(left) and _is_array(right)):
+            return False
+        if unordered:
+            return _arrays_equal_unordered(left, right, args)
+        return (
+            len(left) == len(right)
+            and all(eq(a, b, args) for a, b in zip(left, right))
+        )
     if _is_bool(left) or _is_bool(right):
         return _is_bool(left) and _is_bool(right) and left == right
     left_num = _to_number(left)
@@ -88,8 +129,13 @@ def eq(left, right):
 
 
 @comparisons.register('ne')
-def ne(left, right):
-    return not eq(left, right)
+def ne(left, right, args=None):
+    return not eq(left, right, args)
+
+
+@comparisons.register('eq-unordered')
+def eq_unordered(left, right, args=None):
+    return eq(left, right, {'unordered_arrays': True})
 
 
 def _ordered(op, left, right):
@@ -113,27 +159,27 @@ def _ordered(op, left, right):
 
 
 @comparisons.register('lt')
-def lt(left, right):
+def lt(left, right, args=None):
     return _ordered(operator.lt, left, right)
 
 
 @comparisons.register('le')
-def le(left, right):
+def le(left, right, args=None):
     return _ordered(operator.le, left, right)
 
 
 @comparisons.register('gt')
-def gt(left, right):
+def gt(left, right, args=None):
     return _ordered(operator.gt, left, right)
 
 
 @comparisons.register('ge')
-def ge(left, right):
+def ge(left, right, args=None):
     return _ordered(operator.ge, left, right)
 
 
 @comparisons.register('contains')
-def contains(left, right):
+def contains(left, right, args=None):
     if is_sysmissing(left) or is_sysmissing(right):
         return False
     try:
