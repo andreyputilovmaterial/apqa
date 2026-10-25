@@ -4,6 +4,22 @@
 
 ## Last state
 
+- Added the **`get-content-mdd`** source-reader cmdlet
+  (`src/cmdlets/get_content_mdd/`, registered as `get-content-mdd`, optional
+  dependency `pywin32` — Windows-only) that reads an MDD metadata document via
+  the `MDM.Document` COM API and returns a hierarchical block (sections
+  `source_file`, `languages`, `shared_lists`, `fields`, `pages`, `routing`).
+  Fields/categories are recursive: `ObjectTypeValue` 0 → scalar, 1/2 → array,
+  3 → block; scalars have `value = None` (MDD metadata has no data value) and
+  categorical scalars expose their available options as the keys of a
+  `categories` name→block map; shared-list references honor a `step_into` arg
+  (step into vs step over); label/property contexts are collected across the
+  configured `contexts` (default Question/Analysis) following `mdmreadpy`.
+  Pure helpers tested in `tests/test_get_content_mdd.py`; registry/optional-dep
+  coverage in `tests/test_optional_dependencies.py`; spec in
+  `docs/cmdlet-data-formats.md` "Source readers". Not runnable here (needs
+  Windows + MDM + pywin32).
+
 - Added a set of **standard scalar cmdlets**: type conversions
   (`as-text`, `as-integer`, `as-real`, `as-boolean`, `as-path`, `as-date` — the
   `as-` prefix delegates to Python's natural conversion; `as-date` resolves the

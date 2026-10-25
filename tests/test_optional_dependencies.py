@@ -21,10 +21,22 @@ def _openpyxl_installed():
     return True
 
 
+def _pywin32_installed():
+    try:
+        import win32com.client  # noqa: F401
+    except Exception:
+        return False
+    return True
+
+
 def test_optional_cmdlet_is_always_known():
     # Whether or not openpyxl is installed, the cmdlet is known (rules can
     # reference it); it may simply be unavailable for execution.
     assert 'get-content-excel' in cmdlets.names()
+
+
+def test_get_content_mdd_is_always_known():
+    assert 'get-content-mdd' in cmdlets.names()
 
 
 def test_validate_xml_compatible_is_always_known():
@@ -44,6 +56,7 @@ def test_optional_dependency_requirements_are_discoverable():
         for p in cmdlets_dir.glob('*/requirements.txt')
     }
     assert 'get_content_excel/requirements.txt' in relative
+    assert 'get_content_mdd/requirements.txt' in relative
     assert 'validate_xml_compatible/requirements.txt' in relative
 
 
@@ -56,6 +69,18 @@ def test_get_content_excel_raises_readable_error_without_openpyxl():
     message = str(exc_info.value)
     assert 'get-content-excel' in message
     assert 'openpyxl' in message
+    assert exc_info.value.__cause__ is not None
+
+
+def test_get_content_mdd_raises_readable_error_without_pywin32():
+    if _pywin32_installed():
+        pytest.skip('pywin32 is installed; the missing-dependency path cannot be exercised')
+    with pytest.raises(ImportError) as exc_info:
+        cmdlets.get('get-content-mdd')(None, {'path': 'whatever.mdd'})
+
+    message = str(exc_info.value)
+    assert 'get-content-mdd' in message
+    assert 'pywin32' in message
     assert exc_info.value.__cause__ is not None
 
 

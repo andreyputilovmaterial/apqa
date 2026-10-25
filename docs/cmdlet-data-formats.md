@@ -274,6 +274,30 @@ Date/time values are always timezone-aware and stored in UTC; **naive datetimes
 are not allowed**. The frontend displays them in the browser's local timezone
 (`new Date(isoString)` already converts).
 
+## Source readers
+
+Source readers are the first cmdlet in a chain (they ignore the piped value and
+read their input from ``args``). Currently implemented:
+
+- **`get-content-excel`** — reads the first sheet of an Excel workbook into an
+  array of blocks (one block per data row, keyed by header cell). Optional
+  dependency: ``openpyxl``.
+
+- **`get-content-mdd`** — reads an MDD metadata document into a hierarchical
+  block. Args: ``path`` (required), ``method`` (``"open"`` or ``"join"``),
+  ``contexts`` (label/property contexts, default ``["Question", "Analysis"]``),
+  ``step_into`` (expand shared-list references; default ``true``). Optional
+  dependency: ``pywin32`` (Windows only; reads via the ``MDM.Document`` COM API).
+
+  Top-level fields: ``source_file``, ``languages`` (array of ``{name, label}``),
+  ``shared_lists`` (block keyed by name), ``fields`` (block keyed by name),
+  ``pages`` (block keyed by name), ``routing`` (text). Every item block carries
+  ``name``/``label``/``attributes``/``properties``/``translations``/``scripting``
+  plus ``value`` (``None`` for scalars, an array of iteration blocks for
+  arrays/grids, a block of subfields for classes/blocks) and, for items that own
+  categories, a ``categories`` block keyed by category name → detailed category
+  block (for a categorical scalar its keys are the available response options).
+
 ## Remaining to implement
 
 - Full *runtime* value objects for categoricals and the block / named collection /
@@ -281,6 +305,7 @@ are not allowed**. The frontend displays them in the browser's local timezone
   already exists as `src/cmdlets/value_types.py` and is used for cmdlet
   annotations; until the runtime wrappers are added, the plain-Python rules above
   apply.
-- Source readers (`get-content` for Excel/CSV/SPSS/DB, …) and the full cmdlet set
-  (`select-property`, `select-properties`, `select-item`, `where`, `map`,
-  `to-string`, …).
+- Source readers beyond `get-content-excel` and `get-content-mdd` (CSV, SPSS, DB,
+  …) and the full middle/terminal cmdlet set (`select-property`,
+  `select-properties`, `select-item`, `where`, `map`, `to-string`, …).
+

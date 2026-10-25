@@ -1,0 +1,4 @@
+# pywin32 is Windows-only and is only needed to read MDD files through the
+# MDM COM API (MDM.Document). It is installed best-effort by run_init.* — a
+# missing/failed install must not break the rest of the app.
+pywin32

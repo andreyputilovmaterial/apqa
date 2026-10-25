@@ -18,6 +18,7 @@ from . import bit_rshift  # noqa: F401 - import registers the cmdlet
 from . import bit_xor  # noqa: F401 - import registers the cmdlet
 from . import count  # noqa: F401 - import registers the cmdlet
 from . import get_content_excel  # noqa: F401 - import registers the optional-dep cmdlet
+from . import get_content_mdd  # noqa: F401 - import registers the optional-dep cmdlet
 from . import is_sysmissing  # noqa: F401 - import registers the cmdlet
 from . import length  # noqa: F401 - import registers the cmdlet
 from . import literal  # noqa: F401 - import registers the cmdlet
