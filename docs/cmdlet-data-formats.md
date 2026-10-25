@@ -131,6 +131,17 @@ the piped value instead of producing a value for comparison. The common prefix i
   is vacuously valid). Uses the stdlib `xml.etree.ElementTree`, guarded as an
   optional dependency (see `docs/development.md` "Optional dependencies").
 
+## Predicate cmdlets
+
+A **predicate** cmdlet is a terminal cmdlet that answers a simple yes/no question
+about the piped value and returns a boolean. The common prefix is `is-` (distinct
+from the `validate-` prefix used for validation *actions*):
+
+- `is-sysmissing` — `true` iff the value is `sysmissing` (Python `None`). It does
+  not recurse: an empty value (`""`, `{}`, `[]`, `0`, `false`) and a compound
+  whose fields/items are all `sysmissing` are real values, so they return
+  `false`.
+
 ## Shape-changing operations
 
 On an **array**:

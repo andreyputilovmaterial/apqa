@@ -164,6 +164,37 @@ def test_validate_xml_compatible_compound_of_non_strings_passes():
     assert validate({'a': 1, 'b': Path('/tmp/x&y')}, {}) is True
 
 
+# ---- terminal predicate cmdlets --------------------------------------------
+
+def test_is_sysmissing_true_for_none():
+    assert cmdlets.get('is-sysmissing')(sysmissing, {}) is True
+
+
+def test_is_sysmissing_false_for_empty_string():
+    assert cmdlets.get('is-sysmissing')('', {}) is False
+
+
+def test_is_sysmissing_false_for_zero_and_false():
+    assert cmdlets.get('is-sysmissing')(0, {}) is False
+    assert cmdlets.get('is-sysmissing')(False, {}) is False
+
+
+def test_is_sysmissing_false_for_empty_compounds():
+    assert cmdlets.get('is-sysmissing')({}, {}) is False
+    assert cmdlets.get('is-sysmissing')([], {}) is False
+
+
+def test_is_sysmissing_false_for_compound_of_sysmissing_fields():
+    assert cmdlets.get('is-sysmissing')({'a': sysmissing}, {}) is False
+    assert cmdlets.get('is-sysmissing')([sysmissing, sysmissing], {}) is False
+
+
+def test_is_sysmissing_false_for_any_other_value():
+    assert cmdlets.get('is-sysmissing')('hello', {}) is False
+    assert cmdlets.get('is-sysmissing')(5, {}) is False
+    assert cmdlets.get('is-sysmissing')(True, {}) is False
+
+
 # ---- comparison ops -------------------------------------------------------
 
 def test_eq():

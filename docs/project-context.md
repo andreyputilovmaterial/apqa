@@ -4,6 +4,18 @@
 
 ## Last state
 
+- Restructured cmdlets to **one folder per cmdlet**: split `literal`, `count`,
+  and `sort` out of the removed `src/cmdlets/builtin_cmdlets.py` into their own
+  `src/cmdlets/<name>/__init__.py` folders, so every cmdlet follows the same
+  self-contained, liftable pattern as `get_content_excel` and
+  `validate_xml_compatible` ("built-in" is now expressed structurally — a folder
+  with no `requirements.txt`). Added a terminal predicate cmdlet
+  **`is-sysmissing`** (`src/cmdlets/is_sysmissing/`) returning `True` iff the
+  value is `None`; it does not recurse, so `""`/`{}`/`[]`/`0`/`False` and a
+  compound whose fields are all `sysmissing` are not sysmissing. Documented the
+  new `is-` predicate group in `docs/cmdlet-data-formats.md`; tests in
+  `tests/test_cmdlets.py`.
+
 - Made `count` explicit about what it counts: array → iterations (`len`),
   block / named collection → fields (`len`), text → `1` (never counted
   character-by-character), any other scalar (incl. single-punch categorical) →

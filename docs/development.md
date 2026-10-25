@@ -156,7 +156,7 @@ run scripts.
    import, store the error, register the cmdlet, and raise a readable error at
    the start of its runtime function) and `requirements.txt`.
 2. Import the module from `src/cmdlets/__init__.py`
-   (`from . import <module_name>`), like `builtin_cmdlets`.
+   (`from . import <module_name>`), like `count`.
 3. Done — `build.sh` and `run_init.*` pick the `requirements.txt` up
    automatically.
 
