@@ -87,6 +87,79 @@ bundle. So from the root they first run `build.sh` and then pytest on
 `dist/apqa_bundle.py`; the distributed copy skips the build and runs `apqa_bundle.py`
 directly.
 
+## Optional dependencies
+
+The global [`requirements.txt`](../requirements.txt) lists only the packages the
+whole app needs. Individual cmdlets (and, later, processors) may need extra
+packages that are **not required app-wide** — e.g. `openpyxl` to read Excel,
+`pyreadstat` to read SPSS, `pandas` for some data formats, `pywin32` for the
+Windows COM API — and that may be **platform-specific** (`pywin32` only exists on
+Windows).
+
+These are *optional dependencies*. A missing one must never break the app: you
+must be able to add, edit, and delete a rule that references an Excel-reading
+cmdlet on a machine without `openpyxl` installed. Only *running* that cmdlet
+raises its import error.
+
+### Specifying them (encapsulation)
+
+Each cmdlet that needs optional dependencies lives in its own folder under
+`src/cmdlets/`, with the `requirements.txt` kept next to it (not in a global
+list), so the cmdlet stays self-contained and liftable:
+
+    src/cmdlets/get_content_excel/
+        __init__.py        # guards the optional import, then registers the cmdlet
+        requirements.txt   # e.g. "openpyxl>=3"
+
+### Import time: capture, don't fail
+
+Each cmdlet guards its own optional import at module level and stores the
+captured error, so the module always loads and the cmdlet is always registered
+(and can be listed/referenced). The error is only raised at the start of the
+cmdlet's runtime function:
+
+    try:
+        import openpyxl
+    except Exception as error:          # no exception-type branching
+        openpyxl = None
+        _import_error = error
+    else:
+        _import_error = None
+
+    @cmdlets.register('get-content-excel')
+    def get_content_excel(value, args):
+        if _import_error is not None:
+            raise ImportError(
+                "get-content-excel: missing optional dependency 'openpyxl'"
+            ) from _import_error
+        ...
+
+So rules can be added/edited/deleted that reference the cmdlet without the
+dependency installed; only *running* the cmdlet raises a readable
+missing-dependency error. Each cmdlet is responsible for its own optional
+import — there is no global import-error machinery.
+
+### Build & install
+
+`build.sh` auto-discovers every `src/cmdlets/**/requirements.txt` (a plain
+filesystem search on the real source tree — this runs before/outside the bundle,
+so pinliner is not involved) and copies it into
+`dist/optional_dependencies/<path-under-src>/requirements.txt`. `run_init.sh` and
+`run_init.bat` install each one best-effort (a failure prints a WARNING and
+continues). `build_templates.py --program transform-run-script` rewrites the
+`src/cmdlets` path to `optional_dependencies` in the distributed copies of the
+run scripts.
+
+### Adding a new optional cmdlet
+
+1. Create `src/cmdlets/<module_name>/` with `__init__.py` (guard the optional
+   import, store the error, register the cmdlet, and raise a readable error at
+   the start of its runtime function) and `requirements.txt`.
+2. Import the module from `src/cmdlets/__init__.py`
+   (`from . import <module_name>`), like `builtin_cmdlets`.
+3. Done — `build.sh` and `run_init.*` pick the `requirements.txt` up
+   automatically.
+
 ## Frontend & build
 
 - The web server is **self-written** (`src/webserver_engine/webserve`, a submodule),
@@ -231,6 +304,14 @@ field, without it an array of scalars sorts naturally, and
 The same design principles apply to the DB storage format, the UI, and what flows
 through the pipe. Rules may carry pytest modifiers in `meta.markers`: `skip`
 (do not run) and `xfail` (a failure is expected and treated as normal).
+
+**Planned (not implemented): conditional markers.** Some rules rely on cmdlets
+whose tools exist only on some platforms (e.g. `pywin32` on Windows). The idea is
+a marker that skips a rule unless a condition holds, driven by environment
+variables set by the outer `run_*.sh`/`.bat` script (which can compute a value
+such as `APQA_PLATFORM=windows`). Real expressions can't run inside markers, so
+complex logic stays in the outer script and exposes its result as an env var;
+the marker then just checks that variable. Placeholder only.
 
 ### Rules database storage
 

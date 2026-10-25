@@ -18,3 +18,4 @@ A QC rule has three essential parts: **left side**, **comparison op**, **right s
 - In comparison, `sysmissing` is undefined/uncertain: it equals only another `sysmissing`. Comparing `sysmissing` to empty set/collection, zero, `false`, or empty string must return `false`.
 - The same design principles apply to: the DB storage format, the UI, and what flows through the pipe.
 - Rules may carry pytest modifiers in `meta.markers`: `skip` (do not run) and `xfail` (a failure is expected and treated as normal).
+- Planned (not implemented): a **conditional marker** to skip a rule only on certain platforms/tools (e.g. Windows-only rules for `pywin32`), driven by an env var set by the outer `run_*.sh`/`.bat` script.

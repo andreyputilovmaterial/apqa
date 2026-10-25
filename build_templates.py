@@ -466,6 +466,9 @@ def call_transform_run_script_program(*argcs, **kwargs):
         f'..{sep}tests-real-sensitive-data{sep}'
     )
 
+    # 4. optional per-cmdlet dependencies live in optional_dependencies/ in dist/
+    result = result.replace(f'src{sep}cmdlets', 'optional_dependencies')
+
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(result, encoding='utf-8')

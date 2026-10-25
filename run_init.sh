@@ -30,27 +30,18 @@ echo -
 
 
 
-# echo "Discover optional dependencies for textconv processors"
-# #optional_dependencies=$(find src/textconv/processors -type f -path '*/requirements.txt' -print0)
-# optional_dependencies=$(find src/textconv/processors -type f -path '*/requirements.txt' -print)
-# echo "done"
-# echo -
-# echo -
-
-
-
-# echo "Install optional dependencies for textconv processors"
-# # printf '%s' "$optional_dependencies" |
-# # while IFS= read -r -d '' requirements; do
-# while IFS= read -r requirements; do
-#     echo "installing for $requirements:"
-#     if ! "$pythonexecutable" -m pip install -r "$requirements"; then
-#         echo "WARNING: not installed"
-#     fi
-# done <<< "$optional_dependencies"
-# echo "done"
-# echo -
-# echo -
+# Install optional per-cmdlet/per-processor dependencies (best-effort).
+# A missing optional dependency must not fail the whole init: the affected
+# cmdlets are imported as "unavailable" and only raise their import error when
+# actually used. The distributed copy scans optional_dependencies/ instead.
+if [ -d src/cmdlets ]; then
+    for requirements in $(find src/cmdlets -type f -name 'requirements.txt' | sort); do
+        echo "installing optional dependencies: $requirements"
+        if ! "$pythonexecutable" -m pip install -r "$requirements"; then
+            echo "WARNING: optional dependencies in $requirements not installed (the corresponding cmdlets will be unavailable)"
+        fi
+    done
+fi
 
 
 "$pythonexecutable" -m src.launcher --program done

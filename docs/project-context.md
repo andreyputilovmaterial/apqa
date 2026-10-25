@@ -4,6 +4,21 @@
 
 ## Last state
 
+- Introduced **optional per-cmdlet dependencies** (encapsulated, best-effort,
+  "fail only when used"): each optional cmdlet lives in its own folder
+  (`src/cmdlets/get_content_excel/` — a demonstration Excel source reader needing
+  `openpyxl` — is the first) with its own `requirements.txt`, and guards its own
+  import (`try/except` storing the error) so the module always loads and the
+  cmdlet is always registered; its runtime function raises a readable
+  `ImportError` (chained to the original) at the start. No global import-error
+  machinery (`CmdletUnavailableError`, `register_unavailable`, and
+  `discovery.py` were removed). `build.sh` auto-discovers
+  `src/cmdlets/**/requirements.txt` and copies them to
+  `dist/optional_dependencies/`; `run_init.sh`/`.bat` install them best-effort
+  (WARNING, not fatal); `transform-run-script` rewrites `src/cmdlets` →
+  `optional_dependencies` in the dist copies. Documented in
+  `docs/development.md` and `.clinerules/10-optional-dependencies.md`.
+
 - Implemented order-agnostic array comparison (all three approaches from the
   design pass): comparison ops now take an optional `args` mapping
   (`(left, right, args=None) -> bool`); `eq`/`ne` accept
@@ -383,6 +398,12 @@
 
 ## Open questions / TODO
 
+- Planned (not implemented): **conditional markers** for `meta.markers` — skip a
+  rule only on certain platforms/tools (e.g. Windows-only rules for `pywin32`),
+  driven by an env var set by the outer `run_*.sh`/`.bat` script (real
+  expressions can't run in markers; the outer script computes the value and the
+  marker just checks it). Placeholder only — see `docs/development.md` and
+  `.clinerules/05-domain-model.md`.
 - `named collection` is provisional — see `docs/cmdlet-data-formats.md`; decide
   whether to drop it or promote it once source readers and the full cmdlet set
   are implemented.
@@ -394,10 +415,12 @@
 - The cmdlet value-type *objects* (categoricals, and the block / named collection
   / array wrappers) are still **not implemented** — until then, the plain-Python
   rules in `docs/cmdlet-data-formats.md` apply (`None` for `sysmissing`, `dict`
-  for block, `list` for array). Remaining to build: typed value objects, source
-  readers (`get-content`), and the full cmdlet set (`select-property`,
-  `select-properties`, `select-item`, `where`, `map`, `to-string`, …). Current
-  built-ins are only `literal` and `count`.
+  for block, `list` for array). Remaining to build: typed value objects, the
+  full middle/terminal cmdlet set (`select-property`, `select-properties`,
+  `select-item`, `where`, `map`, `to-string`, …), and further source readers.
+  Built-ins are `literal`, `count`, `sort`; `get-content-excel` is a first
+  (optional-dependency) source reader — see `docs/development.md` "Optional
+  dependencies".
 - SQLite is the "default" only by convention (docs/examples); there is no fallback.
   Decide whether SQLite should auto-create a missing file instead of requiring it
   to exist (currently it matches YAML's fail-early behavior).

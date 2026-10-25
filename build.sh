@@ -162,51 +162,19 @@ echo -
 
 echo "Bring run.sh and requirements.txt to \"$DIST_DIR\""
 cp "requirements.txt" "$DIST_DIR/"
-# echo "Bring other optional dependencies to $DIST_DIR/"
-# mkdir -p $DIST_DIR/optional_dependencies
-# counter=0
-# optional_dependencies_block=""
-# # # printf '%s' "$optional_dependencies" |
-# # echo "$optional_dependencies" |
-# #while IFS= read -r -d '' requirements; do
-# while IFS= read -r requirements; do
-#     [ -z "$requirements" ] && continue
-#     destination="optional_dependencies/requirements-${counter}.txt"
-#     echo "copying $requirements -> $DIST_DIR/$destination"
-#     # optional_dependencies_esc="$optional_dependencies_esc$destination\\n"
-#     optional_dependencies_block+="    \"$destination\""$'\n'
-#     cp "$requirements" "$DIST_DIR/$destination"
-#     ((counter++)) || true
-# done <<< "$optional_dependencies"
-# awk '
-#     BEGIN { deps=ARGV[2]; delete ARGV[2] }
-#     { gsub(/dist[\/\\]/, "") }
-#     /# BEGIN GENERATED OPTIONAL DEPENDENCIES/ {
-#         print
-#         print "optional_dependencies=("
-#         printf "%s", deps
-#         print ")"
-#         in_generated_block = 1
-#         next
-#     }
-#     /# END GENERATED OPTIONAL DEPENDENCIES/ {
-#         print
-#         in_generated_block = 0
-#         next
-#     }
-#     !in_generated_block {
-#         print
-#     }
-# ' "example.run.sh" "$optional_dependencies_block" > "$DIST_DIR/run.sh"
-# awk '
-#     { gsub(/dist[\/\\]/, "") }
-#     { print }
-# ' "example.run_project_example.sh" > "$DIST_DIR/run_project_example.sh"
-# awk '
-#     { gsub(/dist[\/\\]/, "") }
-#     { print }
-# ' "example.run_project_example.bat" > "$DIST_DIR/run_project_example.bat"
-# cp example.projects-config.yaml "$DIST_DIR/"
+# Optional per-cmdlet/per-processor dependencies. They are copied into
+# dist/optional_dependencies/ (preserving their path under src/) and installed
+# best-effort by run_init.sh / run_init.bat. A missing one is not fatal: the
+# corresponding cmdlets simply report their import error when used.
+if [ -d src/cmdlets ]; then
+    for requirements in $(find src/cmdlets -type f -name 'requirements.txt' | sort); do
+        rel="${requirements#src/}"
+        dest="$DIST_DIR/optional_dependencies/$rel"
+        mkdir -p "$(dirname "$dest")"
+        echo "copying optional requirements: $requirements -> $dest"
+        cp "$requirements" "$dest"
+    done
+fi
 cp LICENSE "$DIST_DIR/"
 cp README.md "$DIST_DIR/"
 cp help.md "$DIST_DIR/"

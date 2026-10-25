@@ -27,6 +27,16 @@ echo done
 echo.
 echo.
 
+@REM Install optional per-cmdlet/per-processor dependencies (best-effort).
+@REM The distributed copy scans optional_dependencies\ instead.
+if exist "src\cmdlets" (
+    for /r "src\cmdlets" %%f in (requirements.txt) do (
+        echo Installing optional dependencies: %%f
+        "%pythonexecutable%" -m pip install -r "%%f"
+        if errorlevel 1 echo WARNING: optional dependencies in %%f not installed - the corresponding cmdlets will be unavailable
+    )
+)
+
 "%pythonexecutable%" -m src.launcher --program done
 
 if errorlevel 1 exit /b %errorlevel%
