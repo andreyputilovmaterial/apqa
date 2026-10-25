@@ -4,6 +4,20 @@
 
 ## Last state
 
+- Added a set of **standard scalar cmdlets**: type conversions
+  (`as-text`, `as-integer`, `as-real`, `as-boolean`, `as-path`, `as-date` — the
+  `as-` prefix delegates to Python's natural conversion; `as-date` rejects
+  naive/date-only input with an explicit error), logical operators (`not`,
+  `and`, `or`, `any`, `all` — `and`/`or` combine operand cmdlet chains in
+  `args['operands']`, all coerce operands to boolean, `sysmissing` → `false`),
+  bitwise operators (`bit-not`, `bit-and`, `bit-or`, `bit-xor` — integer-only),
+  and string helpers (`length`, `matches` with `pattern`/`case_insensitive`/
+  `regex` args). Moved `run_chain` from `src/rule_runner.py` into
+  `src/cmdlets/chain_runner.py` (with `src/cmdlets/operands.py` helpers) so
+  operand cmdlets can run sub-chains without a circular import. Updated `count`
+  so empty text counts as `0` (consistent with `as-boolean`). Documented in
+  `docs/cmdlet-data-formats.md`; tested in `tests/test_standard_cmdlets.py`.
+
 - Restructured cmdlets to **one folder per cmdlet**: split `literal`, `count`,
   and `sort` out of the removed `src/cmdlets/builtin_cmdlets.py` into their own
   `src/cmdlets/<name>/__init__.py` folders, so every cmdlet follows the same

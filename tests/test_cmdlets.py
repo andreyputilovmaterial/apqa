@@ -64,9 +64,9 @@ def test_count_block_or_named_collection_counts_fields():
     assert cmdlets.get('count')({'a': 1, 'b': 2, 'c': 3}, {}) == 3
 
 
-def test_count_text_is_one_value_not_characters():
+def test_count_text():
     assert cmdlets.get('count')('hello', {}) == 1
-    assert cmdlets.get('count')('', {}) == 1
+    assert cmdlets.get('count')('', {}) == 0
 
 
 def test_count_other_scalar_is_one_if_stored():

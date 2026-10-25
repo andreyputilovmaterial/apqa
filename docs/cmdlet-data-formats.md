@@ -142,6 +142,38 @@ from the `validate-` prefix used for validation *actions*):
   whose fields/items are all `sysmissing` are real values, so they return
   `false`.
 
+## Standard scalar cmdlets
+
+A set of small, standard cmdlets working on scalar values.
+
+Type conversions use the `as-` prefix and delegate to Python's natural
+conversion (native errors propagate):
+
+| Cmdlet | Meaning |
+| --- | --- |
+| `as-text` | `str(value)`; `sysmissing` becomes `""` |
+| `as-integer` | `int(value)` |
+| `as-real` | `float(value)` |
+| `as-boolean` | `bool(value)` — `sysmissing`/empty/zero → `false`, a stored non-empty value → `true` |
+| `as-path` | `pathlib.Path(value)` |
+| `as-date` | timezone-aware `datetime`; naive or date-only input fails with an explicit error |
+
+Logical operators coerce operands to boolean and always return a boolean:
+
+- `not` — unary over the piped value; `not sysmissing` is `true`.
+- `and` / `or` — combine operand cmdlet chains in `args['operands']` (each chain
+  starts with a source reader and does not depend on the piped value); a
+  `sysmissing` operand counts as `false`.
+- `any` / `all` — reduce an array's iterations to a boolean.
+
+Bitwise operators require integer operands (bool excluded) and use
+`args['operands']` for the binary/n-ary ones: `bit-not` (unary), `bit-and`,
+`bit-or`, `bit-xor`.
+
+String helpers: `length` returns the text length; `matches` searches text for
+`args['pattern']` with optional `case_insensitive` / `regex` flags (default:
+case-sensitive literal substring).
+
 ## Shape-changing operations
 
 On an **array**:

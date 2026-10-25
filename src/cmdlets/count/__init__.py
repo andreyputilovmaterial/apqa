@@ -13,9 +13,10 @@ def count(value: PipeValue, args: dict) -> int:
     - block / named collection (``dict``): number of fields.
     - multi-punch categorical: number of punched categories (today a punch list
       is a plain ``list`` and counts as its length, like an array).
-    - single-punch categorical, text, or any other scalar: ``1`` if a value is
-      stored (i.e. it is not ``sysmissing``). Text is one stored value and is
-      not counted character-by-character.
+    - text: ``0`` if empty, ``1`` otherwise (text is not counted
+      character-by-character).
+    - single-punch categorical or any other scalar: ``1`` if a value is stored
+      (i.e. it is not ``sysmissing``).
     - ``sysmissing`` (``None``): ``0`` by default; ``args['fail_on_sysmissing']``
       raises instead.
     """
@@ -25,7 +26,7 @@ def count(value: PipeValue, args: dict) -> int:
         return 0
 
     if isinstance(value, str):
-        return 1
+        return 0 if value == '' else 1
     if isinstance(value, dict):
         return len(value)
     if isinstance(value, list):
