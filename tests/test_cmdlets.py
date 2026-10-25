@@ -55,19 +55,33 @@ def test_literal_requires_value():
         cmdlets.get('literal')(None, {})
 
 
-def test_count_counts_collection():
+def test_count_array_counts_iterations():
     assert cmdlets.get('count')([1, 2, 3], {}) == 3
+
+
+def test_count_block_or_named_collection_counts_fields():
     assert cmdlets.get('count')({'a': 1, 'b': 2}, {}) == 2
+    assert cmdlets.get('count')({'a': 1, 'b': 2, 'c': 3}, {}) == 3
 
 
-def test_count_rejects_non_countable():
-    with pytest.raises(TypeError):
-        cmdlets.get('count')(5, {})
+def test_count_text_is_one_value_not_characters():
+    assert cmdlets.get('count')('hello', {}) == 1
+    assert cmdlets.get('count')('', {}) == 1
 
 
-def test_count_rejects_sysmissing():
+def test_count_other_scalar_is_one_if_stored():
+    assert cmdlets.get('count')(5, {}) == 1
+    assert cmdlets.get('count')(True, {}) == 1
+    assert cmdlets.get('count')(0, {}) == 1
+
+
+def test_count_sysmissing_defaults_to_zero():
+    assert cmdlets.get('count')(sysmissing, {}) == 0
+
+
+def test_count_sysmissing_can_fail():
     with pytest.raises(ValueError):
-        cmdlets.get('count')(sysmissing, {})
+        cmdlets.get('count')(sysmissing, {'fail_on_sysmissing': True})
 
 
 def test_sort_scalars():

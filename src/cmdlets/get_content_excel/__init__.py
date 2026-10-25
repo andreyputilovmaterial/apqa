@@ -8,6 +8,7 @@ original import error).
 """
 
 from ..registry import cmdlets
+from ..value_types import Array, PipeValue
 
 try:
     import openpyxl
@@ -21,7 +22,7 @@ else:
 
 
 @cmdlets.register('get-content-excel')
-def get_content_excel(value, args):
+def get_content_excel(value: PipeValue, args: dict) -> Array:
     if _openpyxl_import_error is not None:
         raise ImportError(
             "get-content-excel: missing optional dependency 'openpyxl'"
@@ -44,7 +45,7 @@ def get_content_excel(value, args):
     return [dict(zip(names, row)) for row in rows]
 
 
-def _deduplicate_headers(header):
+def _deduplicate_headers(header) -> list:
     """Turn raw header cells into unique field names.
 
     Empty cells fall back to the source's native coordinate (Excel letters);

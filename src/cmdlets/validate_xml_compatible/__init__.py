@@ -19,6 +19,7 @@ cmdlet raises a readable error if the module is genuinely unavailable.
 """
 
 from ..registry import cmdlets
+from ..value_types import PipeValue
 
 try:
     import xml.etree.ElementTree as ET
@@ -30,7 +31,7 @@ else:
 
 
 @cmdlets.register('validate-xml-compatible')
-def validate_xml_compatible(value, args):
+def validate_xml_compatible(value: PipeValue, args: dict) -> bool:
     if _import_error is not None:
         raise ImportError(
             "validate-xml-compatible: missing optional dependency "
@@ -49,7 +50,7 @@ def validate_xml_compatible(value, args):
     return True
 
 
-def _is_xml_compatible(text):
+def _is_xml_compatible(text: str) -> bool:
     """Return ``True`` when ``text`` can be wrapped in a root element and parsed.
 
     A label/snippet is considered XML-compatible when it needs no escaping to be

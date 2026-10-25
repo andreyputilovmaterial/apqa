@@ -4,6 +4,26 @@
 
 ## Last state
 
+- Made `count` explicit about what it counts: array → iterations (`len`),
+  block / named collection → fields (`len`), text → `1` (never counted
+  character-by-character), any other scalar (incl. single-punch categorical) →
+  `1` when stored, and `sysmissing` → `0` by default with
+  `args['fail_on_sysmissing']` opting into an error instead. (A multi-punch
+  categorical counts its punched categories; until those value objects exist, a
+  punch list is a plain `list` and counts as its length.) Updated `count`'s
+  annotation to `PipeValue` and its tests in `tests/test_cmdlets.py`.
+
+- Introduced the **cmdlet value-type taxonomy** (`src/cmdlets/value_types.py`):
+  a root `Value` `Protocol` base plus the `Scalar`/`Compound` families, the
+  `Block`/`NamedCollection`/`Array` compound `Protocol`s, and scalar-category
+  aliases (`Text`, `Integer`, `Real`, `Boolean`, `PathValue`, `DateTime`,
+  `CategoricalSingle`, `CategoricalMulti`); `PipeValue = Optional[Value]` is the
+  "value or sysmissing" alias. Runtime stays plain Python — these are
+  annotation/documentation types, not runtime wrappers. Annotated the cmdlet
+  signatures (`literal`, `count`, `sort`, `get-content-excel`,
+  `validate-xml-compatible`) accordingly. Documented in
+  `docs/cmdlet-data-formats.md`; tested in `tests/test_value_types.py`.
+
 - Added a terminal **`validate-xml-compatible`** cmdlet
   (`src/cmdlets/validate_xml_compatible/`, registered under the `validate-`
   validation prefix) that checks whether a value can be embedded in XML unchanged.
@@ -425,12 +445,14 @@
   decided (`Date` objects) and the range inputs/matchers now comply, so wiring
   `date`/`datetime` columns should just mean building record fields as `Date`
   objects in `qcrules_list/toRecord`.
-- The cmdlet value-type *objects* (categoricals, and the block / named collection
-  / array wrappers) are still **not implemented** — until then, the plain-Python
-  rules in `docs/cmdlet-data-formats.md` apply (`None` for `sysmissing`, `dict`
-  for block, `list` for array). Remaining to build: typed value objects, the
-  full middle/terminal cmdlet set (`select-property`, `select-properties`,
-  `select-item`, `where`, `map`, `to-string`, …), and further source readers.
+- Full *runtime* cmdlet value objects (categoricals, and the block / named
+  collection / array wrappers) are still **not implemented**; the value-type
+  *taxonomy* (`src/cmdlets/value_types.py`) now exists for annotations, and the
+  plain-Python rules in `docs/cmdlet-data-formats.md` still apply (`None` for
+  `sysmissing`, `dict` for block, `list` for array). Remaining to build: the
+  runtime value objects, the full middle/terminal cmdlet set (`select-property`,
+  `select-properties`, `select-item`, `where`, `map`, `to-string`, …), and
+  further source readers.
   Built-ins are `literal`, `count`, `sort`; `get-content-excel` is a first
   (optional-dependency) source reader and `validate-xml-compatible` a first
   (optional-dependency, `validate-` prefixed) terminal validation cmdlet — see

@@ -1,12 +1,15 @@
 # Cmdlet data formats
 
 > Status: **agreed specification.** The runner (`src/rule_runner.py`), the cmdlet
-> registry, and the comparison ops are implemented and follow this spec. The typed
-> *value objects* (categoricals, and the block / named collection / array
-> wrappers) are **not yet implemented** — until they are, the same rules are
-> expressed with plain Python values (`None` for `sysmissing`, `dict` for a block,
-> `list` for an array). Source readers and the full cmdlet set are built on top of
-> this spec.
+> registry, and the comparison ops are implemented and follow this spec. The
+> value-type *taxonomy* is spelled out in `src/cmdlets/value_types.py` — a root
+> `Value` base type plus `Scalar`/`Compound`/`Block`/`NamedCollection`/`Array`
+> structural `Protocol` types and the scalar-category aliases — and is used for
+> cmdlet annotations. Runtime values remain plain Python (`None` for `sysmissing`,
+> `dict` for a block, `list` for an array); full *runtime* value objects
+> (categoricals, and the block / named collection / array wrappers) are **not yet
+> implemented**. Source readers and the full cmdlet set are built on top of this
+> spec.
 
 ## Goal
 
@@ -230,8 +233,11 @@ are not allowed**. The frontend displays them in the browser's local timezone
 
 ## Remaining to implement
 
-- Typed value objects for categoricals and the block / named collection / array
-  wrappers (until then, the plain-Python rules above apply).
+- Full *runtime* value objects for categoricals and the block / named collection /
+  array wrappers. The value-type *taxonomy* (names + a root `Value` base type)
+  already exists as `src/cmdlets/value_types.py` and is used for cmdlet
+  annotations; until the runtime wrappers are added, the plain-Python rules above
+  apply.
 - Source readers (`get-content` for Excel/CSV/SPSS/DB, …) and the full cmdlet set
   (`select-property`, `select-properties`, `select-item`, `where`, `map`,
   `to-string`, …).
