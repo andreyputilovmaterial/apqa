@@ -5,6 +5,7 @@ import { makeFetchResponseErrorMessage } from '../../common_defs/helper_function
 import logError from '../../common_components/_log_error_proxy';
 import DefinitionRecord from './definition_record';
 import RuleRecord from './rule_record';
+import RulesTree from './rules_tree';
 
 import './styles.css';
 
@@ -29,6 +30,8 @@ function toRecord(rule) {
   return {
     id: rule.name,
     name: rule.name,
+    group: rule.group || '',
+    order: meta.order ?? 0,
     op: rule.op || '',
     comment: meta.comment || '',
     tags: Array.isArray(meta.tags) ? meta.tags.slice() : [],
@@ -50,11 +53,23 @@ function toDefinitionRecord(definition) {
   };
 }
 
+function toGroupRecord(group) {
+  const meta = group.meta || {};
+  return {
+    id: group.name,
+    name: group.name,
+    parent: group.parent || '',
+    order: meta.order ?? 0,
+    meta,
+  };
+}
+
 const QcRulesList = {
   components: {
     'component-records-filter': RecordsFilter,
     'definition-record': DefinitionRecord,
     'rule-record': RuleRecord,
+    'rules-tree': RulesTree,
   },
 
   template: `
@@ -64,6 +79,7 @@ const QcRulesList = {
   <template v-else>
     <div class="apqa-qcrules-page-toolbar">
       <button type="button" class="apqa-qcrules-page-button apqa-qcrules-page-button-primary" @click="createRule">Create new QC rule</button>
+      <button type="button" class="apqa-qcrules-page-button" @click="createGroup">Create group</button>
       <button type="button" class="apqa-qcrules-page-button" @click="createDefinition">Add alias</button>
     </div>
 
@@ -81,11 +97,9 @@ const QcRulesList = {
 
     <section class="apqa-qcrules-page-section">
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
-      <component-records-filter :columns="columns" :records="records" key-field="id" need-sort>
+      <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <ul v-if="visibleRecords.length" class="apqa-qcrules-list-items">
-            <rule-record v-for="record in visibleRecords" :key="record.id" :record="record" @edit="onEditRule" @run="onRunRule" />
-          </ul>
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" @edit="onEditRule" @run="onRunRule" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -97,6 +111,7 @@ const QcRulesList = {
   setup() {
     const records = ref([]);
     const definitions = ref([]);
+    const groups = ref([]);
     const loading = ref(true);
     const loadError = ref('');
 
@@ -119,6 +134,8 @@ const QcRulesList = {
 
     const definitionColumns = computed(() => DEFINITION_COLUMNS);
 
+    const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
+
     async function requestJson(url) {
       const response = await fetch(url);
       if (!response.ok) {
@@ -131,12 +148,14 @@ const QcRulesList = {
       loading.value = true;
       loadError.value = '';
       try {
-        const [rulesData, definitionsData] = await Promise.all([
+        const [rulesData, definitionsData, groupsData] = await Promise.all([
           requestJson('/qc/rules'),
           requestJson('/qc/definitions'),
+          requestJson('/qc/groups'),
         ]);
         records.value = (rulesData.rules || []).map(toRecord);
         definitions.value = (definitionsData.definitions || []).map(toDefinitionRecord);
+        groups.value = (groupsData.groups || []).map(toGroupRecord);
       } catch (e) {
         loadError.value = `Failed to load QC rules: ${e}`;
         logError(loadError.value);
@@ -159,12 +178,42 @@ const QcRulesList = {
     async function createRule() {
       const name = window.prompt('New QC rule name');
       if (name == null || name.trim() === '') return;
+      let group = '';
+      if (groups.value.length) {
+        const answer = window.prompt(
+          `Group for "${name.trim()}"? (leave empty for none)\nExisting groups: ${groupNames.value}`,
+          '',
+        );
+        if (answer == null) return;
+        group = answer.trim();
+      }
       try {
-        await postJson('/qc/rules', { name: name.trim() });
+        await postJson('/qc/rules', { name: name.trim(), group });
         await load();
       } catch (e) {
         window.alert(`Failed to create QC rule: ${e}`);
         logError(`Failed to create QC rule: ${e}`);
+      }
+    }
+
+    async function createGroup() {
+      const name = window.prompt('New group name');
+      if (name == null || name.trim() === '') return;
+      let parent = '';
+      if (groups.value.length) {
+        const answer = window.prompt(
+          `Parent group for "${name.trim()}"? (leave empty for top-level)\nExisting groups: ${groupNames.value}`,
+          '',
+        );
+        if (answer == null) return;
+        parent = answer.trim();
+      }
+      try {
+        await postJson('/qc/groups', { name: name.trim(), parent });
+        await load();
+      } catch (e) {
+        window.alert(`Failed to create group: ${e}`);
+        logError(`Failed to create group: ${e}`);
       }
     }
 
@@ -201,10 +250,12 @@ const QcRulesList = {
       definitionColumns,
       records,
       definitions,
+      groups,
       loading,
       loadError,
       load,
       createRule,
+      createGroup,
       createDefinition,
       onEditRule,
       onRunRule,

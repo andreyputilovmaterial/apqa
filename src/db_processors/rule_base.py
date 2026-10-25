@@ -16,6 +16,8 @@ class Rule:
     scalar-only. ``op_args`` is an optional mapping of op-specific options
     (e.g. ``eq`` accepts ``{'unordered_arrays': True}`` for order-agnostic
     array comparison).
+    ``group`` is the name of the folder/group the rule belongs to (see
+    :class:`~.group_base.Group`), or an empty string for an ungrouped rule.
     ``meta`` is an extensible bag of descriptive fields
     (created_by, created_at, comment, tags, markers, ...). ``meta.markers`` may
     carry pytest modifiers: ``skip`` (do not run the rule) or ``xfail``
@@ -27,6 +29,7 @@ class Rule:
     """
 
     name: str
+    group: str = ''
     meta: dict = field(default_factory=dict)
     left: list = field(default_factory=list)
     op: str = ''
@@ -41,6 +44,9 @@ class Rule:
         if name is None or name == '':
             raise ValueError('rule is missing a name')
         name = f'{name}'
+
+        group = data.get('group') or ''
+        group = f'{group}'
 
         meta = data.get('meta') or {}
         if not isinstance(meta, dict):
@@ -62,7 +68,8 @@ class Rule:
             raise ValueError(f'rule {name!r}: op_args must be a mapping')
 
         return cls(
-            name=name, meta=meta, left=left, op=op, op_args=op_args, right=right
+            name=name, group=group, meta=meta, left=left, op=op,
+            op_args=op_args, right=right,
         )
 
     def run(self):

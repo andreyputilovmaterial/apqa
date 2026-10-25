@@ -148,3 +148,29 @@ def test_unknown_method(config):
 def test_unknown_path(config):
     status, data = call(config, 'GET', '/qc/rules/r1/extra')
     assert status == 405
+
+
+def test_create_rule_with_group(config):
+    config['iface']['db_file'].add_group({'name': 'Data'})
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'group': 'Data'})
+    assert status == 201
+    assert data['rule']['group'] == 'Data'
+
+
+def test_create_rule_with_missing_group(config):
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'group': 'Nope'})
+    assert status == 400
+
+
+def test_update_rule_with_missing_group(config):
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'PUT', '/qc/rules/r1', {'group': 'Nope'})
+    assert status == 400
+
+
+def test_update_rule_with_group(config):
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    config['iface']['db_file'].add_group({'name': 'Data'})
+    status, data = call(config, 'PUT', '/qc/rules/r1', {'group': 'Data'})
+    assert status == 200
+    assert data['rule']['group'] == 'Data'

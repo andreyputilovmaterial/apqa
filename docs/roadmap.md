@@ -2,12 +2,12 @@
 
 This sections is to capture everything that comes to mind that should ideally be updated. Tasks listed here are not necessarily the highest priority.
 
-- Make foldable groups for qc rules - otherwise it would be an enornous list
+- (done) Make foldable groups for qc rules - otherwise it would be an enormous list
 - Continue implementation - edit qc rule, test run the qc rule, add or remove qc rules, etc...
-- Implement exact cmdlets and providers - that read Excel, CSV, SPSS, retrieve rows, object fields, etc...
-- Go ahead and try on real project, and then update the list here with all key findings.
-- Condensed form of records filtering component - review when pagination controls are visible, in condensed or expanded mode.
-- Word-wrap in chain of cmdlets: fixed — each cmdlet name and argument now renders
+- (partaially - started) Implement exact cmdlets and providers - that read Excel, CSV, SPSS, retrieve rows, object fields, etc...
+- (getting really close to this, as of 10/24/2026) Go ahead and try on real project, and then update the list here with all key findings.
+- (will check soon once implement other basic functions) Condensed form of records filtering component - review when pagination controls are visible, in condensed or expanded mode.
+- (ideally, not first priority) Word-wrap in chain of cmdlets: fixed — each cmdlet name and argument now renders
   as its own no-wrap unit, the chain wraps between units (no more mid-word breaks),
   and an overlong part (e.g. a long `path=` param) is cut with an ellipsis on the
   right. Possible improvements left: (a) a dedicated "Windows Explorer"-style path

@@ -19,7 +19,7 @@ const RuleCompact = {
   },
 
   template: `
-<div class="apqa-rule-compact">
+<div class="apqa-qcrules-entry apqa-qcrules-entry-rule apqa-rule-compact">
   <div
     class="apqa-rule-compact-description"
     role="button"

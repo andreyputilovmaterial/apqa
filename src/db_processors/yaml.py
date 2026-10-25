@@ -5,6 +5,7 @@ import yaml
 
 from .dbfile_base import DBFile as DBFileBase
 from .definition_base import Definition
+from .group_base import Group
 from .rule_base import Rule
 
 
@@ -45,6 +46,7 @@ class DBFileYaml(DBFileBase):
             raise FileNotFoundError(f'db file: file not found: {self.resource_path}')
         self._rules = {}
         self._definitions = {}
+        self._groups = {}
         self._read()
 
     def _read(self):
@@ -58,13 +60,17 @@ class DBFileYaml(DBFileBase):
 
         rules = data.get('rules') or []
         definitions = data.get('definitions') or []
+        groups = data.get('groups') or []
         if not isinstance(rules, list):
             raise ValueError(f'db file: rules must be a list: {self.resource_path}')
         if not isinstance(definitions, list):
             raise ValueError(f'db file: definitions must be a list: {self.resource_path}')
+        if not isinstance(groups, list):
+            raise ValueError(f'db file: groups must be a list: {self.resource_path}')
 
         self._rules.clear()
         self._definitions.clear()
+        self._groups.clear()
         for item in rules:
             rule = Rule.from_dict(item)
             if rule.name in self._rules:
@@ -75,6 +81,11 @@ class DBFileYaml(DBFileBase):
             if definition.name in self._definitions:
                 raise ValueError(f'db file: duplicated definition name(s): {definition.name}')
             self._definitions[definition.name] = definition
+        for item in groups:
+            group = Group.from_dict(item)
+            if group.name in self._groups:
+                raise ValueError(f'db file: duplicated group name(s): {group.name}')
+            self._groups[group.name] = group
         return self._rules
 
     def save(self):
@@ -82,6 +93,7 @@ class DBFileYaml(DBFileBase):
             yaml.safe_dump(
                 {
                     'definitions': [ definition.to_dict() for definition in self.list_definitions() ],
+                    'groups': [ group.to_dict() for group in self.list_groups() ],
                     'rules': [ rule.to_dict() for rule in self.list_rules() ],
                 },
                 f,
@@ -179,6 +191,64 @@ class DBFileYaml(DBFileBase):
         definition = self.get_definition(name)
         del self._definitions[name]
         return definition
+
+    # ---- groups CRUD -----------------------------------------------------------
+
+    def list_groups(self):
+        return [ group for _,group in self._groups.items() ]
+
+    def get_group(self,name):
+        name = f'{name}'
+        if name not in self._groups:
+            raise KeyError(f'group not found: {name}')
+        return self._groups[name]
+
+    def has_group(self,name):
+        return f'{name}' in self._groups
+
+    def add_group(self,group):
+        if not isinstance(group, Group):
+            group = Group.from_dict(group)
+        if group.name in self._groups:
+            raise ValueError(f'group already exists: {group.name}')
+        group.parent = self._validate_group_parent(group.name, group.parent)
+        self._groups[group.name] = group
+        return group
+
+    def update_group(self,name,**changes):
+        # note: `name` cannot be passed as a keyword here (Python raises
+        # TypeError) — renames go through rename_group().
+        group = self.get_group(name)
+        group.update(**changes)
+        group.parent = self._validate_group_parent(name, group.parent)
+        return group
+
+    def rename_group(self,name,new_name):
+        group = self.get_group(name)
+        new_name = f'{new_name}'
+        if new_name == name:
+            return group
+        if new_name in self._groups:
+            raise ValueError(f'group already exists: {new_name}')
+        del self._groups[name]
+        group.name = new_name
+        self._groups[new_name] = group
+        for child in self._groups.values():
+            if child.parent == name:
+                child.parent = new_name
+        for rule in self._rules.values():
+            if rule.group == name:
+                rule.group = new_name
+        return group
+
+    def delete_group(self,name):
+        group = self.get_group(name)
+        if any(g.parent == name for g in self._groups.values()):
+            raise ValueError(f'group is not empty (it has sub-groups): {name}')
+        if any(r.group == name for r in self._rules.values()):
+            raise ValueError(f'group is not empty (it has rules): {name}')
+        del self._groups[name]
+        return group
 
     # ---- backward-compatible accessors --------------------------------------
     # (the generic `.rules` accessor lives on the base class)

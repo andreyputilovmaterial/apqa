@@ -33,6 +33,17 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
             return None
         return payload
 
+    def resolve_group(group):
+        """Normalize and validate an incoming ``group`` reference."""
+        if group is None:
+            return ''
+        group = f'{group}'
+        if group == '':
+            return group
+        if not db_file.has_group(group):
+            raise ValueError(f'group not found: {group}')
+        return group
+
     # ---- handlers -----------------------------------------------------------
 
     def handle_list_rules():
@@ -48,6 +59,10 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
             return json_response(400, {'error': "rule must have a 'name' field"})
         if db_file.has_rule(name):
             return json_response(409, {'error': f'rule already exists: {name}'})
+        try:
+            payload['group'] = resolve_group(payload.get('group'))
+        except ValueError as e:
+            return json_response(400, {'error': f'{e}'})
         try:
             rule = db_file.add_rule(payload)
         except ValueError as e:
@@ -71,6 +86,11 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
             if changes['name'] != name:
                 return json_response(400, {'error': f"use POST /qc/rules/{name}/rename to change a rule's name"})
             changes.pop('name')
+        if 'group' in changes:
+            try:
+                changes['group'] = resolve_group(changes['group'])
+            except ValueError as e:
+                return json_response(400, {'error': f'{e}'})
         try:
             rule = db_file.update_rule(name, **changes)
         except ValueError as e:

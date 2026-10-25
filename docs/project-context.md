@@ -4,6 +4,47 @@
 
 ## Last state
 
+- Implemented **foldable rule groups (folders)** — the roadmap "Make foldable
+  groups for qc rules" item. Rules can now be organized into a tree of groups
+  instead of one flat list. New `Group` entity (`src/db_processors/group_base.py`:
+  `name` unique, `parent` = parent group name, `''` = top level, `meta`);
+  `Rule` gained a `group` field (`''` = ungrouped). `DBFile` gained a group CRUD
+  contract (`list_groups`/`get_group`/`has_group`/`add_group`/`update_group`/
+  `rename_group`/`delete_group` + `.groups` accessor + `_validate_group_parent`
+  that fails early on missing parent / self-parent / cycles). SQLite: new
+  `groups` table and a `"group"` column on `rules` (quoted — `GROUP` is a SQL
+  keyword); rename cascades to child `groups.parent` and `rules.group`; delete
+  refuses a non-empty group. YAML: new top-level `groups` list (read/write), same
+  semantics. New `/qc/groups…` CRUD endpoint (`endpoints_group_crud.py`) wired in
+  `src/endpoints.py` + `src/frontend/endpoints.py`; `/qc/rules` create/update now
+  validates that `group` exists. Frontend: `RulesTree` component
+  (`qcrules_list/rules_tree.js` + pure `grouping.js`) renders a foldable,
+  depth-indented tree (flat DFS + a reactive collapsed set — no recursion in the
+  template); rules reuse `rule-record`; ungrouped rules appear at the top level
+  (no "Ungrouped" wrapper) and folder headings are a simple `[+]/[-]` outline
+  with no rule counter — **all folders start folded**. Rule rows and folders
+  physically share the `.apqa-qcrules-entry` box class (border/radius/background/
+  padding) and are distinguished by `.apqa-qcrules-entry-rule` vs
+  `.apqa-qcrules-entry-folder` (currently empty → everything renders uniformly
+  white; add per-kind styling there later). Sibling folders and rules within a folder are interleaved
+  by an optional `meta.order` integer (`grouping.js` merges sub-folders + direct
+  rules into one sequence and sorts by it; ties keep insertion order). The
+  `RecordsFilter` still filters/sorts (its own pagination is disabled via
+  `records-per-page=0`), while `RulesTree` paginates the *visible node list*
+  (folder headings and rule leaves alike) at `records-per-page=25`, so pagination
+  remains the standard pattern for many rules in a folder or many folders at a
+  level. "Create group" button + optional group prompt on rule creation added.
+  Tests: `tests/test_db_processors_groups.py`, `tests/test_endpoints_group_crud.py`,
+  group-validation cases in `tests/test_endpoints_rule_crud.py`, and frontend
+  `grouping.spec.js` + `rules_tree.spec.js`. 622 Python tests + 28 qcrules
+  frontend tests pass.
+  Also populated the sample project files `tests-real-sensitive-data/projects.yaml`
+  and `tests-real-sensitive-data/projects.sqlite3` with the example folder/rule
+  hierarchy (gitignored, never committed).
+  Note: rule *editing/moving* UI (and thus moving existing rules between groups)
+  is still a separate roadmap item, so deleting a non-empty group is refused
+  until then.
+
 - Added the **`get-content-mdd`** source-reader cmdlet
   (`src/cmdlets/get_content_mdd/`, registered as `get-content-mdd`, optional
   dependency `pywin32` — Windows-only) that reads an MDD metadata document via
@@ -455,8 +496,9 @@
   (see `.clinerules/03-testing.md` and `docs/development.md`).
 - New storage backends must implement the full CRUD contract in
   `dbfile_base.py` **and** be imported in `db_processors/__init__.py` (import = the
-  `@DBFile.register(...)` side effect). Generic accessors like `.rules` belong on
-  the base class, not per-backend.
+  `@DBFile.register(...)` side effect). Generic accessors like `.rules`,
+  `.definitions` and `.groups` belong on the base class, not per-backend.
+  `"group"` must be quoted in SQLite SQL (`GROUP` is a reserved keyword).
 - Frontend components are plain `.js` + `.css` objects (`{ template, props, setup }`)
   that `import './styles.css'` (the self-written bundler inlines CSS via a `<style>`
   injection). Prefer **relative imports** (self-contained, liftable components); the
@@ -506,10 +548,13 @@
   to exist (currently it matches YAML's fail-early behavior).
 - `.db` extension is intentionally **not** mapped to SQLite (ambiguous); add it
   only if a concrete need appears.
-- The QC-rules page can now *create* a rule and *add* an alias (via `window.prompt`,
-  hitting `/qc/rules`/`/qc/definitions`), but full rule/definition CRUD UI (edit, delete,
-  rename, and the Edit/Run action buttons) is still not implemented — the endpoints
-  exist and are exercised by `tests/test_endpoints_rule_crud.py` and
-  `tests/test_endpoints_definition_crud.py`, but the frontend's Edit/Run buttons are
-  placeholders.
+- The QC-rules page can now *create* a rule (optionally assigning it a group),
+  *create* a group, and *add* an alias (all via `window.prompt`, hitting
+  `/qc/rules`/`/qc/groups`/`/qc/definitions`), but full rule/definition/group CRUD
+  UI (edit, delete, rename, move rules between groups, and the Edit/Run action
+  buttons) is still not implemented — the endpoints exist and are exercised by
+  `tests/test_endpoints_rule_crud.py`, `tests/test_endpoints_group_crud.py` and
+  `tests/test_endpoints_definition_crud.py`, but the frontend's Edit/Run buttons
+  are placeholders and there is no UI yet to move an existing rule into/out of a
+  group.
 

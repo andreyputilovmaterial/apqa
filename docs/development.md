@@ -320,20 +320,25 @@ The rules database is a format-agnostic interface
 `detect_type`:
 
 - **SQLite** (`.sqlite3`/`.sqlite`) — the default. Each rule is one row; `meta`,
-  `left` and `right` are stored as JSON text, `name`/`op` as plain text. A
-  parallel `definitions` table stores project-level aliases (`name`, `value`,
-  `meta`).
-- **YAML** (`.yaml`/`.yml`) — a mapping with two optional lists, `definitions`
-  and `rules`. A legacy top-level list of rules is still accepted (read as
-  rules only).
+  `left` and `right` are stored as JSON text, `name`/`op`/`group` as plain text.
+  Two parallel tables store project-level aliases (`definitions`: `name`,
+  `value`, `meta`) and rule groups/folders (`groups`: `name`, `parent`, `meta`).
+- **YAML** (`.yaml`/`.yml`) — a mapping with three optional lists, `definitions`,
+  `groups` and `rules`. A legacy top-level list of rules is still accepted (read
+  as rules only).
 
 Both backends implement the same CRUD contract for rules (`list_rules`,
 `get_rule`, `has_rule`, `add_rule`, `update_rule`, `rename_rule`,
-`delete_rule`, `save`) and the matching definition contract (`list_definitions`,
+`delete_rule`, `save`), the matching definition contract (`list_definitions`,
 `get_definition`, `has_definition`, `add_definition`, `update_definition`,
-`rename_definition`, `delete_definition`). Rules return `Rule` objects;
-definitions return `Definition` objects (`name`, `value`, `meta`). The SQLite
-backend is thread-safe (the web server is a `ThreadingHTTPServer`) via a
+`rename_definition`, `delete_definition`), and a group contract
+(`list_groups`, `get_group`, `has_group`, `add_group`, `update_group`,
+`rename_group`, `delete_group`). Rules return `Rule` objects; definitions return
+`Definition` objects (`name`, `value`, `meta`); groups return `Group` objects
+(`name`, `parent`, `meta`). Groups form a tree via `parent` (`''` = top level)
+and rules reference their folder via `Rule.group`; renaming a group cascades to
+its rules and child groups, and deleting a non-empty group is refused. The
+SQLite backend is thread-safe (the web server is a `ThreadingHTTPServer`) via a
 re-entrant lock around a single shared connection.
 
 ## Code style & error handling

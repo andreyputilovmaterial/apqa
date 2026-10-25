@@ -87,6 +87,62 @@ class DBFile:
     def delete_definition(self,name):
         raise NotImplementedError
 
+    # ---- groups CRUD contract -----------------------------------------------
+    # Groups (folders) organize rules into a foldable tree. A group references
+    # its parent by name ('' = top level); rules reference their group via
+    # ``Rule.group``. Renaming a group cascades to its rules and child groups;
+    # deleting a group is refused while it still contains rules or sub-groups.
+
+    def list_groups(self):
+        raise NotImplementedError
+
+    def get_group(self,name):
+        raise NotImplementedError
+
+    def has_group(self,name):
+        raise NotImplementedError
+
+    def add_group(self,group):
+        raise NotImplementedError
+
+    def update_group(self,name,**changes):
+        raise NotImplementedError
+
+    def rename_group(self,name,new_name):
+        raise NotImplementedError
+
+    def delete_group(self,name):
+        raise NotImplementedError
+
+    def _validate_group_parent(self, name, parent):
+        """Return the canonical parent name, or raise on an invalid reference.
+
+        Rejects a missing parent, a group being its own parent, and any parent
+        chain that would close a cycle back onto ``name``. Used by the storage
+        backends before adding/updating a group so the tree stays a forest.
+        """
+        parent = f'{parent}' if parent is not None else ''
+        if parent == '':
+            return ''
+        if parent == name:
+            raise ValueError(f'group {name!r} cannot be its own parent')
+        if not self.has_group(parent):
+            raise ValueError(f'group parent not found: {parent}')
+        seen = set()
+        cursor = parent
+        while cursor:
+            if cursor in seen:
+                raise ValueError(
+                    f'group parent chain contains a cycle at {cursor!r}'
+                )
+            seen.add(cursor)
+            if cursor == name:
+                raise ValueError(
+                    f'group {name!r} cannot be nested under its own descendant {parent!r}'
+                )
+            cursor = self.get_group(cursor).parent
+        return parent
+
     # ---- pythonic helpers -------------------------------------------------
 
     def __len__(self):
@@ -107,6 +163,10 @@ class DBFile:
     @property
     def definitions(self):
         return self.list_definitions()
+
+    @property
+    def groups(self):
+        return self.list_groups()
 
 
 

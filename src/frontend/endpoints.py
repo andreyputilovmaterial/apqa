@@ -15,6 +15,9 @@ from .endpoints_rule_crud import (
 from .endpoints_definition_crud import (
     handle_definition_crud,
 )
+from .endpoints_group_crud import (
+    handle_group_crud,
+)
 from .endpoints_functionality import (
     handle_functionality,
 )

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .dbfile_base import DBFile as DBFileBase
 from .definition_base import Definition
+from .group_base import Group
 from .rule_base import Rule
 
 
@@ -38,6 +39,7 @@ class DBFileSqlite(DBFileBase):
     :class:`~.rule_base.Rule`:
 
     - ``name``     (TEXT PRIMARY KEY)
+    - ``"group"``  (TEXT)
     - ``meta``     (JSON text)
     - ``"left"``   (JSON text)
     - ``op``       (TEXT)
@@ -45,8 +47,8 @@ class DBFileSqlite(DBFileBase):
     - ``"right"``  (JSON text)
 
     ``meta``, ``"left"``, ``op_args`` and ``"right"`` are serialized as JSON;
-    ``op`` is a plain text name. ``"left"``/``"right"`` are quoted because they
-    are SQL keywords.
+    ``op`` is a plain text name. ``"left"``/``"right"``/``"group"`` are quoted
+    because they are SQL keywords.
 
     Date/time values inside the JSON columns are serialized to ISO-8601 strings
     (JSON has no native date type), so ``meta`` entries like ``created_at``
@@ -74,16 +76,17 @@ class DBFileSqlite(DBFileBase):
             self._conn.execute(
                 '''
                 CREATE TABLE IF NOT EXISTS rules (
-                    name   TEXT PRIMARY KEY,
-                    meta   TEXT NOT NULL DEFAULT '{}',
+                    name    TEXT PRIMARY KEY,
+                    "group" TEXT NOT NULL DEFAULT '',
+                    meta    TEXT NOT NULL DEFAULT '{}',
                     "left"  TEXT NOT NULL DEFAULT '[]',
-                    op     TEXT NOT NULL DEFAULT '',
+                    op      TEXT NOT NULL DEFAULT '',
                     op_args TEXT NOT NULL DEFAULT '{}',
                     "right" TEXT NOT NULL DEFAULT '[]'
                 )
                 '''
             )
-            # Migrate databases created before ``op_args`` existed.
+            # Migrate databases created before ``op_args``/``"group"`` existed.
             columns = [
                 row['name']
                 for row in self._conn.execute('PRAGMA table_info(rules)').fetchall()
@@ -92,12 +95,25 @@ class DBFileSqlite(DBFileBase):
                 self._conn.execute(
                     'ALTER TABLE rules ADD COLUMN op_args TEXT NOT NULL DEFAULT \'{}\''
                 )
+            if 'group' not in columns:
+                self._conn.execute(
+                    'ALTER TABLE rules ADD COLUMN "group" TEXT NOT NULL DEFAULT \'\''
+                )
             self._conn.execute(
                 '''
                 CREATE TABLE IF NOT EXISTS definitions (
                     name  TEXT PRIMARY KEY,
                     value TEXT NOT NULL DEFAULT '',
                     meta  TEXT NOT NULL DEFAULT '{}'
+                )
+                '''
+            )
+            self._conn.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS groups (
+                    name   TEXT PRIMARY KEY,
+                    parent TEXT NOT NULL DEFAULT '',
+                    meta   TEXT NOT NULL DEFAULT '{}'
                 )
                 '''
             )
@@ -141,10 +157,11 @@ class DBFileSqlite(DBFileBase):
             raise ValueError(f'rule already exists: {rule.name}')
         with self._lock:
             self._conn.execute(
-                'INSERT INTO rules (name, meta, "left", op, op_args, "right") '
-                'VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO rules (name, "group", meta, "left", op, op_args, "right") '
+                'VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (
                     rule.name,
+                    rule.group,
                     _dumps(rule.meta),
                     _dumps(rule.left),
                     rule.op,
@@ -163,9 +180,10 @@ class DBFileSqlite(DBFileBase):
         rule.update(**changes)
         with self._lock:
             self._conn.execute(
-                'UPDATE rules SET meta = ?, "left" = ?, op = ?, op_args = ?, "right" = ? '
+                'UPDATE rules SET "group" = ?, meta = ?, "left" = ?, op = ?, op_args = ?, "right" = ? '
                 'WHERE name = ?',
                 (
+                    rule.group,
                     _dumps(rule.meta),
                     _dumps(rule.left),
                     rule.op,
@@ -287,11 +305,108 @@ class DBFileSqlite(DBFileBase):
             self._conn.commit()
         return definition
 
+    # ---- groups CRUD ---------------------------------------------------------
+
+    def list_groups(self):
+        with self._lock:
+            rows = self._conn.execute(
+                'SELECT * FROM groups ORDER BY rowid'
+            ).fetchall()
+        return [self._row_to_group(row) for row in rows]
+
+    def get_group(self, name):
+        name = f'{name}'
+        with self._lock:
+            row = self._conn.execute(
+                'SELECT * FROM groups WHERE name = ?', (name,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(f'group not found: {name}')
+        return self._row_to_group(row)
+
+    def has_group(self, name):
+        name = f'{name}'
+        with self._lock:
+            row = self._conn.execute(
+                'SELECT 1 FROM groups WHERE name = ?', (name,)
+            ).fetchone()
+        return row is not None
+
+    def add_group(self, group):
+        if not isinstance(group, Group):
+            group = Group.from_dict(group)
+        if self.has_group(group.name):
+            raise ValueError(f'group already exists: {group.name}')
+        group.parent = self._validate_group_parent(group.name, group.parent)
+        with self._lock:
+            self._conn.execute(
+                'INSERT INTO groups (name, parent, meta) VALUES (?, ?, ?)',
+                (group.name, group.parent, _dumps(group.meta)),
+            )
+            self._conn.commit()
+        return group
+
+    def update_group(self, name, **changes):
+        # note: `name` cannot be passed as a keyword here (Python raises
+        # TypeError) — renames go through rename_group().
+        name = f'{name}'
+        group = self.get_group(name)
+        group.update(**changes)
+        group.parent = self._validate_group_parent(name, group.parent)
+        with self._lock:
+            self._conn.execute(
+                'UPDATE groups SET parent = ?, meta = ? WHERE name = ?',
+                (group.parent, _dumps(group.meta), name),
+            )
+            self._conn.commit()
+        return group
+
+    def rename_group(self, name, new_name):
+        name = f'{name}'
+        group = self.get_group(name)
+        new_name = f'{new_name}'
+        if new_name == name:
+            return group
+        if self.has_group(new_name):
+            raise ValueError(f'group already exists: {new_name}')
+        with self._lock:
+            self._conn.execute(
+                'UPDATE groups SET name = ? WHERE name = ?', (new_name, name)
+            )
+            self._conn.execute(
+                'UPDATE groups SET parent = ? WHERE parent = ?', (new_name, name)
+            )
+            self._conn.execute(
+                'UPDATE rules SET "group" = ? WHERE "group" = ?', (new_name, name)
+            )
+            self._conn.commit()
+        group.name = new_name
+        return group
+
+    def delete_group(self, name):
+        name = f'{name}'
+        group = self.get_group(name)
+        with self._lock:
+            child = self._conn.execute(
+                'SELECT 1 FROM groups WHERE parent = ?', (name,)
+            ).fetchone()
+            rule = self._conn.execute(
+                'SELECT 1 FROM rules WHERE "group" = ?', (name,)
+            ).fetchone()
+            if child is not None:
+                raise ValueError(f'group is not empty (it has sub-groups): {name}')
+            if rule is not None:
+                raise ValueError(f'group is not empty (it has rules): {name}')
+            self._conn.execute('DELETE FROM groups WHERE name = ?', (name,))
+            self._conn.commit()
+        return group
+
     # ---- helpers ----------------------------------------------------------
 
     def _row_to_rule(self, row):
         return Rule.from_dict({
             'name': row['name'],
+            'group': row['group'],
             'meta': _loads(row['meta'], {}),
             'left': _loads(row['left'], []),
             'op': row['op'],
@@ -303,5 +418,12 @@ class DBFileSqlite(DBFileBase):
         return Definition.from_dict({
             'name': row['name'],
             'value': row['value'],
+            'meta': _loads(row['meta'], {}),
+        })
+
+    def _row_to_group(self, row):
+        return Group.from_dict({
+            'name': row['name'],
+            'parent': row['parent'],
             'meta': _loads(row['meta'], {}),
         })

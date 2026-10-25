@@ -14,7 +14,7 @@ const Rule = {
   },
 
   template: `
-<div class="apqa-qcrules-list-item">
+<div class="apqa-qcrules-entry apqa-qcrules-entry-rule apqa-qcrules-list-item">
   <div
     class="apqa-qcrules-list-item-head"
     role="button"

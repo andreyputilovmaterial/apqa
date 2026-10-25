@@ -10,6 +10,7 @@ from .frontend.endpoints import (
     renderer_assets,
     handle_rule_crud,
     handle_definition_crud,
+    handle_group_crud,
     handle_functionality,
     handle_rule_run,
 )
@@ -25,6 +26,7 @@ endpoints = {
     '/testpage': render_page_test,
     re.compile(r'^/qc/rules(?=$|/)'): handle_rule_crud,
     re.compile(r'^/qc/definitions(?=$|/)'): handle_definition_crud,
+    re.compile(r'^/qc/groups(?=$|/)'): handle_group_crud,
     re.compile(r'^/functionality(?=$|/)'): handle_functionality,
     re.compile(r'^/functionality/run-rule$'): handle_rule_run,
 
