@@ -2,7 +2,9 @@
 
 This sections is to capture everything that comes to mind that should ideally be updated. Tasks listed here are not necessarily the highest priority.
 
-- (done) Make foldable groups for qc rules - otherwise it would be an enormous list
+- Decide the alias substitution - if we substitute every string with exact matches, or require special char, or make more structural syntax for this.
+- We currently have the run-rule endpoint that receives a rule in json - review how would it work with aliases and what should we do to implement alias substitution.
+- (done) Make foldable groups for qc rules
 - Continue implementation - edit qc rule, test run the qc rule, add or remove qc rules, etc...
 - (partaially - started) Implement exact cmdlets and providers - that read Excel, CSV, SPSS, retrieve rows, object fields, etc...
 - (getting really close to this, as of 10/24/2026) Go ahead and try on real project, and then update the list here with all key findings.
