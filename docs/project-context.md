@@ -4,6 +4,28 @@
 
 ## Last state
 
+- **Split rule/group `name` into `id` (technical) + `name` (display).** Rules and
+  groups now each carry a stable, auto-generated `id` — an ASCII alphanumeric
+  slug derived from the display name (`src/db_processors/ids.py`: lower-cased
+  words joined by `-`, never starting with a digit, accents folded, fallback
+  `rule`/`group`) — plus the free-form, user-visible `name`. References
+  (`Rule.group`, `Group.parent`) now use the **group id**, so a display-name
+  change (e.g. a future translation) never breaks references. Ids are unique per
+  entity type and auto-deduplicated on add (`-2`, `-3`, …); display names may
+  repeat. `rename_rule`/`rename_group` now change the display name only (no
+  cascade). Lookups (`get_rule`/`has_rule`/`get_group`/`has_group`, CRUD
+  endpoints) take the id; `DBFile.resolve_group_ref()` accepts either an id or a
+  display name for incoming references. **Migration**: loading pre-split data
+  (YAML `_read`; SQLite table rebuild in `_ensure_schema`) generates `id` from
+  the old `name` and remaps old name-based `group`/`parent` references to ids.
+  Frontend `qcrules_list` splits `id`/`name` in records, keys the tree by `id`,
+  and still shows only `name`; create flows resolve a typed group name → id.
+  Tests updated; new `tests/test_ids.py`. **Group aliases are already id-only**:
+  an alias `name` is the technical id (variable-name-shaped) — there is no
+  separate human-shown name. The real `tests-real-sensitive-data/projects.*`
+  files were migrated to the new format.
+
+
 - Added a `format-strip-html` terminal cmdlet (`src/cmdlets/format_strip_html/__init__.py`,
   registered in `src/cmdlets/__init__.py`) that removes HTML markup and leaves
   plain text (`how <i>would</i> you rate...` → `how would you rate...`). It uses

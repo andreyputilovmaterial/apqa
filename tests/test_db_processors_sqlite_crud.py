@@ -97,9 +97,10 @@ def test_add_rule_from_dict(dbfile):
     assert dbfile.get_rule("new-rule").op == "eq"
 
 
-def test_add_rule_duplicate(dbfile):
-    with pytest.raises(ValueError):
-        dbfile.add_rule({"name": "wave69-counts-equal-9002"})
+def test_add_rule_duplicate_name_dedups_id(dbfile):
+    added = dbfile.add_rule({"name": "wave69-counts-equal-9002"})
+    assert added.id == "wave69-counts-equal-9002-2"
+    assert len(dbfile) == 2
 
 
 def test_update_rule(dbfile):
@@ -113,22 +114,24 @@ def test_update_rule_unknown_field(dbfile):
         dbfile.update_rule("wave69-counts-equal-9002", bogus_field=1)
 
 
-def test_update_rule_cannot_rename_via_name_kwarg(dbfile):
-    with pytest.raises(TypeError):
-        dbfile.update_rule("wave69-counts-equal-9002", name="renamed-rule")
+def test_update_rule_cannot_change_id(dbfile):
+    with pytest.raises(ValueError):
+        dbfile.update_rule("wave69-counts-equal-9002", id="renamed-rule")
 
 
 def test_rename_rule(dbfile):
     rule = dbfile.rename_rule("wave69-counts-equal-9002", "renamed-rule")
     assert rule.name == "renamed-rule"
-    assert "wave69-counts-equal-9002" not in dbfile
-    assert "renamed-rule" in dbfile
+    assert rule.id == "wave69-counts-equal-9002"
+    assert "wave69-counts-equal-9002" in dbfile
+    assert dbfile.get_rule("wave69-counts-equal-9002").name == "renamed-rule"
 
 
-def test_rename_rule_to_existing_name(dbfile):
+def test_rename_rule_allows_duplicate_display_name(dbfile):
     dbfile.add_rule({"name": "other"})
-    with pytest.raises(ValueError):
-        dbfile.rename_rule("wave69-counts-equal-9002", "other")
+    rule = dbfile.rename_rule("wave69-counts-equal-9002", "other")
+    assert rule.name == "other"
+    assert rule.id == "wave69-counts-equal-9002"
 
 
 def test_update_rule_missing(dbfile):
@@ -213,3 +216,38 @@ def test_migrates_old_schema_adds_op_args(tmp_path):
 
     dbfile = DBFile(str(db_file))
     assert dbfile.get_rule("wave69-counts-equal-9002").op_args == {}
+def test_migrates_old_schema_generates_ids_and_remaps_groups(tmp_path):
+    db_path = tmp_path / "projects.sqlite3"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute(
+        'CREATE TABLE groups ('
+        'name TEXT PRIMARY KEY, parent TEXT NOT NULL DEFAULT \'\', '
+        'aliases TEXT NOT NULL DEFAULT \'[]\', meta TEXT NOT NULL DEFAULT \'{}\')'
+    )
+    conn.execute(
+        'INSERT INTO groups (name, parent, aliases, meta) VALUES (?, ?, ?, ?)',
+        ('comp titles', '', '[]', '{"order": 1}'),
+    )
+    conn.execute(
+        'CREATE TABLE rules ('
+        'name TEXT PRIMARY KEY, "group" TEXT NOT NULL DEFAULT \'\', '
+        'meta TEXT NOT NULL DEFAULT \'{}\', "left" TEXT NOT NULL DEFAULT \'[]\', '
+        'op TEXT NOT NULL DEFAULT \'\', op_args TEXT NOT NULL DEFAULT \'{}\', '
+        '"right" TEXT NOT NULL DEFAULT \'[]\')'
+    )
+    conn.execute(
+        'INSERT INTO rules (name, "group", meta, "left", op, op_args, "right") '
+        'VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ('list of comp titles matches excel', 'comp titles', '{}', '[]', 'eq', '{}', '[]'),
+    )
+    conn.commit()
+    conn.close()
+
+    dbfile = DBFile(str(db_path))
+    assert dbfile.get_group("comp-titles").name == "comp titles"
+    rule = dbfile.get_rule("list-of-comp-titles-matches-excel")
+    assert rule.name == "list of comp titles matches excel"
+    assert rule.group == "comp-titles"
+
+
+

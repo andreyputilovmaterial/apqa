@@ -66,9 +66,10 @@ def test_add_rule_from_dict(dbfile):
     assert dbfile.get_rule("new-rule").op == "eq"
 
 
-def test_add_rule_duplicate(dbfile):
-    with pytest.raises(ValueError):
-        dbfile.add_rule({"name": "wave69-counts-equal-9002"})
+def test_add_rule_duplicate_name_dedups_id(dbfile):
+    added = dbfile.add_rule({"name": "wave69-counts-equal-9002"})
+    assert added.id == "wave69-counts-equal-9002-2"
+    assert len(dbfile) == 2
 
 
 def test_update_rule(dbfile):
@@ -82,22 +83,24 @@ def test_update_rule_unknown_field(dbfile):
         dbfile.update_rule("wave69-counts-equal-9002", bogus_field=1)
 
 
-def test_update_rule_cannot_rename_via_name_kwarg(dbfile):
-    with pytest.raises(TypeError):
-        dbfile.update_rule("wave69-counts-equal-9002", name="renamed-rule")
+def test_update_rule_cannot_change_id(dbfile):
+    with pytest.raises(ValueError):
+        dbfile.update_rule("wave69-counts-equal-9002", id="renamed-rule")
 
 
 def test_rename_rule(dbfile):
     rule = dbfile.rename_rule("wave69-counts-equal-9002", "renamed-rule")
     assert rule.name == "renamed-rule"
-    assert "wave69-counts-equal-9002" not in dbfile
-    assert "renamed-rule" in dbfile
+    assert rule.id == "wave69-counts-equal-9002"
+    assert "wave69-counts-equal-9002" in dbfile
+    assert dbfile.get_rule("wave69-counts-equal-9002").name == "renamed-rule"
 
 
-def test_rename_rule_to_existing_name(dbfile):
+def test_rename_rule_allows_duplicate_display_name(dbfile):
     dbfile.add_rule({"name": "other"})
-    with pytest.raises(ValueError):
-        dbfile.rename_rule("wave69-counts-equal-9002", "other")
+    rule = dbfile.rename_rule("wave69-counts-equal-9002", "other")
+    assert rule.name == "other"
+    assert rule.id == "wave69-counts-equal-9002"
 
 
 def test_update_rule_missing(dbfile):
@@ -144,6 +147,7 @@ def test_rule_to_dict(dbfile):
     rule = dbfile.get_rule("wave69-counts-equal-9002")
     d = rule.to_dict()
     assert d["name"] == "wave69-counts-equal-9002"
+    assert d["id"] == "wave69-counts-equal-9002"
     assert d["meta"]["tags"] == ["counts", "wave69"]
 
 
@@ -157,3 +161,37 @@ def test_op_args_roundtrip(dbfile):
 
     reloaded = DBFile(str(dbfile.resource_path))
     assert reloaded.get_rule("unordered-rule").op_args == {"unordered_arrays": True}
+def test_rule_from_dict_generates_id_from_display_name():
+    rule = Rule.from_dict({"name": "properties for key art are matching"})
+    assert rule.id == "properties-for-key-art-are-matching"
+    assert rule.name == "properties for key art are matching"
+
+
+def test_rule_from_dict_rejects_invalid_id():
+    with pytest.raises(ValueError):
+        Rule.from_dict({"name": "x", "id": "1 starts with a digit"})
+
+
+def test_yaml_load_generates_ids_and_remaps_group_references(tmp_path):
+    db_file = tmp_path / "projects.yaml"
+    db_file.write_text(
+        "\n".join([
+            "groups:",
+            "  - name: comp titles",
+            "  - name: titles updated",
+            "rules:",
+            "  - name: list of comp titles matches excel",
+            "    group: comp titles",
+            "    op: eq",
+        ]),
+        encoding="utf-8",
+    )
+    dbfile = DBFile(str(db_file))
+
+    group = dbfile.get_group("comp-titles")
+    assert group.name == "comp titles"
+    rule = dbfile.get_rule("list-of-comp-titles-matches-excel")
+    assert rule.group == "comp-titles"
+
+
+

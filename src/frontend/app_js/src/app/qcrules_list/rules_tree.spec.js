@@ -20,7 +20,7 @@ function rule(name, group = '') {
 }
 
 function group(name, parent = '', aliases = []) {
-  return { name, parent, aliases };
+  return { id: name, name, parent, aliases };
 }
 
 describe('RulesTree', () => {

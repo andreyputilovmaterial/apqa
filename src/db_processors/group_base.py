@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass, field, fields, asdict
 
+from .ids import is_valid_id, make_slug
+
 
 def normalize_aliases(aliases):
     """Validate and normalize a group's alias list.
@@ -44,23 +46,30 @@ def normalize_aliases(aliases):
 class Group:
     """A single folder/group of QC rules.
 
-    Groups form a tree: ``parent`` is the name of the parent group, or an empty
-    string for a top-level (root) group. ``name`` is the unique identity used by
-    rules (``Rule.group``) and by child groups (``Group.parent``) to reference
-    this group. ``aliases`` is a list of ``{ name, chain, meta }`` entries that
-    define folder-local reusable values (resolved once per folder at run time and
-    inherited by sub-folders). ``meta`` is an extensible bag of descriptive
-    fields, just like a rule's ``meta``.
+    Groups form a tree: ``parent`` is the **id** of the parent group, or an
+    empty string for a top-level (root) group. ``name`` is the free-form,
+    user-visible display name; ``id`` is the stable technical identity (an ASCII
+    alphanumeric slug auto-generated from ``name``) that rules
+    (``Rule.group``) and child groups (``Group.parent``) reference. ``aliases``
+    is a list of ``{ name, chain, meta }`` entries that define folder-local
+    reusable values (resolved once per folder at run time and inherited by
+    sub-folders). ``meta`` is an extensible bag of descriptive fields, just like
+    a rule's ``meta``.
 
-    Only ``name`` is strictly required; ``parent`` defaults to an empty string
-    (top level) and ``meta`` to an empty mapping so a group can be created
-    incrementally in the ui.
+    Only ``name`` is strictly required; ``id`` is auto-generated when omitted,
+    ``parent`` defaults to an empty string (top level) and ``meta`` to an empty
+    mapping so a group can be created incrementally in the ui.
     """
 
     name: str
+    id: str = ''
     parent: str = ''
     aliases: list = field(default_factory=list)
     meta: dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = make_slug(self.name, fallback='group')
 
     @classmethod
     def from_dict(cls, data):
@@ -71,6 +80,17 @@ class Group:
             raise ValueError('group is missing a name')
         name = f'{name}'
 
+        group_id = data.get('id')
+        if group_id is None or f'{group_id}' == '':
+            group_id = make_slug(name, fallback='group')
+        else:
+            group_id = f'{group_id}'
+            if not is_valid_id(group_id):
+                raise ValueError(
+                    f'group {name!r}: invalid id {group_id!r} '
+                    f'(must be ASCII letters/digits/hyphens and not start with a digit)'
+                )
+
         parent = data.get('parent') or ''
         parent = f'{parent}'
 
@@ -80,7 +100,7 @@ class Group:
 
         aliases = normalize_aliases(data.get('aliases'))
 
-        return cls(name=name, parent=parent, aliases=aliases, meta=meta)
+        return cls(name=name, id=group_id, parent=parent, aliases=aliases, meta=meta)
 
     def update(self, **changes):
         unknown = set(changes) - {f.name for f in fields(self)}
@@ -96,3 +116,4 @@ class Group:
 
     def to_dict(self):
         return asdict(self)
+

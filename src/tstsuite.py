@@ -32,10 +32,10 @@ def load_cases(resource_path=None) -> Iterable:
 
     groups = dbfile.list_groups()
     resolver = AliasScopeResolver(groups)
-    group_names = {group.name for group in groups}
+    group_ids = {group.id for group in groups}
 
     for rule in dbfile.list_rules():
-        if rule.group in group_names:
+        if rule.group in group_ids:
             yield _rule_with_scope(rule, resolver.scope_for(rule.group))
         else:
             yield rule
@@ -74,7 +74,7 @@ def pytest_param_for(rule):
         marks.append(pytest.mark.skip(reason="rule marked 'skip'"))
     if 'xfail' in markers:
         marks.append(pytest.mark.xfail(reason="rule marked 'xfail'", strict=False))
-    return pytest.param(rule, id=rule.name, marks=marks)
+    return pytest.param(rule, id=rule.id, marks=marks)
 
 
 def load_case_params(resource_path=None) -> Iterable:

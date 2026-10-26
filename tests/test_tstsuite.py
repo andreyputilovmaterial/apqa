@@ -30,6 +30,12 @@ def test_skip_marker_becomes_skip_mark():
     assert any(m.name == 'skip' for m in param.marks)
 
 
+def test_pytest_param_uses_rule_id_not_display_name():
+    rule = Rule(name='Skip Me', meta={'markers': ['skip']})
+    param = pytest_param_for(rule)
+    assert param.id == 'skip-me'
+
+
 def test_xfail_marker_becomes_xfail_mark():
     param = pytest_param_for(_rule(['xfail']))
     assert any(m.name == 'xfail' for m in param.marks)

@@ -40,13 +40,14 @@ def yaml_dbfile(tmp_path):
 def test_yaml_loads_groups(yaml_dbfile):
     groups = yaml_dbfile.list_groups()
     assert [g.name for g in groups] == ["Data", "Metadata"]
+    assert [g.id for g in groups] == ["data", "metadata"]
     assert isinstance(groups[0], Group)
-    assert yaml_dbfile.get_group("Metadata").parent == "Data"
+    assert yaml_dbfile.get_group("metadata").parent == "data"
 
 
 def test_yaml_loads_rules_with_groups(yaml_dbfile):
-    assert yaml_dbfile.get_rule("in-data").group == "Data"
-    assert yaml_dbfile.get_rule("in-metadata").group == "Metadata"
+    assert yaml_dbfile.get_rule("in-data").group == "data"
+    assert yaml_dbfile.get_rule("in-metadata").group == "metadata"
 
 
 def test_yaml_groups_accessor(yaml_dbfile):
@@ -55,43 +56,42 @@ def test_yaml_groups_accessor(yaml_dbfile):
 
 def test_yaml_add_group(yaml_dbfile):
     yaml_dbfile.add_group({"name": "Routing"})
-    assert yaml_dbfile.has_group("Routing")
-    assert yaml_dbfile.get_group("Routing").parent == ""
+    assert yaml_dbfile.has_group("routing")
+    assert yaml_dbfile.get_group("routing").parent == ""
 
 
-def test_yaml_add_group_duplicate(yaml_dbfile):
-    with pytest.raises(ValueError):
-        yaml_dbfile.add_group({"name": "Data"})
+def test_yaml_add_group_duplicate_name_dedups_id(yaml_dbfile):
+    added = yaml_dbfile.add_group({"name": "Data"})
+    assert added.id == "data-2"
+    assert yaml_dbfile.has_group("data-2")
 
 
 def test_yaml_update_group_parent(yaml_dbfile):
-    group = yaml_dbfile.update_group("Metadata", parent="")
+    group = yaml_dbfile.update_group("metadata", parent="")
     assert group.parent == ""
-    assert yaml_dbfile.get_group("Metadata").parent == ""
+    assert yaml_dbfile.get_group("metadata").parent == ""
 
 
-def test_yaml_rename_group_cascades(yaml_dbfile):
-    group = yaml_dbfile.rename_group("Data", "Core")
+def test_yaml_rename_group(yaml_dbfile):
+    group = yaml_dbfile.rename_group("data", "Core")
     assert group.name == "Core"
-    assert not yaml_dbfile.has_group("Data")
-    # child group's parent follows the rename
-    assert yaml_dbfile.get_group("Metadata").parent == "Core"
-    # rules in the renamed group follow too
-    assert yaml_dbfile.get_rule("in-data").group == "Core"
-    # rules in other groups are untouched
-    assert yaml_dbfile.get_rule("in-metadata").group == "Metadata"
+    assert group.id == "data"
+    assert yaml_dbfile.has_group("data")
+    # references point at the id, so they are unchanged
+    assert yaml_dbfile.get_group("metadata").parent == "data"
+    assert yaml_dbfile.get_rule("in-data").group == "data"
 
 
 def test_yaml_delete_group(yaml_dbfile):
     yaml_dbfile.add_group({"name": "Empty"})
-    deleted = yaml_dbfile.delete_group("Empty")
+    deleted = yaml_dbfile.delete_group("empty")
     assert deleted.name == "Empty"
-    assert "Empty" not in {g.name for g in yaml_dbfile.list_groups()}
+    assert "empty" not in {g.id for g in yaml_dbfile.list_groups()}
 
 
 def test_yaml_delete_non_empty_group_refused(yaml_dbfile):
     with pytest.raises(ValueError):
-        yaml_dbfile.delete_group("Data")
+        yaml_dbfile.delete_group("data")
 
 
 def test_yaml_save_roundtrip_groups(yaml_dbfile):
@@ -100,7 +100,7 @@ def test_yaml_save_roundtrip_groups(yaml_dbfile):
 
     reloaded = DBFile(str(yaml_dbfile.resource_path))
     assert [g.name for g in reloaded.list_groups()] == ["Data", "Metadata", "Routing"]
-    assert reloaded.get_group("Routing").parent == "Data"
+    assert reloaded.get_group("routing").parent == "data"
 
 
 # ---- parent validation (shared via base class) -------------------------------
@@ -118,7 +118,7 @@ def test_yaml_group_cannot_be_its_own_parent(yaml_dbfile):
 def test_yaml_group_parent_cycle_refused(yaml_dbfile):
     yaml_dbfile.add_group({"name": "Child", "parent": "Data"})
     with pytest.raises(ValueError):
-        yaml_dbfile.update_group("Data", parent="Child")
+        yaml_dbfile.update_group("data", parent="Child")
 
 
 # ---- SQLite backend ---------------------------------------------------------
@@ -135,40 +135,41 @@ def test_sqlite_add_and_list_groups(sqlite_dbfile):
     sqlite_dbfile.add_group({"name": "Metadata", "parent": "Data"})
     groups = sqlite_dbfile.list_groups()
     assert [g.name for g in groups] == ["Data", "Metadata"]
-    assert sqlite_dbfile.get_group("Metadata").parent == "Data"
+    assert sqlite_dbfile.get_group("metadata").parent == "data"
 
 
 def test_sqlite_update_group_parent(sqlite_dbfile):
     sqlite_dbfile.add_group({"name": "Data"})
     sqlite_dbfile.add_group({"name": "Metadata"})
-    group = sqlite_dbfile.update_group("Metadata", parent="Data")
-    assert group.parent == "Data"
+    group = sqlite_dbfile.update_group("metadata", parent="Data")
+    assert group.parent == "data"
 
 
-def test_sqlite_rename_group_cascades(sqlite_dbfile):
+def test_sqlite_rename_group(sqlite_dbfile):
     sqlite_dbfile.add_group({"name": "Data"})
     sqlite_dbfile.add_group({"name": "Metadata", "parent": "Data"})
     sqlite_dbfile.add_rule({"name": "in-data", "group": "Data", "op": "eq"})
 
-    group = sqlite_dbfile.rename_group("Data", "Core")
+    group = sqlite_dbfile.rename_group("data", "Core")
     assert group.name == "Core"
-    assert not sqlite_dbfile.has_group("Data")
-    assert sqlite_dbfile.get_group("Metadata").parent == "Core"
-    assert sqlite_dbfile.get_rule("in-data").group == "Core"
+    assert group.id == "data"
+    assert sqlite_dbfile.has_group("data")
+    assert sqlite_dbfile.get_group("metadata").parent == "data"
+    assert sqlite_dbfile.get_rule("in-data").group == "data"
 
 
 def test_sqlite_delete_group(sqlite_dbfile):
     sqlite_dbfile.add_group({"name": "Empty"})
-    deleted = sqlite_dbfile.delete_group("Empty")
+    deleted = sqlite_dbfile.delete_group("empty")
     assert deleted.name == "Empty"
-    assert not sqlite_dbfile.has_group("Empty")
+    assert not sqlite_dbfile.has_group("empty")
 
 
 def test_sqlite_delete_non_empty_group_refused(sqlite_dbfile):
     sqlite_dbfile.add_group({"name": "Data"})
     sqlite_dbfile.add_rule({"name": "r1", "group": "Data"})
     with pytest.raises(ValueError):
-        sqlite_dbfile.delete_group("Data")
+        sqlite_dbfile.delete_group("data")
 
 
 def test_sqlite_group_parent_must_exist(sqlite_dbfile):
@@ -183,7 +184,7 @@ def test_sqlite_group_roundtrip_reload(sqlite_dbfile):
 
     reloaded = DBFile(str(sqlite_dbfile.resource_path))
     assert [g.name for g in reloaded.list_groups()] == ["Data", "Metadata"]
-    assert reloaded.get_group("Metadata").parent == "Data"
+    assert reloaded.get_group("metadata").parent == "data"
 
 
 # ---- aliases on groups -------------------------------------------------------
@@ -214,20 +215,20 @@ def test_yaml_group_aliases_roundtrip(tmp_path):
     db_file.write_text(YAML_WITH_GROUP_ALIASES, encoding='utf-8')
     dbfile = DBFile(str(db_file))
 
-    group = dbfile.get_group('Data')
+    group = dbfile.get_group('data')
     assert [a['name'] for a in group.aliases] == ['survey_mdd', 'processed_data']
     assert group.aliases[0]['chain'][0]['cmdlet'] == 'get-content-mdd'
 
     dbfile.save()
     reloaded = DBFile(str(db_file))
-    assert [a['name'] for a in reloaded.get_group('Data').aliases] == [
+    assert [a['name'] for a in reloaded.get_group('data').aliases] == [
         'survey_mdd', 'processed_data',
     ]
 
 
 def test_yaml_group_update_aliases(yaml_dbfile):
     aliases = [{'name': 'x', 'chain': [{'cmdlet': 'literal', 'args': {'value': 1}}]}]
-    group = yaml_dbfile.update_group('Data', aliases=aliases)
+    group = yaml_dbfile.update_group('data', aliases=aliases)
     assert [a['name'] for a in group.aliases] == ['x']
 
 
@@ -257,7 +258,7 @@ def test_sqlite_group_aliases_roundtrip(sqlite_dbfile):
     sqlite_dbfile.save()
 
     reloaded = DBFile(str(sqlite_dbfile.resource_path))
-    aliases = reloaded.get_group('Data').aliases
+    aliases = reloaded.get_group('data').aliases
     assert [a['name'] for a in aliases] == ['survey_mdd']
     assert aliases[0]['chain'][0]['cmdlet'] == 'get-content-mdd'
 
@@ -278,6 +279,7 @@ def test_group_to_dict_roundtrip():
     group = Group.from_dict({"name": "Data", "parent": "Root", "meta": {"comment": "x"}})
     d = group.to_dict()
     assert d["name"] == "Data"
+    assert d["id"] == "data"
     assert d["parent"] == "Root"
     assert d["meta"]["comment"] == "x"
 

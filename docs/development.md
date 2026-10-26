@@ -320,24 +320,39 @@ The rules database is a format-agnostic interface
 `detect_type`:
 
 - **SQLite** (`.sqlite3`/`.sqlite`) — the default. Each rule is one row; `meta`,
-  `left` and `right` are stored as JSON text, `name`/`op`/`group` as plain text.
-  Rule groups/folders live in a `groups` table (`name`, `parent`, `meta`, and an
-  `aliases` JSON column for folder-local aliases).
+  `left` and `right` are stored as JSON text, `id`/`name`/`op`/`group` as plain
+  text (`id` is the primary key). Rule groups/folders live in a `groups` table
+  (`id`, `name`, `parent`, `meta`, and an `aliases` JSON column for folder-local
+  aliases).
 - **YAML** (`.yaml`/`.yml`) — a mapping with two optional lists, `groups` and
   `rules`; each group may carry an `aliases` list. A legacy top-level list of
   rules is still accepted (read as rules only).
+
+Rules and groups have an **id/name split**: `id` is the stable technical
+identity — an ASCII alphanumeric slug auto-generated from the display `name`
+(lower-cased words joined by `-`, never starting with a digit) via
+`src/db_processors/ids.py` — and `name` is the free-form, user-visible display
+name. References (`Rule.group`, `Group.parent`) point at group **ids**, so a
+display-name change (e.g. a translation) never breaks references. Ids are
+unique per entity type and auto-deduplicated on add by appending `-2`, `-3`, …;
+display names may repeat. On load, data written before the split (a single
+`name` used for both identity and display) is migrated: `id` is generated from
+the old `name` and old `name`-based references are remapped to the new ids.
 
 Both backends implement the same CRUD contract for rules (`list_rules`,
 `get_rule`, `has_rule`, `add_rule`, `update_rule`, `rename_rule`,
 `delete_rule`, `save`) and a group contract (`list_groups`, `get_group`,
 `has_group`, `add_group`, `update_group`, `rename_group`, `delete_group`).
-Rules return `Rule` objects; groups return `Group` objects (`name`, `parent`,
-`aliases`, `meta`). Groups form a tree via `parent` (`''` = top level) and
-rules reference their folder via `Rule.group`; renaming a group cascades to
-its rules and child groups, and deleting a non-empty group is refused. A group's
+Lookups take the **id**; `rename_rule`/`rename_group` change the display name
+only (the id stays fixed, so nothing cascades). Rules return `Rule` objects;
+groups return `Group` objects (`id`, `name`, `parent`, `aliases`, `meta`).
+Groups form a tree via `parent` (`''` = top level) and rules reference their
+folder via `Rule.group`; deleting a non-empty group is refused. A group's
 `aliases` is a list of `{ name, chain, meta }` where `chain` is a cmdlet chain
 that produces the alias value; aliases are resolved once per folder at run time
-and inherited by sub-folders. The
+and inherited by sub-folders. An alias `name` is already the technical id
+(variable-name-shaped) — unlike rules and groups it has no separate human-shown
+name. The
 SQLite backend is thread-safe (the web server is a `ThreadingHTTPServer`) via a
 re-entrant lock around a single shared connection.
 

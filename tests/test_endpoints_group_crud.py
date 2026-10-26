@@ -58,16 +58,19 @@ def test_create_and_list(config):
     status, data = call(config, 'POST', '/qc/groups', {'name': 'Data'})
     assert status == 201
     assert data['group']['name'] == 'Data'
+    assert data['group']['id'] == 'data'
 
     status, data = call(config, 'GET', '/qc/groups')
     assert status == 200
     assert [g['name'] for g in data['groups']] == ['Data']
+    assert [g['id'] for g in data['groups']] == ['data']
 
 
-def test_create_duplicate(config):
+def test_create_duplicate_name_dedups_id(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
     status, data = call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    assert status == 409
+    assert status == 201
+    assert data['group']['id'] == 'data-2'
 
 
 def test_create_missing_name(config):
@@ -82,7 +85,7 @@ def test_create_invalid_parent(config):
 
 def test_get_group(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    status, data = call(config, 'GET', '/qc/groups/Data')
+    status, data = call(config, 'GET', '/qc/groups/data')
     assert status == 200
     assert data['group']['name'] == 'Data'
 
@@ -95,9 +98,9 @@ def test_get_group_missing(config):
 def test_update_group(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
     call(config, 'POST', '/qc/groups', {'name': 'Metadata'})
-    status, data = call(config, 'PUT', '/qc/groups/Metadata', {'parent': 'Data'})
+    status, data = call(config, 'PUT', '/qc/groups/metadata', {'parent': 'Data'})
     assert status == 200
-    assert data['group']['parent'] == 'Data'
+    assert data['group']['parent'] == 'data'
 
 
 def test_create_group_with_aliases(config):
@@ -111,33 +114,33 @@ def test_create_group_with_aliases(config):
 
 def test_update_group_aliases(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    status, data = call(config, 'PUT', '/qc/groups/Data', {
+    status, data = call(config, 'PUT', '/qc/groups/data', {
         'aliases': [{'name': 'x', 'chain': [{'cmdlet': 'literal', 'args': {'value': 1}}]}],
     })
     assert status == 200
     assert data['group']['aliases'][0]['name'] == 'x'
 
 
-def test_update_group_rejects_name_change(config):
+def test_update_group_rejects_id_change(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    status, data = call(config, 'PUT', '/qc/groups/Data', {'name': 'Other'})
+    status, data = call(config, 'PUT', '/qc/groups/data', {'id': 'Other'})
     assert status == 400
 
 
 def test_delete_group(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    status, data = call(config, 'DELETE', '/qc/groups/Data')
+    status, data = call(config, 'DELETE', '/qc/groups/data')
     assert status == 200
     assert data['group']['name'] == 'Data'
 
-    status, data = call(config, 'GET', '/qc/groups/Data')
+    status, data = call(config, 'GET', '/qc/groups/data')
     assert status == 404
 
 
 def test_delete_non_empty_group(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
     config['iface']['db_file'].add_rule({'name': 'r1', 'group': 'Data'})
-    status, data = call(config, 'DELETE', '/qc/groups/Data')
+    status, data = call(config, 'DELETE', '/qc/groups/data')
     assert status == 409
 
 
@@ -148,21 +151,24 @@ def test_delete_group_missing(config):
 
 def test_rename_group(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    status, data = call(config, 'POST', '/qc/groups/Data/rename', {'new_name': 'Core'})
+    status, data = call(config, 'POST', '/qc/groups/data/rename', {'new_name': 'Core'})
     assert status == 200
     assert data['group']['name'] == 'Core'
+    assert data['group']['id'] == 'data'
 
 
-def test_rename_group_duplicate(config):
+def test_rename_group_allows_duplicate_display_name(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
     call(config, 'POST', '/qc/groups', {'name': 'Core'})
-    status, data = call(config, 'POST', '/qc/groups/Data/rename', {'new_name': 'Core'})
-    assert status == 409
+    status, data = call(config, 'POST', '/qc/groups/data/rename', {'new_name': 'Core'})
+    assert status == 200
+    assert data['group']['name'] == 'Core'
+    assert data['group']['id'] == 'data'
 
 
 def test_rename_group_missing_new_name(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
-    status, data = call(config, 'POST', '/qc/groups/Data/rename', {})
+    status, data = call(config, 'POST', '/qc/groups/data/rename', {})
     assert status == 400
 
 

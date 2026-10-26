@@ -9,7 +9,7 @@ import RulesTree from './rules_tree';
 import './styles.css';
 
 const COLUMNS = {
-  name: { label: 'Name', type: 'text', description: 'Unique QC rule name.' },
+  name: { label: 'Name', type: 'text', description: 'Display name of the QC rule.' },
   op: { label: 'Operator', type: 'text', description: 'Comparison operator between the left and right chains.' },
   comment: { label: 'Comment', type: 'text', description: 'Short human-readable note about the rule.' },
   tags: { label: 'Tags', type: 'multipunch', description: 'Tags attached to the rule; a rule must have all selected tags.' },
@@ -21,8 +21,8 @@ const COLUMNS = {
 function toRecord(rule) {
   const meta = rule.meta || {};
   return {
-    id: rule.name,
-    name: rule.name,
+    id: rule.id || '',
+    name: rule.name || '',
     group: rule.group || '',
     order: meta.order ?? 0,
     op: rule.op || '',
@@ -46,8 +46,8 @@ function toAlias(alias) {
 function toGroupRecord(group) {
   const meta = group.meta || {};
   return {
-    id: group.name,
-    name: group.name,
+    id: group.id || '',
+    name: group.name || '',
     parent: group.parent || '',
     order: meta.order ?? 0,
     aliases: Array.isArray(group.aliases) ? group.aliases.map(toAlias) : [],
@@ -111,6 +111,19 @@ const QcRulesList = {
 
     const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
 
+    // Resolve a user-typed group reference (display name or id) to the group id
+    // stored on rules/groups. Unknown values are passed through for the backend
+    // to reject with a clear message.
+    function groupIdFor(value) {
+      const input = (value || '').trim();
+      if (!input) return '';
+      const byName = groups.value.find((group) => group.name === input);
+      if (byName) return byName.id;
+      const byId = groups.value.find((group) => group.id === input);
+      if (byId) return byId.id;
+      return input;
+    }
+
     async function requestJson(url) {
       const response = await fetch(url);
       if (!response.ok) {
@@ -169,7 +182,7 @@ const QcRulesList = {
           '',
         );
         if (answer == null) return;
-        group = answer.trim();
+        group = groupIdFor(answer);
       }
       try {
         await postJson('/qc/rules', { name: name.trim(), group });
@@ -190,7 +203,7 @@ const QcRulesList = {
           '',
         );
         if (answer == null) return;
-        parent = answer.trim();
+        parent = groupIdFor(answer);
       }
       try {
         await postJson('/qc/groups', { name: name.trim(), parent });
@@ -206,7 +219,9 @@ const QcRulesList = {
         `Folder (group) to add the alias to.\nExisting groups: ${groupNames.value}`,
       );
       if (groupName == null || groupName.trim() === '') return;
-      const group = groups.value.find((g) => g.name === groupName.trim());
+      const group = groups.value.find(
+        (g) => g.name === groupName.trim() || g.id === groupName.trim(),
+      );
       if (!group) {
         window.alert(`Group not found: ${groupName.trim()}`);
         return;
@@ -232,7 +247,7 @@ const QcRulesList = {
       const aliases = group.aliases.filter((alias) => alias.name !== name.trim());
       aliases.push({ name: name.trim(), chain });
       try {
-        await putJson(`/qc/groups/${encodeURIComponent(group.name)}`, { aliases });
+        await putJson(`/qc/groups/${encodeURIComponent(group.id)}`, { aliases });
         await load();
       } catch (e) {
         window.alert(`Failed to add alias: ${e}`);

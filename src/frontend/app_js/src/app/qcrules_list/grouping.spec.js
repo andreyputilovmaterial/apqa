@@ -7,7 +7,7 @@ function rule(name, group = '', order = 0) {
 }
 
 function group(name, parent = '', order = 0, aliases = []) {
-  return { name, parent, order, aliases };
+  return { id: name, name, parent, order, aliases };
 }
 
 describe('buildGroupNodes', () => {

@@ -51,6 +51,7 @@ def test_substitute_recurses_into_nested_structures():
 class _Group:
     def __init__(self, name, parent='', aliases=None):
         self.name = name
+        self.id = name  # tests use the display name as the id for convenience
         self.parent = parent
         self.aliases = aliases or []
 

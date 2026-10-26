@@ -35,24 +35,24 @@ class AliasScopeResolver:
     """Resolve each group's aliases once and cache the resulting scope."""
 
     def __init__(self, groups):
-        self._groups = {group.name: group for group in groups}
+        self._groups = {group.id: group for group in groups}
         self._cache = {}
         self._resolving = set()
 
-    def scope_for(self, group_name):
-        """Return the effective alias scope for ``group_name`` (parent-scoped)."""
-        if group_name not in self._groups:
+    def scope_for(self, group_id):
+        """Return the effective alias scope for ``group_id`` (parent-scoped)."""
+        if group_id not in self._groups:
             return {}
-        if group_name in self._cache:
-            return self._cache[group_name]
-        if group_name in self._resolving:
+        if group_id in self._cache:
+            return self._cache[group_id]
+        if group_id in self._resolving:
             raise ValueError(
-                f'group parent chain contains a cycle at {group_name!r}'
+                f'group parent chain contains a cycle at {group_id!r}'
             )
 
-        self._resolving.add(group_name)
+        self._resolving.add(group_id)
         try:
-            group = self._groups[group_name]
+            group = self._groups[group_id]
             parent_scope = (
                 self.scope_for(group.parent)
                 if group.parent in self._groups
@@ -64,7 +64,7 @@ class AliasScopeResolver:
                 own[alias['name']] = run_chain(chain)
             scope = {**parent_scope, **own}
         finally:
-            self._resolving.discard(group_name)
+            self._resolving.discard(group_id)
 
-        self._cache[group_name] = scope
+        self._cache[group_id] = scope
         return scope

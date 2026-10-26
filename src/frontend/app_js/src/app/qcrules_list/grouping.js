@@ -6,10 +6,10 @@
 const orderOf = (value) => Number(value) || 0;
 
 export function buildGroupNodes(groups, records) {
-  const byName = new Map();
+  const byId = new Map();
   groups.forEach((group) => {
-    byName.set(group.name, {
-      id: group.name,
+    byId.set(group.id, {
+      id: group.id,
       name: group.name,
       parent: group.parent || '',
       order: orderOf(group.order),
@@ -22,9 +22,9 @@ export function buildGroupNodes(groups, records) {
   // A group whose parent is missing/unknown becomes a root (defensive; the
   // backend refuses to create such references).
   const roots = [];
-  byName.forEach((node) => {
-    if (node.parent && byName.has(node.parent)) {
-      byName.get(node.parent).children.push(node);
+  byId.forEach((node) => {
+    if (node.parent && byId.has(node.parent)) {
+      byId.get(node.parent).children.push(node);
     } else {
       roots.push(node);
     }
@@ -33,7 +33,7 @@ export function buildGroupNodes(groups, records) {
   const ungrouped = [];
   for (const record of records) {
     const group = record.group;
-    if (group && byName.has(group)) byName.get(group).rules.push(record);
+    if (group && byId.has(group)) byId.get(group).rules.push(record);
     else ungrouped.push(record);
   }
 

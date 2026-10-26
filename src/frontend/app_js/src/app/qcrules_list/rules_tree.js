@@ -79,7 +79,7 @@ const RulesTree = {
       () => props.groups,
       () => {
         for (const key of Object.keys(collapsed)) delete collapsed[key];
-        for (const group of props.groups) collapsed[group.name] = true;
+        for (const group of props.groups) collapsed[group.id] = true;
       },
       { immediate: true },
     );

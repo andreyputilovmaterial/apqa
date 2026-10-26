@@ -5,6 +5,7 @@ import yaml
 
 from .dbfile_base import DBFile as DBFileBase
 from .group_base import Group
+from .ids import ensure_unique
 from .rule_base import Rule
 
 
@@ -65,16 +66,20 @@ class DBFileYaml(DBFileBase):
 
         self._rules.clear()
         self._groups.clear()
-        for item in rules:
-            rule = Rule.from_dict(item)
-            if rule.name in self._rules:
-                raise ValueError(f'db file: duplicated rule name(s): {rule.name}')
-            self._rules[rule.name] = rule
         for item in groups:
             group = Group.from_dict(item)
-            if group.name in self._groups:
-                raise ValueError(f'db file: duplicated group name(s): {group.name}')
-            self._groups[group.name] = group
+            if group.id in self._groups:
+                raise ValueError(f'db file: duplicated group id(s): {group.id}')
+            self._groups[group.id] = group
+        # Resolve old-style (name) references to ids now that every group exists.
+        for group in self._groups.values():
+            group.parent = self.resolve_group_ref(group.parent)
+        for item in rules:
+            rule = Rule.from_dict(item)
+            if rule.id in self._rules:
+                raise ValueError(f'db file: duplicated rule id(s): {rule.id}')
+            rule.group = self.resolve_group_ref(rule.group)
+            self._rules[rule.id] = rule
         return self._rules
 
     def save(self):
@@ -93,45 +98,41 @@ class DBFileYaml(DBFileBase):
     def list_rules(self):
         return [ rule for _,rule in self._rules.items() ]
 
-    def get_rule(self,name):
-        name = f'{name}'
-        if name not in self._rules:
-            raise KeyError(f'rule not found: {name}')
-        return self._rules[name]
+    def get_rule(self, rule_id):
+        rule_id = f'{rule_id}'
+        if rule_id not in self._rules:
+            raise KeyError(f'rule not found: {rule_id}')
+        return self._rules[rule_id]
 
-    def has_rule(self,name):
-        return f'{name}' in self._rules
+    def has_rule(self, rule_id):
+        return f'{rule_id}' in self._rules
 
-    def add_rule(self,rule):
+    def add_rule(self, rule):
         if not isinstance(rule, Rule):
             rule = Rule.from_dict(rule)
-        if rule.name in self._rules:
-            raise ValueError(f'rule already exists: {rule.name}')
-        self._rules[rule.name] = rule
+        rule.id = ensure_unique(rule.id, self._existing_rule_ids())
+        rule.group = self.resolve_group_ref(rule.group)
+        self._rules[rule.id] = rule
         return rule
 
-    def update_rule(self,name,**changes):
-        # note: `name` cannot be passed as a keyword here (Python raises
-        # TypeError) — renames go through rename_rule().
-        rule = self.get_rule(name)
+    def update_rule(self, rule_id, **changes):
+        # note: `rule_id` cannot be passed as a keyword here (Python raises
+        # TypeError) — a rule's id is stable and cannot be changed.
+        if 'id' in changes:
+            raise ValueError("a rule's id cannot be changed")
+        rule = self.get_rule(rule_id)
         rule.update(**changes)
+        rule.group = self.resolve_group_ref(rule.group)
         return rule
 
-    def rename_rule(self,name,new_name):
-        rule = self.get_rule(name)
-        new_name = f'{new_name}'
-        if new_name == name:
-            return rule
-        if new_name in self._rules:
-            raise ValueError(f'rule already exists: {new_name}')
-        del self._rules[name]
-        rule.name = new_name
-        self._rules[new_name] = rule
+    def rename_rule(self, rule_id, new_name):
+        rule = self.get_rule(rule_id)
+        rule.name = f'{new_name}'
         return rule
 
-    def delete_rule(self,name):
-        rule = self.get_rule(name)
-        del self._rules[name]
+    def delete_rule(self, rule_id):
+        rule = self.get_rule(rule_id)
+        del self._rules[rule_id]
         return rule
 
     # ---- groups CRUD -----------------------------------------------------------
@@ -139,57 +140,45 @@ class DBFileYaml(DBFileBase):
     def list_groups(self):
         return [ group for _,group in self._groups.items() ]
 
-    def get_group(self,name):
-        name = f'{name}'
-        if name not in self._groups:
-            raise KeyError(f'group not found: {name}')
-        return self._groups[name]
+    def get_group(self, group_id):
+        group_id = f'{group_id}'
+        if group_id not in self._groups:
+            raise KeyError(f'group not found: {group_id}')
+        return self._groups[group_id]
 
-    def has_group(self,name):
-        return f'{name}' in self._groups
+    def has_group(self, group_id):
+        return f'{group_id}' in self._groups
 
-    def add_group(self,group):
+    def add_group(self, group):
         if not isinstance(group, Group):
             group = Group.from_dict(group)
-        if group.name in self._groups:
-            raise ValueError(f'group already exists: {group.name}')
-        group.parent = self._validate_group_parent(group.name, group.parent)
-        self._groups[group.name] = group
+        group.id = ensure_unique(group.id, self._existing_group_ids())
+        group.parent = self._validate_group_parent(group, group.parent)
+        self._groups[group.id] = group
         return group
 
-    def update_group(self,name,**changes):
-        # note: `name` cannot be passed as a keyword here (Python raises
-        # TypeError) — renames go through rename_group().
-        group = self.get_group(name)
+    def update_group(self, group_id, **changes):
+        # note: `group_id` cannot be passed as a keyword here (Python raises
+        # TypeError) — a group's id is stable and cannot be changed.
+        if 'id' in changes:
+            raise ValueError("a group's id cannot be changed")
+        group = self.get_group(group_id)
         group.update(**changes)
-        group.parent = self._validate_group_parent(name, group.parent)
+        group.parent = self._validate_group_parent(group, group.parent)
         return group
 
-    def rename_group(self,name,new_name):
-        group = self.get_group(name)
-        new_name = f'{new_name}'
-        if new_name == name:
-            return group
-        if new_name in self._groups:
-            raise ValueError(f'group already exists: {new_name}')
-        del self._groups[name]
-        group.name = new_name
-        self._groups[new_name] = group
-        for child in self._groups.values():
-            if child.parent == name:
-                child.parent = new_name
-        for rule in self._rules.values():
-            if rule.group == name:
-                rule.group = new_name
+    def rename_group(self, group_id, new_name):
+        group = self.get_group(group_id)
+        group.name = f'{new_name}'
         return group
 
-    def delete_group(self,name):
-        group = self.get_group(name)
-        if any(g.parent == name for g in self._groups.values()):
-            raise ValueError(f'group is not empty (it has sub-groups): {name}')
-        if any(r.group == name for r in self._rules.values()):
-            raise ValueError(f'group is not empty (it has rules): {name}')
-        del self._groups[name]
+    def delete_group(self, group_id):
+        group = self.get_group(group_id)
+        if any(g.parent == group_id for g in self._groups.values()):
+            raise ValueError(f'group is not empty (it has sub-groups): {group_id}')
+        if any(r.group == group_id for r in self._rules.values()):
+            raise ValueError(f'group is not empty (it has rules): {group_id}')
+        del self._groups[group_id]
         return group
 
     # ---- backward-compatible accessors --------------------------------------

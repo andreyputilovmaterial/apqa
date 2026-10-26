@@ -58,16 +58,20 @@ def test_create_and_list(config):
     status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
     assert status == 201
     assert data['rule']['name'] == 'r1'
+    assert data['rule']['id'] == 'r1'
 
     status, data = call(config, 'GET', '/qc/rules')
     assert status == 200
     assert [r['name'] for r in data['rules']] == ['r1']
+    assert [r['id'] for r in data['rules']] == ['r1']
 
 
-def test_create_duplicate(config):
-    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+def test_create_duplicate_name_dedups_id(config):
     status, data = call(config, 'POST', '/qc/rules', {'name': 'r1'})
-    assert status == 409
+    assert status == 201
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    assert status == 201
+    assert data['rule']['id'] == 'r1-2'
 
 
 def test_create_missing_name(config):
@@ -99,9 +103,9 @@ def test_update_rule(config):
     assert data['rule']['op'] == 'lt'
 
 
-def test_update_rule_rejects_name_change(config):
+def test_update_rule_rejects_id_change(config):
     call(config, 'POST', '/qc/rules', {'name': 'r1'})
-    status, data = call(config, 'PUT', '/qc/rules/r1', {'name': 'r2'})
+    status, data = call(config, 'PUT', '/qc/rules/r1', {'id': 'r2'})
     assert status == 400
 
 
@@ -125,13 +129,16 @@ def test_rename_rule(config):
     status, data = call(config, 'POST', '/qc/rules/r1/rename', {'new_name': 'r2'})
     assert status == 200
     assert data['rule']['name'] == 'r2'
+    assert data['rule']['id'] == 'r1'
 
 
-def test_rename_rule_duplicate(config):
+def test_rename_rule_allows_duplicate_display_name(config):
     call(config, 'POST', '/qc/rules', {'name': 'r1'})
     call(config, 'POST', '/qc/rules', {'name': 'r2'})
     status, data = call(config, 'POST', '/qc/rules/r1/rename', {'new_name': 'r2'})
-    assert status == 409
+    assert status == 200
+    assert data['rule']['name'] == 'r2'
+    assert data['rule']['id'] == 'r1'
 
 
 def test_rename_rule_missing_new_name(config):
@@ -154,7 +161,7 @@ def test_create_rule_with_group(config):
     config['iface']['db_file'].add_group({'name': 'Data'})
     status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'group': 'Data'})
     assert status == 201
-    assert data['rule']['group'] == 'Data'
+    assert data['rule']['group'] == 'data'
 
 
 def test_create_rule_with_missing_group(config):
@@ -173,4 +180,4 @@ def test_update_rule_with_group(config):
     config['iface']['db_file'].add_group({'name': 'Data'})
     status, data = call(config, 'PUT', '/qc/rules/r1', {'group': 'Data'})
     assert status == 200
-    assert data['rule']['group'] == 'Data'
+    assert data['rule']['group'] == 'data'
