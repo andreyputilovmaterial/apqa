@@ -83,7 +83,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   background: #fff;
-  padding: 6px 10px;
+  padding: 6px 8px;
 }
 
 .apqa-qcrules-entry-rule {
@@ -154,6 +154,7 @@
 .apqa-cmdlet-chain-empty {
   color: #999;
   font-style: italic;
+  font-family: 'IBM Plex Sans'; /* switch from monospace - to address slight misalignment in the left indent - the size of "(" and "[" characters in monospace font is bigger than the char itself, causing couple pixes of whitespace and the feel of misalignment */
 }
 
 .apqa-comparison {
@@ -334,7 +335,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 5px; /* reduced from 8px so that text in folder title after the [+] toggle is better aligned with rules below */
   width: 100%;
   margin: 0;
   appearance: none;
@@ -351,6 +352,7 @@
 .apqa-rules-tree-group-toggle {
   color: #666;
   font-family: 'IBM Plex Mono', monospace;
+  margin-left: -2px; /* compensate for the monospace "[" glyph's left advance width - the "[" and "(" characters carry a couple pixels of whitespace beyond the visible glyph, so the toggle looks shifted right relative to the rules below */
   font-size: 0.85rem;
   width: 2em;
   flex: 0 0 auto;
