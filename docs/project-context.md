@@ -4,6 +4,14 @@
 
 ## Last state
 
+- CSS alignment pass on the QC-rules list (`qcrules_list/styles.css`): narrowed the
+  shared entry box's horizontal padding (10px→8px) and the folder-header gap
+  (8px→5px), pulled the monospace `[+]` toggle back with `margin-left: -2px`, and
+  rendered the `(empty)` chain placeholder in IBM Plex Sans — all so folder titles
+  and rule text share the same left indent. `docs/roadmap.md` gained two TODOs
+  (decide alias reference syntax; review how `/functionality/run-rule` should
+  resolve aliases).
+
 - UI styling pass for folder aliases: removed the alias-row border/padding/box and
   the inter-line gap, so aliases render as tight plain `name: chain` lines below
   the folder name, indented by `var(--mdm-space-0-75x)` (22.5px), in muted grey
