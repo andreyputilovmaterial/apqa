@@ -4,6 +4,19 @@
 
 ## Last state
 
+- Added a `format-strip-html` terminal cmdlet (`src/cmdlets/format_strip_html/__init__.py`,
+  registered in `src/cmdlets/__init__.py`) that removes HTML markup and leaves
+  plain text (`how <i>would</i> you rate...` → `how would you rate...`). It uses
+  `BeautifulSoup(..., "html.parser")`, so misformatted/unbalanced markup is parsed
+  best-effort instead of rejected. `sysmissing` → `""`; blocks/arrays recurse and
+  keep their shape; other scalars delegate to the existing `as-text`.
+  `beautifulsoup4` is an **optional dependency** — a per-cmdlet `requirements.txt`
+  (`beautifulsoup4>=4`) plus the guarded-import pattern (the cmdlet is always
+  registered and only raises a readable `ImportError` when run without the dep).
+  The family prefix `format-` is provisional — see `docs/roadmap.md`. Tests in
+  `tests/test_standard_cmdlets.py` + `tests/test_optional_dependencies.py`.
+
+
 - CSS alignment pass on the QC-rules list (`qcrules_list/styles.css`): narrowed the
   shared entry box's horizontal padding (10px→8px) and the folder-header gap
   (8px→5px), pulled the monospace `[+]` toggle back with `margin-left: -2px`, and

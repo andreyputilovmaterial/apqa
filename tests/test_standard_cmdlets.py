@@ -208,3 +208,69 @@ def test_matches_regex():
 def test_matches_requires_pattern():
     with pytest.raises(ValueError):
         cmdlets.get('matches')('abc', {})
+
+
+# ---- text cleaning (markup -> plain text) -----------------------------------
+
+def test_format_strip_html_removes_inline_tags():
+    assert cmdlets.get('format-strip-html')('how <i>would</i> you rate...', {}) == \
+        'how would you rate...'
+
+
+def test_format_strip_html_preserves_plain_text():
+    assert cmdlets.get('format-strip-html')('plain text, no tags', {}) == \
+        'plain text, no tags'
+
+
+def test_format_strip_html_decodes_entities():
+    assert cmdlets.get('format-strip-html')('fish &amp; chips', {}) == 'fish & chips'
+
+
+def test_format_strip_html_is_lenient_with_unbalanced_markup():
+    assert cmdlets.get('format-strip-html')('a <b>bold', {}) == 'a bold'
+
+
+def test_format_strip_html_leaves_math_operators_alone():
+    assert cmdlets.get('format-strip-html')('x < 3 and y > 2', {}) == 'x < 3 and y > 2'
+
+
+def test_format_strip_html_sysmissing_becomes_empty_string():
+    assert cmdlets.get('format-strip-html')(sysmissing, {}) == ''
+
+
+def test_format_strip_html_other_scalars_use_as_text():
+    strip = cmdlets.get('format-strip-html')
+    assert strip(42, {}) == '42'
+    assert strip(3.14, {}) == '3.14'
+    assert strip(True, {}) == 'True'
+    assert strip(date(2025, 7, 15), {}) == '2025-07-15'
+    assert strip(datetime(2025, 7, 15, 10, 0, tzinfo=timezone.utc), {}) == \
+        '2025-07-15 10:00:00+00:00'
+    assert strip(Path('/tmp/plain-name'), {}) == '/tmp/plain-name'
+
+
+def test_format_strip_html_block_processes_fields_and_keeps_shape():
+    assert cmdlets.get('format-strip-html')({
+        'a': 'x <b>bold</b>',
+        'b': 'plain',
+        'c': 7,
+    }, {}) == {'a': 'x bold', 'b': 'plain', 'c': '7'}
+
+
+def test_format_strip_html_array_processes_items_and_keeps_shape():
+    assert cmdlets.get('format-strip-html')(
+        ['a <b>bold</b>', 'plain', None, 7],
+        {},
+    ) == ['a bold', 'plain', '', '7']
+
+
+def test_format_strip_html_recurse_into_nested_compounds():
+    assert cmdlets.get('format-strip-html')(
+        [{'label': 'how <i>would</i> you rate...'}],
+        {},
+    ) == [{'label': 'how would you rate...'}]
+
+
+def test_format_strip_html_empty_compounds_stay_empty():
+    assert cmdlets.get('format-strip-html')({}, {}) == {}
+    assert cmdlets.get('format-strip-html')([], {}) == []

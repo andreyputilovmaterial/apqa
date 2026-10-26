@@ -174,6 +174,21 @@ String helpers: `length` returns the text length; `matches` searches text for
 `args['pattern']` with optional `case_insensitive` / `regex` flags (default:
 case-sensitive literal substring).
 
+## Text cleaning cmdlets
+
+A **text cleaning** cmdlet turns text into plainer text by removing one kind of
+markup/formatting. The common prefix is `format-` (provisional — see
+`docs/roadmap.md`):
+
+- `format-strip-html` — remove HTML tags, leaving the text content. Uses
+  `BeautifulSoup(..., "html.parser")`, so misformatted/unbalanced markup is
+  handled best-effort rather than rejected. `sysmissing` becomes `""`; a block or
+  array is processed recursively and returned in the same shape; any other scalar
+  (number, boolean, date/time, path, …) is converted with `as-text`.
+  `beautifulsoup4` is an optional dependency (see the cmdlet's `requirements.txt`);
+  the cmdlet is always registered and only raises its import error when run
+  without it.
+
 ## Shape-changing operations
 
 On an **array**:

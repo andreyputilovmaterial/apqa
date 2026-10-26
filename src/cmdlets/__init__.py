@@ -26,5 +26,6 @@ from . import matches  # noqa: F401 - import registers the cmdlet
 from . import not_  # noqa: F401 - import registers the cmdlet
 from . import or_  # noqa: F401 - import registers the cmdlet
 from . import sort  # noqa: F401 - import registers the cmdlet
+from . import format_strip_html  # noqa: F401 - import registers the optional-dep cmdlet
 from . import validate_xml_compatible  # noqa: F401 - import registers the optional-dep cmdlet
 from .comparison_ops import ComparisonRegistry, comparisons
