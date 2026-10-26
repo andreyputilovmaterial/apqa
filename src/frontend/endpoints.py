@@ -12,9 +12,6 @@ from .endpoints_assets_delivery_path import (
 from .endpoints_rule_crud import (
     handle_rule_crud,
 )
-from .endpoints_definition_crud import (
-    handle_definition_crud,
-)
 from .endpoints_group_crud import (
     handle_group_crud,
 )

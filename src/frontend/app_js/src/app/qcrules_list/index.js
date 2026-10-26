@@ -3,7 +3,6 @@ import { computed, ref, onMounted } from 'vue';
 import RecordsFilter from '../../common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '../../common_defs/helper_functions';
 import logError from '../../common_components/_log_error_proxy';
-import DefinitionRecord from './definition_record';
 import RuleRecord from './rule_record';
 import RulesTree from './rules_tree';
 
@@ -17,12 +16,6 @@ const COLUMNS = {
   markers: { label: 'Markers', type: 'multipunch', description: 'Pytest markers that change how the rule runs, e.g. skip or xfail.' },
   created_at: { label: 'Created', type: 'text', description: 'When the rule was created.' },
   modified_at: { label: 'Modified', type: 'text', description: 'When the rule was last modified.' },
-};
-
-const DEFINITION_COLUMNS = {
-  name: { label: 'Name', type: 'text', description: 'Unique alias name.' },
-  value: { label: 'Value', type: 'text', description: 'Value the alias resolves to (e.g. a path).' },
-  comment: { label: 'Comment', type: 'text', description: 'Short human-readable note about the alias.' },
 };
 
 function toRecord(rule) {
@@ -43,13 +36,10 @@ function toRecord(rule) {
   };
 }
 
-function toDefinitionRecord(definition) {
-  const meta = definition.meta || {};
+function toAlias(alias) {
   return {
-    id: definition.name,
-    name: definition.name,
-    value: definition.value || '',
-    comment: meta.comment || '',
+    name: alias.name || '',
+    chain: Array.isArray(alias.chain) ? alias.chain : [],
   };
 }
 
@@ -60,6 +50,7 @@ function toGroupRecord(group) {
     name: group.name,
     parent: group.parent || '',
     order: meta.order ?? 0,
+    aliases: Array.isArray(group.aliases) ? group.aliases.map(toAlias) : [],
     meta,
   };
 }
@@ -67,7 +58,6 @@ function toGroupRecord(group) {
 const QcRulesList = {
   components: {
     'component-records-filter': RecordsFilter,
-    'definition-record': DefinitionRecord,
     'rule-record': RuleRecord,
     'rules-tree': RulesTree,
   },
@@ -80,20 +70,8 @@ const QcRulesList = {
     <div class="apqa-qcrules-page-toolbar">
       <button type="button" class="apqa-qcrules-page-button apqa-qcrules-page-button-primary" @click="createRule">Create new QC rule</button>
       <button type="button" class="apqa-qcrules-page-button" @click="createGroup">Create group</button>
-      <button type="button" class="apqa-qcrules-page-button" @click="createDefinition">Add alias</button>
+      <button type="button" class="apqa-qcrules-page-button" @click="createAlias">Add alias</button>
     </div>
-
-    <section class="apqa-qcrules-page-section">
-      <h2 class="apqa-qcrules-page-section-title">Global aliases</h2>
-      <component-records-filter :columns="definitionColumns" :records="definitions" key-field="id" :records-per-page="0">
-        <template #default="{ records: visibleDefinitions }">
-          <ul v-if="visibleDefinitions.length" class="apqa-qcrules-definition-list">
-            <definition-record v-for="definition in visibleDefinitions" :key="definition.id" :record="definition" />
-          </ul>
-          <div v-else class="apqa-qcrules-page-empty">No aliases defined.</div>
-        </template>
-      </component-records-filter>
-    </section>
 
     <section class="apqa-qcrules-page-section">
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
@@ -110,7 +88,6 @@ const QcRulesList = {
 
   setup() {
     const records = ref([]);
-    const definitions = ref([]);
     const groups = ref([]);
     const loading = ref(true);
     const loadError = ref('');
@@ -132,8 +109,6 @@ const QcRulesList = {
       };
     });
 
-    const definitionColumns = computed(() => DEFINITION_COLUMNS);
-
     const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
 
     async function requestJson(url) {
@@ -148,13 +123,11 @@ const QcRulesList = {
       loading.value = true;
       loadError.value = '';
       try {
-        const [rulesData, definitionsData, groupsData] = await Promise.all([
+        const [rulesData, groupsData] = await Promise.all([
           requestJson('/qc/rules'),
-          requestJson('/qc/definitions'),
           requestJson('/qc/groups'),
         ]);
         records.value = (rulesData.rules || []).map(toRecord);
-        definitions.value = (definitionsData.definitions || []).map(toDefinitionRecord);
         groups.value = (groupsData.groups || []).map(toGroupRecord);
       } catch (e) {
         loadError.value = `Failed to load QC rules: ${e}`;
@@ -167,6 +140,17 @@ const QcRulesList = {
     async function postJson(url, payload) {
       const response = await fetch(url, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(await makeFetchResponseErrorMessage(response));
+      }
+    }
+
+    async function putJson(url, payload) {
+      const response = await fetch(url, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
@@ -217,13 +201,38 @@ const QcRulesList = {
       }
     }
 
-    async function createDefinition() {
-      const name = window.prompt('New alias name');
+    async function createAlias() {
+      const groupName = window.prompt(
+        `Folder (group) to add the alias to.\nExisting groups: ${groupNames.value}`,
+      );
+      if (groupName == null || groupName.trim() === '') return;
+      const group = groups.value.find((g) => g.name === groupName.trim());
+      if (!group) {
+        window.alert(`Group not found: ${groupName.trim()}`);
+        return;
+      }
+      const name = window.prompt('Alias name');
       if (name == null || name.trim() === '') return;
-      const value = window.prompt('Alias value (e.g. a path)');
-      if (value == null) return;
+      const chainText = window.prompt(
+        'Cmdlet chain as a JSON array of {cmdlet, args} objects',
+        '[{"cmdlet":"get-content-mdd","args":{"path":"s:\\\\..."}}]',
+      );
+      if (chainText == null) return;
+      let chain;
       try {
-        await postJson('/qc/definitions', { name: name.trim(), value });
+        chain = JSON.parse(chainText);
+      } catch (e) {
+        window.alert(`Failed to parse cmdlet chain: ${e}`);
+        return;
+      }
+      if (!Array.isArray(chain)) {
+        window.alert('Cmdlet chain must be a JSON array');
+        return;
+      }
+      const aliases = group.aliases.filter((alias) => alias.name !== name.trim());
+      aliases.push({ name: name.trim(), chain });
+      try {
+        await putJson(`/qc/groups/${encodeURIComponent(group.name)}`, { aliases });
         await load();
       } catch (e) {
         window.alert(`Failed to add alias: ${e}`);
@@ -247,16 +256,14 @@ const QcRulesList = {
 
     return {
       columns,
-      definitionColumns,
       records,
-      definitions,
       groups,
       loading,
       loadError,
       load,
       createRule,
       createGroup,
-      createDefinition,
+      createAlias,
       onEditRule,
       onRunRule,
     };

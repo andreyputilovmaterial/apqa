@@ -1,5 +1,6 @@
 import { computed, reactive, ref, watch } from 'vue';
 
+import AliasRecord from './alias_record';
 import RuleRecord from './rule_record';
 import { buildGroupNodes } from './grouping';
 
@@ -21,6 +22,7 @@ const RulesTree = {
   emits: ['edit', 'run'],
 
   components: {
+    'alias-record': AliasRecord,
     'rule-record': RuleRecord,
   },
 
@@ -38,6 +40,9 @@ const RulesTree = {
           <span class="apqa-rules-tree-group-toggle" aria-hidden="true">{{ collapsed[node.id] ? '[+]' : '[-]' }}</span>
           <span class="apqa-rules-tree-group-name">{{ node.name }}</span>
         </button>
+        <ul v-if="!collapsed[node.id] && node.aliases.length" class="apqa-rules-tree-aliases">
+          <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" />
+        </ul>
       </li>
       <rule-record
         v-else

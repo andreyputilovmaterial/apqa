@@ -100,6 +100,24 @@ def test_update_group(config):
     assert data['group']['parent'] == 'Data'
 
 
+def test_create_group_with_aliases(config):
+    status, data = call(config, 'POST', '/qc/groups', {
+        'name': 'Data',
+        'aliases': [{'name': 'x', 'chain': []}],
+    })
+    assert status == 201
+    assert data['group']['aliases'][0]['name'] == 'x'
+
+
+def test_update_group_aliases(config):
+    call(config, 'POST', '/qc/groups', {'name': 'Data'})
+    status, data = call(config, 'PUT', '/qc/groups/Data', {
+        'aliases': [{'name': 'x', 'chain': [{'cmdlet': 'literal', 'args': {'value': 1}}]}],
+    })
+    assert status == 200
+    assert data['group']['aliases'][0]['name'] == 'x'
+
+
 def test_update_group_rejects_name_change(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
     status, data = call(config, 'PUT', '/qc/groups/Data', {'name': 'Other'})

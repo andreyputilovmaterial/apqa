@@ -54,14 +54,19 @@ Rules are stored in the project's **database file**, in one of two formats:
 The format is chosen by the file extension. To start a new project, create an
 empty file with the extension you want (for example, `project.sqlite3`).
 
-## Global aliases
+## Folder aliases
 
-You can define project-wide **aliases** that give a short name to a long, reused
-value (usually a file path). For example, define
-`/project/p123/data/datafile.db` as `PROCESSED_DATA`, then use `PROCESSED_DATA`
-as a command parameter instead of repeating the full path everywhere. Aliases are
-stored in the same database file as the rules and are shown in their own section
-above the rule list.
+You can define **aliases** inside a folder (group) to give a short name to a
+reusable value — typically a source document. Each alias is a name plus a chain
+of cmdlets that produces the value, for example:
+
+    survey_mdd: get-content-mdd --path "s:\projects\p123456\myfile.mdd"
+
+Aliases defined in a folder are inherited by its sub-folders, like a Python
+`with` statement. Rules inside the folder can then use the alias name wherever
+an argument value is expected, instead of repeating the full cmdlet chain.
+Aliases are stored on the group that owns them, in the same database file as the
+rules, and are shown inside the folder in the rule list.
 
 ## Running the QC tests
 

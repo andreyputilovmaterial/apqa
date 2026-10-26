@@ -6,8 +6,8 @@ function rule(name, group = '', order = 0) {
   return { id: name, name, group, order };
 }
 
-function group(name, parent = '', order = 0) {
-  return { name, parent, order };
+function group(name, parent = '', order = 0, aliases = []) {
+  return { name, parent, order, aliases };
 }
 
 describe('buildGroupNodes', () => {
@@ -56,6 +56,15 @@ describe('buildGroupNodes', () => {
   it('keeps empty groups', () => {
     const nodes = buildGroupNodes([group('Empty')], []);
     expect(nodes.map((n) => n.name)).toEqual(['Empty']);
+  });
+
+  it('carries folder aliases onto group nodes', () => {
+    const aliases = [
+      { name: 'survey_mdd', chain: [{ cmdlet: 'get-content-mdd', args: { path: 'x' } }] },
+    ];
+    const nodes = buildGroupNodes([group('Data', '', 0, aliases)], []);
+    const node = nodes.find((n) => n.kind === 'group');
+    expect(node.aliases).toEqual(aliases);
   });
 
   it('treats a group with a missing parent as a root', () => {

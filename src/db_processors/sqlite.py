@@ -6,7 +6,6 @@ import threading
 from pathlib import Path
 
 from .dbfile_base import DBFile as DBFileBase
-from .definition_base import Definition
 from .group_base import Group
 from .rule_base import Rule
 
@@ -101,22 +100,26 @@ class DBFileSqlite(DBFileBase):
                 )
             self._conn.execute(
                 '''
-                CREATE TABLE IF NOT EXISTS definitions (
-                    name  TEXT PRIMARY KEY,
-                    value TEXT NOT NULL DEFAULT '',
-                    meta  TEXT NOT NULL DEFAULT '{}'
-                )
-                '''
-            )
-            self._conn.execute(
-                '''
                 CREATE TABLE IF NOT EXISTS groups (
-                    name   TEXT PRIMARY KEY,
-                    parent TEXT NOT NULL DEFAULT '',
-                    meta   TEXT NOT NULL DEFAULT '{}'
+                    name    TEXT PRIMARY KEY,
+                    parent  TEXT NOT NULL DEFAULT '',
+                    aliases TEXT NOT NULL DEFAULT '[]',
+                    meta    TEXT NOT NULL DEFAULT '{}'
                 )
                 '''
             )
+            # Migrate databases created before ``aliases`` existed on groups.
+            group_columns = [
+                row['name']
+                for row in self._conn.execute('PRAGMA table_info(groups)').fetchall()
+            ]
+            if 'aliases' not in group_columns:
+                self._conn.execute(
+                    'ALTER TABLE groups ADD COLUMN aliases TEXT NOT NULL DEFAULT \'[]\''
+                )
+            # The old project-level `definitions` table is obsolete (aliases now
+            # live on groups). Drop it — no backward compatibility maintained.
+            self._conn.execute('DROP TABLE IF EXISTS definitions')
             self._conn.commit()
 
     def save(self):
@@ -219,92 +222,6 @@ class DBFileSqlite(DBFileBase):
             self._conn.commit()
         return rule
 
-    # ---- definitions CRUD ---------------------------------------------------
-
-    def list_definitions(self):
-        with self._lock:
-            rows = self._conn.execute(
-                'SELECT * FROM definitions ORDER BY rowid'
-            ).fetchall()
-        return [self._row_to_definition(row) for row in rows]
-
-    def get_definition(self, name):
-        name = f'{name}'
-        with self._lock:
-            row = self._conn.execute(
-                'SELECT * FROM definitions WHERE name = ?', (name,)
-            ).fetchone()
-        if row is None:
-            raise KeyError(f'definition not found: {name}')
-        return self._row_to_definition(row)
-
-    def has_definition(self, name):
-        name = f'{name}'
-        with self._lock:
-            row = self._conn.execute(
-                'SELECT 1 FROM definitions WHERE name = ?', (name,)
-            ).fetchone()
-        return row is not None
-
-    def add_definition(self, definition):
-        if not isinstance(definition, Definition):
-            definition = Definition.from_dict(definition)
-        if self.has_definition(definition.name):
-            raise ValueError(f'definition already exists: {definition.name}')
-        with self._lock:
-            self._conn.execute(
-                'INSERT INTO definitions (name, value, meta) VALUES (?, ?, ?)',
-                (
-                    definition.name,
-                    definition.value,
-                    _dumps(definition.meta),
-                ),
-            )
-            self._conn.commit()
-        return definition
-
-    def update_definition(self, name, **changes):
-        # note: `name` cannot be passed as a keyword here (Python raises
-        # TypeError) — renames go through rename_definition().
-        name = f'{name}'
-        definition = self.get_definition(name)
-        definition.update(**changes)
-        with self._lock:
-            self._conn.execute(
-                'UPDATE definitions SET value = ?, meta = ? WHERE name = ?',
-                (
-                    definition.value,
-                    _dumps(definition.meta),
-                    name,
-                ),
-            )
-            self._conn.commit()
-        return definition
-
-    def rename_definition(self, name, new_name):
-        name = f'{name}'
-        definition = self.get_definition(name)
-        new_name = f'{new_name}'
-        if new_name == name:
-            return definition
-        if self.has_definition(new_name):
-            raise ValueError(f'definition already exists: {new_name}')
-        with self._lock:
-            self._conn.execute(
-                'UPDATE definitions SET name = ? WHERE name = ?', (new_name, name)
-            )
-            self._conn.commit()
-        definition.name = new_name
-        return definition
-
-    def delete_definition(self, name):
-        name = f'{name}'
-        definition = self.get_definition(name)
-        with self._lock:
-            self._conn.execute('DELETE FROM definitions WHERE name = ?', (name,))
-            self._conn.commit()
-        return definition
-
     # ---- groups CRUD ---------------------------------------------------------
 
     def list_groups(self):
@@ -340,8 +257,8 @@ class DBFileSqlite(DBFileBase):
         group.parent = self._validate_group_parent(group.name, group.parent)
         with self._lock:
             self._conn.execute(
-                'INSERT INTO groups (name, parent, meta) VALUES (?, ?, ?)',
-                (group.name, group.parent, _dumps(group.meta)),
+                'INSERT INTO groups (name, parent, aliases, meta) VALUES (?, ?, ?, ?)',
+                (group.name, group.parent, _dumps(group.aliases), _dumps(group.meta)),
             )
             self._conn.commit()
         return group
@@ -355,8 +272,8 @@ class DBFileSqlite(DBFileBase):
         group.parent = self._validate_group_parent(name, group.parent)
         with self._lock:
             self._conn.execute(
-                'UPDATE groups SET parent = ?, meta = ? WHERE name = ?',
-                (group.parent, _dumps(group.meta), name),
+                'UPDATE groups SET parent = ?, aliases = ?, meta = ? WHERE name = ?',
+                (group.parent, _dumps(group.aliases), _dumps(group.meta), name),
             )
             self._conn.commit()
         return group
@@ -414,16 +331,10 @@ class DBFileSqlite(DBFileBase):
             'right': _loads(row['right'], []),
         })
 
-    def _row_to_definition(self, row):
-        return Definition.from_dict({
-            'name': row['name'],
-            'value': row['value'],
-            'meta': _loads(row['meta'], {}),
-        })
-
     def _row_to_group(self, row):
         return Group.from_dict({
             'name': row['name'],
             'parent': row['parent'],
+            'aliases': _loads(row['aliases'], []),
             'meta': _loads(row['meta'], {}),
         })

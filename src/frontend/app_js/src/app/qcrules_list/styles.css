@@ -60,7 +60,6 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #555;
-  border-bottom: 1px solid #ddd;
 }
 
 .apqa-qcrules-page-empty {
@@ -240,55 +239,32 @@
   align-self: baseline;
 }
 
-/* Global aliases (definitions) list: raw "NAME = value" rows, Excel-like. */
-.apqa-qcrules-definition-list {
+/* Folder aliases (alias_record.js) — plain "name: chain" rows shown inside an
+   expanded folder in the rules tree. No borders/boxes: just a few tight lines
+   below the folder name, indented by the modular 0.75x step (22.5px). */
+.apqa-rules-tree-aliases {
   list-style-type: none;
-  margin: 0;
+  margin: var(--mdm-space-0-125x) 0 0 var(--mdm-space);
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
-.apqa-definition-record {
+.apqa-alias-record {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
-  padding: 3px 8px;
-  border: 1px solid #eee;
-  border-radius: 3px;
-  background: #fafafa;
   min-width: 0;
+  color: #666;
 }
 
-.apqa-definition-record-name {
+.apqa-alias-record-name {
   font-weight: 600;
-  color: #333;
+  margin-right: 2px;
 }
 
-.apqa-definition-record-eq {
+.apqa-alias-record-colon {
   color: #999;
-}
-
-.apqa-definition-record-value {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.85rem;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.apqa-definition-record-comment {
-  color: #888;
-}
-
-.apqa-definition-record-comment::before {
-  content: "—";
   margin-right: 6px;
-  color: #bbb;
 }
 
 /* Rule record wrapper: the `<li>` in the list. The bordered card is rendered by
@@ -296,7 +272,7 @@
    `--rules-tree-depth` is set inline by the rules tree so nested rules indent. */
 .apqa-rule-record {
   list-style-type: none;
-  padding-left: calc(var(--rules-tree-depth, 0) * 16px);
+  padding-left: calc(var(--rules-tree-depth, 0) * var(--mdm-space));
 }
 
 .apqa-rule-body {
@@ -348,7 +324,7 @@
 
 .apqa-rules-tree-group {
   list-style-type: none;
-  padding-left: calc(var(--rules-tree-depth, 0) * 16px);
+  padding-left: calc(var(--rules-tree-depth, 0) * var(--mdm-space));
 }
 
 /* A folder is the same box as a QC rule (it also carries `.apqa-qcrules-entry`);

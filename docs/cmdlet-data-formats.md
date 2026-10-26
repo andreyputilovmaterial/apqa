@@ -298,6 +298,15 @@ read their input from ``args``). Currently implemented:
   categories, a ``categories`` block keyed by category name → detailed category
   block (for a categorical scalar its keys are the available response options).
 
+## Folder aliases
+
+A folder (group) may define aliases: `{ name, chain }` entries where `chain` is a
+cmdlet chain whose output is the alias value. Aliases are resolved once per
+folder at run time and inherited by sub-folders (like a `with` statement). A rule
+inside the folder references an alias by name wherever an argument value is
+expected; the name is replaced by the resolved value — any scalar or compound
+value a cmdlet can return — rather than a plain path.
+
 ## Remaining to implement
 
 - Full *runtime* value objects for categoricals and the block / named collection /

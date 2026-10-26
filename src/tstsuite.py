@@ -4,6 +4,8 @@ import os
 from collections.abc import Iterable
 
 from .db_processors import DBFile
+from .db_processors.rule_base import Rule
+from .group_aliases import AliasScopeResolver, substitute
 
 
 DB_FILE_ENV_VAR_NAME = "APQA_DB_FILE"
@@ -27,7 +29,26 @@ def load_cases(resource_path=None) -> Iterable:
         dbfile = DBFile(resource_path)
     except Exception as e:
         raise RuntimeError(f'db_file: can\'t load file: {resource_path}: {e}') from e
-    yield from dbfile.rules
+
+    groups = dbfile.list_groups()
+    resolver = AliasScopeResolver(groups)
+    group_names = {group.name for group in groups}
+
+    for rule in dbfile.list_rules():
+        if rule.group in group_names:
+            yield _rule_with_scope(rule, resolver.scope_for(rule.group))
+        else:
+            yield rule
+
+
+def _rule_with_scope(rule, scope):
+    """Return a copy of ``rule`` with folder aliases resolved into its chains."""
+    if not scope:
+        return rule
+    substituted = Rule.from_dict(rule.to_dict())
+    substituted.left = substitute(rule.left, scope)
+    substituted.right = substitute(rule.right, scope)
+    return substituted
 
 
 def run_tst_case(rule):

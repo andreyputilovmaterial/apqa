@@ -4,6 +4,41 @@
 
 ## Last state
 
+- UI styling pass for folder aliases: removed the alias-row border/padding/box and
+  the inter-line gap, so aliases render as tight plain `name: chain` lines below
+  the folder name, indented by `var(--mdm-space-0-75x)` (22.5px), in muted grey
+  (`#666`) with 2px between name and colon and 6px between colon and chain;
+  removed the grey rule under the "QC rules" heading. SQLite `_ensure_schema`
+  now `DROP TABLE IF EXISTS definitions` (no backward compat for the removed
+  global-definitions table).
+
+- Replaced **global aliases (definitions)** with **folder aliases**. Removed the
+  `Definition` entity (`src/db_processors/definition_base.py`), its `DBFile`
+  contract (`list_definitions`/…), the `definitions` SQLite table/column writes,
+  the YAML top-level `definitions` list, the `/qc/definitions…` endpoint
+  (`endpoints_definition_crud.py`), and the frontend "Global aliases" section +
+  `definition_record.js`. A `Group` now carries an `aliases` list of
+  `{ name, chain, meta }` (a cmdlet chain that produces the value), stored as a
+  `groups.aliases` JSON column in SQLite (with an automatic `ALTER TABLE`
+  migration) and as a per-group `aliases` list in YAML; `Group.from_dict`/`update`
+  normalize them (unique names, `chain` must be a list). New
+  `src/group_aliases.py`: `substitute()` (recursive alias-name → resolved-value
+  substitution that skips a cmdlet's `cmdlet` key) and `AliasScopeResolver`
+  (resolves each folder's aliases once via `run_chain`, caches the scope,
+  inherits parent scope, child shadows parent). `src/tstsuite.py` `load_cases()`
+  now resolves aliases per rule group and yields a plain list of `Rule` copies
+  with resolved chains; ungrouped rules pass through untouched. Frontend:
+  `RulesTree` renders folder aliases as `name: chain` rows (new `alias_record.js`)
+  under an expanded folder; the "Add alias" button now prompts for folder + name +
+  chain JSON and PUTs the group's `aliases`. Tests: removed
+  `tests/test_db_processors_definitions.py` and
+  `tests/test_endpoints_definition_crud.py`; added `tests/test_group_aliases.py`
+  and alias cases in `tests/test_db_processors_groups.py` +
+  `tests/test_endpoints_group_crud.py` + `grouping.spec.js`/`rules_tree.spec.js`.
+  599 Python tests + qcrules frontend tests pass. Sample
+  `tests-real-sensitive-data/projects.yaml`/`.sqlite3` now demo aliases on
+  `comp titles` and `titles updated`.
+
 - Implemented **foldable rule groups (folders)** — the roadmap "Make foldable
   groups for qc rules" item. Rules can now be organized into a tree of groups
   instead of one flat list. New `Group` entity (`src/db_processors/group_base.py`:
@@ -517,6 +552,15 @@
 
 ## Open questions / TODO
 
+- **Alias reference syntax is undecided.** Currently an alias is referenced by an
+  exact whole-string match of an argument value (so `"survey_mdd"` is substituted,
+  with no way to pass a literal `"survey_mdd"` string). Being considered: a
+  reference marker (e.g. `@survey_mdd`) or an explicit JSON form such as
+  `{ isReference: true, name: "survey_mdd" }`. Not implemented — needs a decision.
+- **`/functionality/run-rule` has no folder context**, so an isolated rule passed
+  as JSON cannot resolve folder aliases (only the `load_cases` / run-QC-tests path
+  resolves them). Needs a rethink — e.g. accept a scope/aliases map in the request
+  or route it through `load_cases`. Recorded as a real open question.
 - Planned (not implemented): **conditional markers** for `meta.markers` — skip a
   rule only on certain platforms/tools (e.g. Windows-only rules for `pywin32`),
   driven by an env var set by the outer `run_*.sh`/`.bat` script (real
@@ -549,12 +593,11 @@
 - `.db` extension is intentionally **not** mapped to SQLite (ambiguous); add it
   only if a concrete need appears.
 - The QC-rules page can now *create* a rule (optionally assigning it a group),
-  *create* a group, and *add* an alias (all via `window.prompt`, hitting
-  `/qc/rules`/`/qc/groups`/`/qc/definitions`), but full rule/definition/group CRUD
-  UI (edit, delete, rename, move rules between groups, and the Edit/Run action
-  buttons) is still not implemented — the endpoints exist and are exercised by
-  `tests/test_endpoints_rule_crud.py`, `tests/test_endpoints_group_crud.py` and
-  `tests/test_endpoints_definition_crud.py`, but the frontend's Edit/Run buttons
-  are placeholders and there is no UI yet to move an existing rule into/out of a
-  group.
+  *create* a group, and *add a folder alias* (all via `window.prompt`, hitting
+  `/qc/rules`/`/qc/groups`), but full rule/group CRUD UI (edit, delete, rename,
+  move rules between groups, and the Edit/Run action buttons) is still not
+  implemented — the endpoints exist and are exercised by
+  `tests/test_endpoints_rule_crud.py` and `tests/test_endpoints_group_crud.py`,
+  but the frontend's Edit/Run buttons are placeholders and there is no UI yet to
+  move an existing rule into/out of a group.
 

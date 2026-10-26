@@ -186,6 +186,82 @@ def test_sqlite_group_roundtrip_reload(sqlite_dbfile):
     assert reloaded.get_group("Metadata").parent == "Data"
 
 
+# ---- aliases on groups -------------------------------------------------------
+
+YAML_WITH_GROUP_ALIASES = """\
+groups:
+  - name: Data
+    aliases:
+      - name: survey_mdd
+        chain:
+          - cmdlet: get-content-mdd
+            args:
+              path: s:/projects/p123/myfile.mdd
+      - name: processed_data
+        chain:
+          - cmdlet: literal
+            args:
+              value: 42
+rules:
+  - name: r1
+    group: Data
+    op: eq
+"""
+
+
+def test_yaml_group_aliases_roundtrip(tmp_path):
+    db_file = tmp_path / 'aliases.yaml'
+    db_file.write_text(YAML_WITH_GROUP_ALIASES, encoding='utf-8')
+    dbfile = DBFile(str(db_file))
+
+    group = dbfile.get_group('Data')
+    assert [a['name'] for a in group.aliases] == ['survey_mdd', 'processed_data']
+    assert group.aliases[0]['chain'][0]['cmdlet'] == 'get-content-mdd'
+
+    dbfile.save()
+    reloaded = DBFile(str(db_file))
+    assert [a['name'] for a in reloaded.get_group('Data').aliases] == [
+        'survey_mdd', 'processed_data',
+    ]
+
+
+def test_yaml_group_update_aliases(yaml_dbfile):
+    aliases = [{'name': 'x', 'chain': [{'cmdlet': 'literal', 'args': {'value': 1}}]}]
+    group = yaml_dbfile.update_group('Data', aliases=aliases)
+    assert [a['name'] for a in group.aliases] == ['x']
+
+
+def test_yaml_group_aliases_duplicate_name_rejected(yaml_dbfile):
+    with pytest.raises(ValueError):
+        yaml_dbfile.add_group({
+            'name': 'Dup',
+            'aliases': [
+                {'name': 'a', 'chain': []},
+                {'name': 'a', 'chain': []},
+            ],
+        })
+
+
+def test_yaml_group_alias_requires_name(yaml_dbfile):
+    with pytest.raises(ValueError):
+        yaml_dbfile.add_group({'name': 'Bad', 'aliases': [{'chain': []}]})
+
+
+def test_sqlite_group_aliases_roundtrip(sqlite_dbfile):
+    sqlite_dbfile.add_group({
+        'name': 'Data',
+        'aliases': [
+            {'name': 'survey_mdd', 'chain': [{'cmdlet': 'get-content-mdd', 'args': {'path': 'x'}}]},
+        ],
+    })
+    sqlite_dbfile.save()
+
+    reloaded = DBFile(str(sqlite_dbfile.resource_path))
+    aliases = reloaded.get_group('Data').aliases
+    assert [a['name'] for a in aliases] == ['survey_mdd']
+    assert aliases[0]['chain'][0]['cmdlet'] == 'get-content-mdd'
+
+
 # ---- shared model behavior --------------------------------------------------
 
 def test_group_from_dict_requires_name():

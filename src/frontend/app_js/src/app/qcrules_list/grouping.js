@@ -13,6 +13,7 @@ export function buildGroupNodes(groups, records) {
       name: group.name,
       parent: group.parent || '',
       order: orderOf(group.order),
+      aliases: group.aliases || [],
       children: [],
       rules: [],
     });
@@ -57,6 +58,7 @@ export function buildGroupNodes(groups, records) {
       key: `g:${node.id}`,
       id: node.id,
       name: node.name,
+      aliases: node.aliases || [],
       depth,
       parents: parents.slice(),
     });

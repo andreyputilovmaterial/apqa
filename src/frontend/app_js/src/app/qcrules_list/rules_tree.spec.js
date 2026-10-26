@@ -19,8 +19,8 @@ function rule(name, group = '') {
   };
 }
 
-function group(name, parent = '') {
-  return { name, parent };
+function group(name, parent = '', aliases = []) {
+  return { name, parent, aliases };
 }
 
 describe('RulesTree', () => {
@@ -55,6 +55,27 @@ describe('RulesTree', () => {
 
     expect(wrapper.text()).toContain('r1');
     expect(wrapper.find('.apqa-rules-tree-group').exists()).toBe(false);
+  });
+
+  it('renders folder aliases as name: chain when expanded', async () => {
+    const wrapper = mount(RulesTree, {
+      props: {
+        groups: [
+          group('Data', '', [
+            { name: 'survey_mdd', chain: [{ cmdlet: 'get-content-mdd', args: { path: 'x' } }] },
+          ]),
+        ],
+        records: [],
+      },
+    });
+
+    expect(wrapper.text()).not.toContain('survey_mdd');
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+
+    expect(wrapper.text()).toContain('survey_mdd');
+    expect(wrapper.text()).toContain('get-content-mdd');
+    expect(wrapper.text()).toContain('path=x');
   });
 
   it('keeps child rules hidden while a parent folder is folded', async () => {
