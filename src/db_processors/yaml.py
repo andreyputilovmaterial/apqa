@@ -48,6 +48,15 @@ class DBFileYaml(DBFileBase):
         self._groups = {}
         self._read()
 
+    @classmethod
+    def _init_storage(cls, resource_path):
+        path = Path(resource_path).resolve()
+        if path.exists():
+            raise FileExistsError(f'db file: already exists: {path}')
+        with open(path, 'w', encoding='utf-8') as f:
+            yaml.safe_dump({'groups': [], 'rules': []}, f, sort_keys=False)
+        return path
+
     def _read(self):
         with open(self.resource_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}

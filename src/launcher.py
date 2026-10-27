@@ -14,6 +14,7 @@ if __name__ == '__main__':
     from src.GENERATED.HELP import _MD as help_md
     from src.main_print_help import print_help
     from src.main_ui_program import main as call_ui_program
+    from src.main_init_program import main as call_init_program
     # from src.main_gitgui_project_selector import main as call_gitgui_project_selector_program
 elif '.' in __name__:
     # package
@@ -21,6 +22,7 @@ elif '.' in __name__:
     from .GENERATED.HELP import _MD as help_md
     from .main_print_help import print_help
     from .main_ui_program import main as call_ui_program
+    from .main_init_program import main as call_init_program
     # from .main_gitgui_project_selector import main as call_gitgui_project_selector_program
 else:
     # included with no parent package
@@ -28,6 +30,7 @@ else:
     from GENERATED.HELP import _MD as help_md
     from main_print_help import print_help
     from main_ui_program import main as call_ui_program
+    from main_init_program import main as call_init_program
     # from main_gitgui_project_selector import main as call_gitgui_project_selector_program
 
 gitgui_script_version = gitgui_script_version.strip()
@@ -72,6 +75,7 @@ def call_printversion_program(*argcs,**kwargs):
 
 run_programs = {
     'ui': call_ui_program,
+    'init': call_init_program,
     # 'project-selector': call_gitgui_project_selector_program,
     'test': call_test_program,
     'done': call_done_program,

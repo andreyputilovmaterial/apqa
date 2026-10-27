@@ -30,6 +30,27 @@ class DBFile:
             return dbfile_cls
         return decorator
 
+    @classmethod
+    def init_storage(cls, resource_path, resource_type=None):
+        """Create an empty QC-rules storage at ``resource_path``.
+
+        ``resource_type`` is the registry key of the storage format (e.g.
+        ``'yaml'``, ``'sqlite'``). When omitted it is derived from the path via
+        :func:`~.detect_type.detect_type`, the same logic used when opening a
+        database. This method is only the router: the concrete creation logic
+        lives in each registered processor's ``_init_storage`` classmethod, so
+        the set of supported formats is whatever is currently registered, never
+        a hardcoded list.
+        """
+        if resource_type is None:
+            resource_type = detect_type(resource_path)
+        processor_cls = cls._registry.get(resource_type)
+        if processor_cls is None:
+            raise NotImplementedError(
+                f'db file: resource type not supported: {resource_type or "unrecognized"}'
+            )
+        return processor_cls._init_storage(resource_path)
+
     def __init__(self,resource_path):
         self.resource_path = resource_path
 

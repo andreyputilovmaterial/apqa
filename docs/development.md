@@ -11,17 +11,22 @@ user-facing picture, see the [README](../README.md) and the in-app Help page
 ## What APQA is
 
 APQA is a Python tool for defining, managing, and running **QC (quality-control)
-rules** for a research project. It has two run modes:
+rules** for a research project. It has three run modes:
 
 1. **Desktop app (edit rules)** — a Python backend + Vue frontend served from
    `localhost` (`--program ui --db-file <path>`).
-2. **Run the QC rules** — the program is invoked through `pytest`, which runs every
+2. **Create a rules database** — create a new empty storage
+   (`--program init --db-file <path> [--db-format <type>]`); the format defaults
+   to the file extension, and every backend registered in `src/db_processors` is
+   supported (nothing is hardcoded in the init program).
+3. **Run the QC rules** — the program is invoked through `pytest`, which runs every
    rule against the source data and reports pass/fail.
 
 The project is selected by pointing the program at a **rules database file**
-(SQLite by default; YAML also supported): `--db-file` in the desktop app, or the
-`APQA_DB_FILE` environment variable in the run-tests mode (CLI args are not
-available there). The format is chosen by the file extension.
+(SQLite by default; YAML also supported): `--db-file` in the desktop-app and
+init modes, or the `APQA_DB_FILE` environment variable in the run-tests mode
+(CLI args are not available there). The format is chosen by the file extension;
+`--program init` also accepts an optional `--db-format` override.
 
 ## Distribution model: the pinliner bundle
 

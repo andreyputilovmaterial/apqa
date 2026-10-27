@@ -4,6 +4,21 @@
 
 ## Last state
 
+- Added a **CLI storage initializer** (`--program init`, new
+  `src/main_init_program.py`) that creates an empty QC-rules storage at a given
+  path. It parses a required `--db-file` and an optional `--db-format`; the
+  format defaults to `detect_type(path)` and is otherwise routed through the
+  existing db_processor registry, so every format registered in
+  `src/db_processors` (yaml, sqlite, …) is supported with no hardcoded list.
+  Creation logic lives in each processor (`DBFileYaml._init_storage` /
+  `DBFileSqlite._init_storage`), with a single router
+  `DBFile.init_storage(path, type=None)` on the base class; sqlite DDL is now
+  shared between fresh creation and the legacy migrations. The init program
+  follows `main_ui_program.py`'s coloring/error-reporting style (raise +
+  launcher's red error block). `init_storage` refuses to clobber an existing
+  file (`FileExistsError`). New tests in `tests/test_db_processors_init.py`;
+  289 dev tests pass.
+
 - **Split rule/group `name` into `id` (technical) + `name` (display).** Rules and
   groups now each carry a stable, auto-generated `id` — an ASCII alphanumeric
   slug derived from the display name (`src/db_processors/ids.py`: lower-cased

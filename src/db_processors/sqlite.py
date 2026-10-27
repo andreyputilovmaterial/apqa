@@ -31,6 +31,33 @@ def _loads(text, default):
         return default
 
 
+# DDL shared by schema creation (fresh databases) and the legacy migrations
+# that rebuild a table in place. Keeping a single source of truth avoids the
+# two copies drifting apart.
+_CREATE_RULES_SQL = '''
+CREATE TABLE IF NOT EXISTS rules (
+    id      TEXT PRIMARY KEY,
+    name    TEXT NOT NULL DEFAULT '',
+    "group" TEXT NOT NULL DEFAULT '',
+    meta    TEXT NOT NULL DEFAULT '{}',
+    "left"  TEXT NOT NULL DEFAULT '[]',
+    op      TEXT NOT NULL DEFAULT '',
+    op_args TEXT NOT NULL DEFAULT '{}',
+    "right" TEXT NOT NULL DEFAULT '[]'
+)
+'''
+
+_CREATE_GROUPS_SQL = '''
+CREATE TABLE IF NOT EXISTS groups (
+    id      TEXT PRIMARY KEY,
+    name    TEXT NOT NULL DEFAULT '',
+    parent  TEXT NOT NULL DEFAULT '',
+    aliases TEXT NOT NULL DEFAULT '[]',
+    meta    TEXT NOT NULL DEFAULT '{}'
+)
+'''
+
+
 @DBFileBase.register('sqlite')
 class DBFileSqlite(DBFileBase):
     """SQLite-backed QC-rules database.
@@ -81,31 +108,8 @@ class DBFileSqlite(DBFileBase):
     def _ensure_schema(self):
         with self._lock:
             # Create the tables in their current (id/name) shape when the file is new.
-            self._conn.execute(
-                '''
-                CREATE TABLE IF NOT EXISTS rules (
-                    id      TEXT PRIMARY KEY,
-                    name    TEXT NOT NULL DEFAULT '',
-                    "group" TEXT NOT NULL DEFAULT '',
-                    meta    TEXT NOT NULL DEFAULT '{}',
-                    "left"  TEXT NOT NULL DEFAULT '[]',
-                    op      TEXT NOT NULL DEFAULT '',
-                    op_args TEXT NOT NULL DEFAULT '{}',
-                    "right" TEXT NOT NULL DEFAULT '[]'
-                )
-                '''
-            )
-            self._conn.execute(
-                '''
-                CREATE TABLE IF NOT EXISTS groups (
-                    id      TEXT PRIMARY KEY,
-                    name    TEXT NOT NULL DEFAULT '',
-                    parent  TEXT NOT NULL DEFAULT '',
-                    aliases TEXT NOT NULL DEFAULT '[]',
-                    meta    TEXT NOT NULL DEFAULT '{}'
-                )
-                '''
-            )
+            self._conn.execute(_CREATE_RULES_SQL)
+            self._conn.execute(_CREATE_GROUPS_SQL)
             # Bring databases created before the id/name split up to date. Groups
             # go first so the rules migration can remap old `group` references.
             self._migrate_groups_to_id()
@@ -114,6 +118,20 @@ class DBFileSqlite(DBFileBase):
             # live on groups). Drop it — no backward compatibility maintained.
             self._conn.execute('DROP TABLE IF EXISTS definitions')
             self._conn.commit()
+
+    @classmethod
+    def _init_storage(cls, resource_path):
+        path = Path(resource_path).resolve()
+        if path.exists():
+            raise FileExistsError(f'db file: already exists: {path}')
+        conn = sqlite3.connect(str(path))
+        try:
+            conn.execute(_CREATE_RULES_SQL)
+            conn.execute(_CREATE_GROUPS_SQL)
+            conn.commit()
+        finally:
+            conn.close()
+        return path
 
     def _migrate_groups_to_id(self):
         columns = self._columns('groups')
@@ -131,17 +149,7 @@ class DBFileSqlite(DBFileBase):
             gid = unique_slug(row['name'], set(name_to_id.values()), fallback='group')
             name_to_id[row['name']] = gid
         self._conn.execute('ALTER TABLE groups RENAME TO groups_old')
-        self._conn.execute(
-            '''
-            CREATE TABLE groups (
-                id      TEXT PRIMARY KEY,
-                name    TEXT NOT NULL DEFAULT '',
-                parent  TEXT NOT NULL DEFAULT '',
-                aliases TEXT NOT NULL DEFAULT '[]',
-                meta    TEXT NOT NULL DEFAULT '{}'
-            )
-            '''
-        )
+        self._conn.execute(_CREATE_GROUPS_SQL)
         for row in rows:
             gid = name_to_id[row['name']]
             parent = name_to_id.get(row['parent'], row['parent']) if row['parent'] else ''
@@ -176,20 +184,7 @@ class DBFileSqlite(DBFileBase):
             rid = unique_slug(row['name'], set(rule_name_to_id.values()), fallback='rule')
             rule_name_to_id[row['name']] = rid
         self._conn.execute('ALTER TABLE rules RENAME TO rules_old')
-        self._conn.execute(
-            '''
-            CREATE TABLE rules (
-                id      TEXT PRIMARY KEY,
-                name    TEXT NOT NULL DEFAULT '',
-                "group" TEXT NOT NULL DEFAULT '',
-                meta    TEXT NOT NULL DEFAULT '{}',
-                "left"  TEXT NOT NULL DEFAULT '[]',
-                op      TEXT NOT NULL DEFAULT '',
-                op_args TEXT NOT NULL DEFAULT '{}',
-                "right" TEXT NOT NULL DEFAULT '[]'
-            )
-            '''
-        )
+        self._conn.execute(_CREATE_RULES_SQL)
         for row in rows:
             rid = rule_name_to_id[row['name']]
             group = name_to_id.get(row['group'], row['group']) if row['group'] else ''
