@@ -4,6 +4,16 @@
 
 ## Last state
 
+- **Reworked `get-content-excel` to return a block of sheets (roadmap item).**
+  Removed the unstable `sheet` arg; the cmdlet now reads the whole workbook and
+  returns a block keyed by sheet name, each value an array of row blocks (header
+  row = column names), closing the workbook in a `finally`. Sheet order is
+  preserved (dict insertion order). This forces a QC rule to address a sheet by
+  its stable name instead of relying on whatever sheet Excel saved as active.
+  Tests in `tests/test_get_content_excel.py` (built with openpyxl, skipped via
+  `pytest.importorskip` when absent); docs updated in
+  `docs/cmdlet-data-formats.md` and `docs/roadmap.md` (marked done).
+
 - **Added `get-content-text` source reader and a `get-content` proxy.** New
   `src/cmdlets/get_content_text/` (registered as `get-content-text`, a *source*)
   reads a text file into a single text value via the stdlib

@@ -92,15 +92,17 @@ Three compound types, which may nest (a field may itself be scalar or compound):
 
 ## Worked example: an Excel workbook
 
-- The workbook is an **array of sheets**; each iteration (sheet) has both a name
-  and an index.
-- Each sheet is an **array of rows**; each iteration (row) has an index and a
-  name (the name is read from an "index" column — see "Missing & duplicate
-  names" for the fallback when it does not exist).
+- The workbook is a **block** keyed by **sheet name** (a named collection of
+  sheets; Python dict insertion order preserves sheet order, so a sheet is
+  addressable by name and by position).
+- Each sheet is an **array of rows**; each iteration (row) is a block with an
+  implicit index (and an optional name read from an "index" column — see
+  "Missing & duplicate names" for the fallback when it does not exist).
 - Each row is a **block** whose fields are the sheet's columns (column names from
   row 1, made unique).
-- `record.field["state"]` reads one field; there is no ambiguity from multiple
-  "state" columns.
+- `record.field["Title Details"]` reads the sheet by name; reading a column from
+  that sheet (e.g. `select-property "B"`) has no ambiguity from multiple "B"
+  columns because the field names were made unique.
 
 ## Cmdlet naming
 
@@ -300,9 +302,10 @@ are not allowed**. The frontend displays them in the browser's local timezone
 Source readers are the first cmdlet in a chain (they ignore the piped value and
 read their input from ``args``). Currently implemented:
 
-- **`get-content-excel`** — reads the first sheet of an Excel workbook into an
-  array of blocks (one block per data row, keyed by header cell). Optional
-  dependency: ``openpyxl``.
+- **`get-content-excel`** — reads an Excel workbook into a block keyed by sheet
+  name; each sheet is an array of row blocks (one block per data row, keyed by
+  header cell). A rule must therefore address the sheet it wants by name, never
+  by the workbook's active sheet. Optional dependency: ``openpyxl``.
 
 - **`get-content-text`** — reads a text file into a single text value. Args:
   ``path`` (required), ``encoding`` (optional text encoding, default

@@ -1,5 +1,10 @@
-"""`get-content-excel` — read the first sheet of an Excel workbook into an array
-of blocks (one dict per data row, keyed by header cell).
+"""`get-content-excel` — read an Excel workbook into a block of sheets.
+
+Each sheet is keyed by its name and holds that sheet's data rows as an array of
+blocks (one dict per data row, keyed by header cell). Returning every sheet —
+keyed by its stable sheet name — rather than a single active sheet means a QC
+rule must address the sheet it wants explicitly and never depends on which sheet
+Excel happened to save as "active".
 
 Optional dependency: ``openpyxl`` (see ``requirements.txt``). The import is
 guarded so a missing dependency never breaks loading this module or listing the
@@ -8,7 +13,7 @@ original import error).
 """
 
 from ..registry import cmdlets
-from ..value_types import Array, PipeValue
+from ..value_types import Block, PipeValue
 
 try:
     import openpyxl
@@ -24,13 +29,12 @@ else:
 @cmdlets.register(
     'get-content-excel',
     kind='source',
-    help='Read the first sheet of an Excel workbook into an array of row blocks.',
+    help='Read every sheet of an Excel workbook into a block keyed by sheet name.',
     args=[
         {'name': 'path', 'type': 'path', 'required': True, 'description': 'Full path to the Excel workbook.'},
-        {'name': 'sheet', 'type': 'text', 'required': False, 'description': 'Sheet name; defaults to the active (first) sheet.'},
     ],
 )
-def get_content_excel(value: PipeValue, args: dict) -> Array:
+def get_content_excel(value: PipeValue, args: dict) -> Block:
     if _openpyxl_import_error is not None:
         raise ImportError(
             "get-content-excel: missing optional dependency 'openpyxl'"
@@ -41,14 +45,23 @@ def get_content_excel(value: PipeValue, args: dict) -> Array:
         raise ValueError("get-content-excel: missing required arg 'path'")
 
     workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    sheet_name = args.get('sheet')
-    sheet = workbook[sheet_name] if sheet_name else workbook.active
+    try:
+        return {
+            sheet_name: _read_sheet(workbook[sheet_name])
+            for sheet_name in workbook.sheetnames
+        }
+    finally:
+        close = getattr(workbook, 'close', None)
+        if callable(close):
+            close()
 
+
+def _read_sheet(sheet) -> list:
+    """Read one sheet into an array of row blocks (header row = field names)."""
     rows = sheet.iter_rows(values_only=True)
     header = next(rows, None)
     if header is None:
         return []
-
     names = _deduplicate_headers(header)
     return [dict(zip(names, row)) for row in rows]
 
