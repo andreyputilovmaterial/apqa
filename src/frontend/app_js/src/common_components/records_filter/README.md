@@ -27,7 +27,7 @@ Props:
   One filter box per key. `type` is
   `'text' | 'number' | 'date' | 'datetime' | 'multipunch'` (default `text`).
   Non-text types render a range input, except `multipunch` which renders the
-  globally registered `component-multipunch` drop down; a `multipunch` column
+  globally registered `component-input-multipunch` drop down; a `multipunch` column
   should also provide `options` (the allowed values), e.g.
   `{ label: 'Tags', type: 'multipunch', options: ['counts', 'wave69'] }`.
   `description` is an optional docstring kept for a future per-column help
@@ -56,7 +56,7 @@ The component is registered locally by consumers (see
 `app/qcrules_list/index.js`). For the number/date/datetime range inputs it uses
 the globally registered `component-input-numericrange` and
 `component-input-datetimerange` components; for `multipunch` columns it uses the
-globally registered `component-multipunch` component.
+globally registered `component-input-multipunch` component.
 
 ## Collapsible header
 

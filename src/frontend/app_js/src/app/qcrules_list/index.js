@@ -98,7 +98,7 @@ const QcRulesList = {
 
     // Tags and markers are multi-punch columns, so their allowed values depend
     // on the loaded records. Start from the static column shape and fill in the
-    // distinct values as the `options` for the `component-multipunch` drop downs.
+    // distinct values as the `options` for the `component-input-multipunch` drop downs.
     const columns = computed(() => {
       const tags = new Set();
       const markers = new Set();

@@ -44,7 +44,7 @@ const RecordsFilter = {
         />
         <component
           v-else-if="isMultipunchType(def.type)"
-          :is="'component-multipunch'"
+          :is="'component-input-multipunch'"
           v-model="filters[key]"
           :options="def.options"
           :name="'filter-' + key"

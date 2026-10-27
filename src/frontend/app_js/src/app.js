@@ -18,7 +18,7 @@ import ComponentFormatHash from './common_components/format_hash/index';
 import ComponentFormatLocalFilePath from './common_components/format_local_file_path/index';
 import ComponentInputNumericRange from './common_components/input_numeric_range/index';
 import ComponentInputDatetimeRange from './common_components/input_datetime_range/index';
-import ComponentMultipunch from './common_components/multipunch/index';
+import ComponentInputMultipunch from './common_components/input_multipunch/index';
 import ComponentInputCmdlet from './common_components/input_cmdlet/index';
 import ComponentInputCmdletChain from './common_components/input_cmdlet_chain/index';
 import ComponentInputComparisonOp from './common_components/input_comparison_op/index';
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
   app.component('component-format-local-file-path', ComponentFormatLocalFilePath);
   app.component('component-input-numericrange',ComponentInputNumericRange);
   app.component('component-input-datetimerange',ComponentInputDatetimeRange);
-  app.component('component-multipunch', ComponentMultipunch);
+  app.component('component-input-multipunch', ComponentInputMultipunch);
   app.component('component-input-search-select', ComponentInputSearchSelect);
   app.component('component-input-cmdlet', ComponentInputCmdlet);
   app.component('component-input-cmdlet-chain', ComponentInputCmdletChain);

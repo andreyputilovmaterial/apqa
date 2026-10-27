@@ -11,7 +11,7 @@ import './styles.css';
 // `options` may be a plain array of strings/numbers, or an array of
 // `{ value, label }` objects. When only one of `value`/`label` is given for an
 // object option, the other falls back to the same value.
-const Multipunch = {
+const InputMultipunch = {
   inheritAttrs: false,
 
   props: {
@@ -24,23 +24,23 @@ const Multipunch = {
   emits: ['update:modelValue', 'change'],
 
   template: `
-<div ref="rootEl" class="apqa-multipunch">
+<div ref="rootEl" class="apqa-input-multipunch">
   <button
     type="button"
-    class="apqa-multipunch-trigger"
+    class="apqa-input-multipunch-trigger"
     :aria-expanded="String(open)"
     aria-haspopup="listbox"
     @click="toggle"
   >
     <span
-      class="apqa-multipunch-trigger-value"
+      class="apqa-input-multipunch-trigger-value"
       :class="{ 'is-placeholder': !summaryText }"
     >{{ summaryText || placeholder }}</span>
-    <span class="apqa-multipunch-trigger-caret" aria-hidden="true">▾</span>
+    <span class="apqa-input-multipunch-trigger-caret" aria-hidden="true">▾</span>
   </button>
 
-  <div v-if="open" class="apqa-multipunch-menu" role="listbox" aria-multiselectable="true">
-    <label v-for="option in options" :key="optionKey(option)" class="apqa-multipunch-option">
+  <div v-if="open" class="apqa-input-multipunch-menu" role="listbox" aria-multiselectable="true">
+    <label v-for="option in options" :key="optionKey(option)" class="apqa-input-multipunch-option">
       <input
         type="checkbox"
         :name="name"
@@ -48,7 +48,7 @@ const Multipunch = {
         :checked="isChecked(option)"
         @change="toggleOption(option, $event.target.checked)"
       />
-      <span class="apqa-multipunch-option-label">{{ optionLabel(option) }}</span>
+      <span class="apqa-input-multipunch-option-label">{{ optionLabel(option) }}</span>
     </label>
   </div>
 </div>
@@ -132,4 +132,4 @@ const Multipunch = {
   },
 };
 
-export default Multipunch;
+export default InputMultipunch;

@@ -1,4 +1,4 @@
-import Multipunch from '../multipunch/index';
+import InputMultipunch from '../input_multipunch/index';
 
 import './styles.css';
 
@@ -22,12 +22,12 @@ const InputQcruleMarks = {
   emits: ['update:modelValue', 'change', 'input'],
 
   components: {
-    'multipunch': Multipunch,
+    'input-multipunch': InputMultipunch,
   },
 
   template: `
 <div class="apqa-input-qcrule-marks">
-  <multipunch
+  <input-multipunch
     :model-value="modelValue"
     :options="MARKERS"
     :placeholder="'Select markers…'"

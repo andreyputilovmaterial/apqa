@@ -1,9 +1,9 @@
-.apqa-multipunch {
+.apqa-input-multipunch {
   position: relative;
   width: 100%;
 }
 
-.apqa-multipunch-trigger {
+.apqa-input-multipunch-trigger {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -21,16 +21,16 @@
   box-sizing: border-box;
 }
 
-.apqa-multipunch-trigger:hover {
+.apqa-input-multipunch-trigger:hover {
   border-color: #999;
 }
 
-.apqa-multipunch-trigger:focus-visible {
+.apqa-input-multipunch-trigger:focus-visible {
   outline: none;
   border-color: #385;
 }
 
-.apqa-multipunch-trigger-value {
+.apqa-input-multipunch-trigger-value {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -38,18 +38,18 @@
   white-space: nowrap;
 }
 
-.apqa-multipunch-trigger-value.is-placeholder {
+.apqa-input-multipunch-trigger-value.is-placeholder {
   color: #888;
 }
 
-.apqa-multipunch-trigger-caret {
+.apqa-input-multipunch-trigger-caret {
   flex: 0 0 auto;
   color: #385;
   font-size: 0.8rem;
   line-height: 1;
 }
 
-.apqa-multipunch-menu {
+.apqa-input-multipunch-menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -65,7 +65,7 @@
   box-sizing: border-box;
 }
 
-.apqa-multipunch-option {
+.apqa-input-multipunch-option {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -77,17 +77,17 @@
   line-height: 1.2;
 }
 
-.apqa-multipunch-option:hover {
+.apqa-input-multipunch-option:hover {
   background: #eaf6ef;
 }
 
-.apqa-multipunch-option input {
+.apqa-input-multipunch-option input {
   flex: 0 0 auto;
   margin: 0;
   accent-color: #385;
 }
 
-.apqa-multipunch-option-label {
+.apqa-input-multipunch-option-label {
   min-width: 0;
   overflow-wrap: anywhere;
 }

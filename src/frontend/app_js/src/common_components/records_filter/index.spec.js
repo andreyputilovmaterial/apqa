@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RecordsFilter from './index.js';
-import Multipunch from '../multipunch/index.js';
+import InputMultipunch from '../input_multipunch/index.js';
 
 const columns = {
   name: { label: 'Name', type: 'text' },
@@ -77,11 +77,11 @@ describe('RecordsFilter', () => {
     ];
     const wrapper = mount(RecordsFilter, {
       props: { columns: multipunchColumns, records: multipunchRecords, keyField: 'id' },
-      global: { components: { 'component-multipunch': Multipunch } },
+      global: { components: { 'component-input-multipunch': InputMultipunch } },
     });
 
     await wrapper.find('.apqa-records-filter-header').trigger('click');
-    const trigger = wrapper.find('.apqa-multipunch-trigger');
+    const trigger = wrapper.find('.apqa-input-multipunch-trigger');
     expect(trigger.exists()).toBe(true);
 
     await trigger.trigger('click');

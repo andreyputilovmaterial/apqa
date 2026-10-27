@@ -1,7 +1,7 @@
-# Multipunch
+# InputMultipunch
 
 Global multi-punch (multi-select) drop down, registered in `app.js` as
-`component-multipunch`.
+`component-input-multipunch`.
 
 On click it expands a list of checkable options; clicking outside closes it.
 The value is an array of the selected option values and works with `v-model`.

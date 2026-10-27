@@ -4,6 +4,13 @@
 
 ## Last state
 
+- Renamed the multi-punch dropdown component `multipunch` → `input_multipunch` to
+  match the other `input_*` controls. Global registration
+  `component-multipunch` → `component-input-multipunch`, local usage
+  `multipunch` → `input-multipunch`, and CSS `apqa-multipunch-*` →
+  `apqa-input-multipunch-*`. Updated consumers (`records_filter`,
+  `input_qcrule_marks`) and their specs.
+
 - Added a **Delete rule** action to the QC-rules list. Each expanded rule row now
   shows an explicit "Delete" button next to "Edit"/"Run" (neutral by default,
   red on hover — not inviting to click). Clicking it opens a small centered
@@ -21,7 +28,7 @@
   filters the pre-defined options (case-insensitive substring), arrow keys move
   the highlight and Enter selects. It only allows choosing from the list (no
   free-form value). Registered globally as `component-input-search-select` in `app.js`
-  and imported locally in `input_cmdlet` (same pattern as `multipunch`). Updated
+  and imported locally in `input_cmdlet` (same pattern as `input_multipunch`). Updated
   `input_cmdlet`/`input_cmdlet_chain` specs and added an `input_search_select` spec; all
   app/common-components specs pass (the 4 `myers-diff` suites fail on a
   pre-existing module-resolution error, unrelated). Follow-up fix: removed the
