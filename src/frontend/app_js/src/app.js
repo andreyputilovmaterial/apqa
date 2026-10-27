@@ -24,6 +24,7 @@ import ComponentInputCmdletChain from './common_components/input_cmdlet_chain/in
 import ComponentInputComparisonOp from './common_components/input_comparison_op/index';
 import ComponentInputQcruleTags from './common_components/input_qcrule_tags/index';
 import ComponentInputQcruleMarks from './common_components/input_qcrule_marks/index';
+import ComponentSearchSelect from './common_components/search_select/index';
 import ComponentLoaderSpinner from './common_components/loader_spinner/index';
 import ComponentLoaderInProgress from './common_components/loader_inprogress/index';
 import './common_components/css_grid/styles.css';
@@ -88,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   app.component('component-input-numericrange',ComponentInputNumericRange);
   app.component('component-input-datetimerange',ComponentInputDatetimeRange);
   app.component('component-multipunch', ComponentMultipunch);
+  app.component('component-search-select', ComponentSearchSelect);
   app.component('component-input-cmdlet', ComponentInputCmdlet);
   app.component('component-input-cmdlet-chain', ComponentInputCmdletChain);
   app.component('component-input-comparison-op', ComponentInputComparisonOp);

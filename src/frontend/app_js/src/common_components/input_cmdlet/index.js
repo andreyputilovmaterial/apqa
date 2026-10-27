@@ -1,5 +1,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 
+import SearchSelect from '../search_select/index';
+
 import './styles.css';
 
 function deepClone(value) {
@@ -49,12 +51,20 @@ const InputCmdlet = {
 
   emits: ['update:modelValue', 'change', 'input'],
 
+  components: {
+    'search-select': SearchSelect,
+  },
+
   template: `
 <div class="apqa-input-cmdlet">
-  <select v-if="!selected" class="apqa-input-cmdlet-select" :name="name" :value="''" @change="selectCmdlet($event.target.value)">
-    <option value="" selected disabled>{{ placeholder }}</option>
-    <option v-for="c in candidates" :key="c.name" :value="c.name">{{ c.name }}</option>
-  </select>
+  <search-select
+    v-if="!selected"
+    :model-value="null"
+    :options="candidateNames"
+    :placeholder="placeholder"
+    :name="name"
+    @update:model-value="selectCmdlet"
+  />
 
   <div v-else class="apqa-input-cmdlet-selected">
     <span class="apqa-input-cmdlet-name">{{ selected.name }}</span>
@@ -111,6 +121,8 @@ const InputCmdlet = {
       const set = new Set(props.kinds);
       return list.filter((c) => set.has(c.kind));
     });
+
+    const candidateNames = computed(() => candidates.value.map((c) => c.name));
 
     function resetArgs() {
       for (const key of Object.keys(args)) delete args[key];
@@ -229,6 +241,7 @@ const InputCmdlet = {
       helpOpen,
       selected,
       candidates,
+      candidateNames,
       selectCmdlet,
       clear,
       setArg,

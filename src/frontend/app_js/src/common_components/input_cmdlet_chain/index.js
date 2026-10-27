@@ -37,7 +37,7 @@ const InputCmdletChain = {
     />
   </div>
 
-  <div class="apqa-input-cmdlet-chain-slot apqa-input-cmdlet-chain-slot-next">
+  <div class="apqa-input-cmdlet-chain-slot">
     <input-cmdlet
       :model-value="null"
       :cmdlets="cmdlets"

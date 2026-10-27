@@ -35,31 +35,33 @@ function mountHarness() {
 describe('InputCmdletChain', () => {
   it('renders a single source placeholder when empty', () => {
     const wrapper = mountChain();
-    const selects = wrapper.findAll('select.apqa-input-cmdlet-select');
-    expect(selects).toHaveLength(1);
-    expect(selects[0].find('option[disabled]').text()).toContain('source');
+    const triggers = wrapper.findAll('.apqa-search-select-trigger');
+    expect(triggers).toHaveLength(1);
+    expect(triggers[0].text()).toContain('source');
   });
 
-  it('offers only source readers in the first slot', () => {
+  it('offers only source readers in the first slot', async () => {
     const wrapper = mountChain();
-    const options = wrapper
-      .findAll('select.apqa-input-cmdlet-select option')
-      .filter((o) => o.attributes('value'));
+    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    const options = wrapper.findAll('.apqa-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['get-content-excel']);
   });
 
   it('shows a new placeholder after the first cmdlet is selected', async () => {
     const wrapper = mountHarness();
-    await wrapper.find('select.apqa-input-cmdlet-select').setValue('get-content-excel');
+    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    const first = wrapper
+      .findAll('.apqa-search-select-option')
+      .find((o) => o.text() === 'get-content-excel');
+    await first.trigger('click');
 
     expect(wrapper.findAll('.apqa-input-cmdlet-selected')).toHaveLength(1);
-    const selects = wrapper.findAll('select.apqa-input-cmdlet-select');
-    expect(selects).toHaveLength(1);
-    // The new placeholder must stay blank, not pre-select the next candidate.
-    expect(selects[0].element.value).toBe('');
-    const options = selects[0]
-      .findAll('option')
-      .filter((o) => o.attributes('value'));
+    const triggers = wrapper.findAll('.apqa-search-select-trigger');
+    expect(triggers).toHaveLength(1);
+    // The new placeholder must stay empty, not pre-select the next candidate.
+    expect(triggers[0].text()).toContain('Select next cmdlet');
+    await triggers[0].trigger('click');
+    const options = wrapper.findAll('.apqa-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['count']);
   });
 });

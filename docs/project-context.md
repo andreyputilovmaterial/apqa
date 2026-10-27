@@ -4,6 +4,20 @@
 
 ## Last state
 
+- Added a **searchable single-select drop-down** component
+  (`src/frontend/app_js/src/common_components/search_select/`) and wired it into
+  the cmdlet selector (`input_cmdlet`), replacing the native `<select>`. The new
+  control's search box is focused by default when the drop-down opens; typing
+  filters the pre-defined options (case-insensitive substring), arrow keys move
+  the highlight and Enter selects. It only allows choosing from the list (no
+  free-form value). Registered globally as `component-search-select` in `app.js`
+  and imported locally in `input_cmdlet` (same pattern as `multipunch`). Updated
+  `input_cmdlet`/`input_cmdlet_chain` specs and added a `search_select` spec; all
+  app/common-components specs pass (the 4 `myers-diff` suites fail on a
+  pre-existing module-resolution error, unrelated). Follow-up fix: removed the
+  `opacity: 0.85` on the trailing chain slot — it made the open menu translucent
+  and created a stacking context that let a lower dropdown render on top.
+
 - **Implemented "create QC rule" as a modal form.** The green "Create new QC
   rule" button now opens a modal (the existing `createModal` system) with **one
   input per rule field**: the auto-filled technical name (`id`, shown first — a

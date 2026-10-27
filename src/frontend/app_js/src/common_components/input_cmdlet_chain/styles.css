@@ -12,7 +12,3 @@
   display: flex;
   flex-direction: column;
 }
-
-.apqa-input-cmdlet-chain-slot-next {
-  opacity: 0.85;
-}

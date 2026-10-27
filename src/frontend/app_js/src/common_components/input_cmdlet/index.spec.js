@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import InputCmdlet from './index.js';
 
 const CMDLETS = [
@@ -21,24 +21,41 @@ function mountCmdlet(props = {}) {
 }
 
 describe('InputCmdlet', () => {
-  it('renders a placeholder drop down when nothing is selected', () => {
+  it('renders a searchable drop down when nothing is selected', () => {
     const wrapper = mountCmdlet();
-    const select = wrapper.find('select.apqa-input-cmdlet-select');
-    expect(select.exists()).toBe(true);
-    expect(select.find('option[disabled]').text()).toContain('Select cmdlet');
+    const trigger = wrapper.find('.apqa-search-select-trigger');
+    expect(trigger.exists()).toBe(true);
+    expect(trigger.text()).toContain('Select cmdlet');
   });
 
-  it('filters the drop down by kind', () => {
+  it('focuses the search box when the drop down opens', async () => {
+    const wrapper = mount(InputCmdlet, {
+      attachTo: document.body,
+      props: { cmdlets: CMDLETS },
+      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    });
+    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    await flushPromises();
+    expect(document.activeElement).toBe(
+      wrapper.find('.apqa-search-select-search').element,
+    );
+    wrapper.unmount();
+  });
+
+  it('filters the drop down by kind', async () => {
     const wrapper = mountCmdlet({ kinds: ['source'] });
-    const options = wrapper
-      .findAll('select.apqa-input-cmdlet-select option')
-      .filter((o) => o.attributes('value'));
+    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    const options = wrapper.findAll('.apqa-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['literal']);
   });
 
   it('emits the chosen cmdlet as the model value', async () => {
     const wrapper = mountCmdlet();
-    await wrapper.find('select.apqa-input-cmdlet-select').setValue('count');
+    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    const option = wrapper
+      .findAll('.apqa-search-select-option')
+      .find((o) => o.text() === 'count');
+    await option.trigger('click');
     expect(wrapper.emitted('update:modelValue').at(-1)).toEqual([
       { cmdlet: 'count', args: {} },
     ]);
