@@ -4,6 +4,21 @@
 
 ## Last state
 
+- **Cleaned unnecessary deep upward imports in the frontend JS.** Replaced the
+  `../../common_components/...` and `../../common_defs/...` imports (2 levels up,
+  reaching shared components/defs placed relative to the app root) with the `@/...`
+  alias (`@` → `src/frontend/app_js/src`, per `jsconfig.json`/`vite.config.js`).
+  Files touched: `src/app/qcrules_list/{rule_form,rule_edit_form,index,rule}.js`,
+  `src/app/background_navlinks_attachmodals/manipulate_links.js`, and
+  `src/common_app_exposed_defs/error_reporting/index.js` (17 import lines). The
+  single-level `../` sibling references *within* `common_components` (e.g.
+  `../_log_error_proxy`, `../input_multipunch`) were left as-is — those are genuine
+  component-to-sibling encapsulation, not app-root references. Confirmed the
+  self-written bundler resolves `@/` on the real entry point (`process('…/app.js')`
+  → 222,284 chars) and the bundler integration test passes (7/7); Vitest is 146/146
+  across 19 files. Precedent already existed (`apppane_errorview/index.js` and
+  `background_navlinks_attachmodals/window_component.js` already used `@/`).
+
 - **Removed the unused `myers-diff` vendored package (roadmap item).** It lived at
   `src/frontend/app_js/src/lib/myers-diff/`, was never imported by the app, and its 4
   mocha/chai test suites were being picked up by Vitest (`test/*.test.js`) and failing

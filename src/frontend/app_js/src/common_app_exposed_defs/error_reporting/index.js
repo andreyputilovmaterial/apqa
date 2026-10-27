@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
 
-import { _logErrorProxyContext } from '../../common_components/_log_error_proxy';
-import { genId } from '../../common_defs/helper_functions';
+import { _logErrorProxyContext } from '@/common_components/_log_error_proxy';
+import { genId } from '@/common_defs/helper_functions';
 
 function useErrorReporting() {
   const errors = reactive([]);

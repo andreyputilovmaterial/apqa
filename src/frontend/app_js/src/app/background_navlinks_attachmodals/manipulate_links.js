@@ -3,8 +3,8 @@ import { defineComponent, h, markRaw, onMounted } from 'vue';
 
 import Window from './window_component';
 import safetyUrlCheck from './safetycheck';
-import logError from '../../common_components/_log_error_proxy';
-import { createModal } from '../../common_components/modals/modals';
+import logError from '@/common_components/_log_error_proxy';
+import { createModal } from '@/common_components/modals/modals';
 
 
 const LinksSiteComponent = {

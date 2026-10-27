@@ -1,9 +1,9 @@
 import { ref, watch } from 'vue';
 
-import InputCmdletChain from '../../common_components/input_cmdlet_chain/index';
-import InputComparisonOp from '../../common_components/input_comparison_op/index';
-import InputQcruleTags from '../../common_components/input_qcrule_tags/index';
-import InputQcruleMarks from '../../common_components/input_qcrule_marks/index';
+import InputCmdletChain from '@/common_components/input_cmdlet_chain/index';
+import InputComparisonOp from '@/common_components/input_comparison_op/index';
+import InputQcruleTags from '@/common_components/input_qcrule_tags/index';
+import InputQcruleMarks from '@/common_components/input_qcrule_marks/index';
 
 import './rule_form.css';
 

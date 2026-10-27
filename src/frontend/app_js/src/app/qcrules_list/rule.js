@@ -2,7 +2,7 @@ import { computed } from 'vue';
 
 import CmdletChain from './cmdlet_chain';
 import Comparison from './comparison';
-import ComponentFormatDatetime from '../../common_components/format_datetime/index';
+import ComponentFormatDatetime from '@/common_components/format_datetime/index';
 import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges';
 import { isUnfinished, markNamesForRecord } from './grouping';
 
