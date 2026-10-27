@@ -5,14 +5,19 @@ import { markClassesForRecord } from './grouping';
 
 // Outer "record" wrapper for a QC rule. It owns the expanded/condensed state and
 // toggles it when the inner rule's header is clicked. It forwards
-// `edit`/`run`/`delete` actions to the page. This is the `<li>` unit rendered
-// inside the rules list. Its classes are the shared tree-entry base plus the
-// rule kind marker, the rule's mark classes, and any classes the records filter
-// attached (e.g. `.apqa-u-hidden`).
+// `edit`/`run`/`delete` actions to the page and, when the rule is the one being
+// edited (`editingId`), renders the inline edit form and forwards its
+// save/cancel. This is the `<li>` unit rendered inside the rules list.
 const RuleRecord = {
-  props: ['record'],
+  props: {
+    record: { type: Object, required: true },
+    editingId: { type: String, default: '' },
+    cmdlets: { type: Array, default: () => [] },
+    ops: { type: Array, default: () => [] },
+    tagSuggestions: { type: Array, default: () => [] },
+  },
 
-  emits: ['edit', 'run', 'delete'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
 
   components: {
     'rule-body': RuleBody,
@@ -23,16 +28,26 @@ const RuleRecord = {
   <rule-body
     :record="record"
     :expanded="expanded"
+    :editing="editing"
+    :cmdlets="cmdlets"
+    :ops="ops"
+    :tag-suggestions="tagSuggestions"
     @toggle="expanded = !expanded"
     @edit="$emit('edit', record)"
     @run="$emit('run', record)"
     @delete="$emit('delete', record)"
+    @save="onSave"
+    @cancel="onCancel"
   />
 </li>
 `,
 
-  setup(props) {
+  setup(props, { emit }) {
     const expanded = ref(false);
+
+    const editing = computed(() =>
+      Boolean(props.editingId && props.editingId === props.record.id),
+    );
 
     const classes = computed(() => {
       const filterMeta = props.record._filterMeta;
@@ -48,7 +63,15 @@ const RuleRecord = {
       ];
     });
 
-    return { expanded, classes };
+    function onSave(record, changes) {
+      emit('save', record, changes);
+    }
+
+    function onCancel(record) {
+      emit('cancel', record);
+    }
+
+    return { expanded, editing, classes, onSave, onCancel };
   },
 };
 

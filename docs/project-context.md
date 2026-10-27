@@ -4,6 +4,23 @@
 
 ## Last state
 
+- **Implemented in-place "Edit rule" (roadmap item).** Clicking Edit now swaps the
+  expanded rule's display for an inline form (`rule_edit_form.js`) inside the same
+  rule container, pre-filled from the stored record (`name`, read-only `id`,
+  `comment`, `tags`, `markers`, `left`/`right` cmdlet chains, `op`/`op_args`).
+  The form has explicit **Save**/**Cancel**; Save does `PUT /qc/rules/<id>` with
+  only the form-managed fields, merged back into the preserved `meta` (so `order`,
+  `created_at`/`modified_at` and unknown keys survive), then reloads. `toRecord`
+  now carries `op_args` + a full `meta` copy so the editor round-trips them.
+  Editing state is lifted to the page as a single `editingId`, threaded
+  rule_body → rule_record → rules_tree → page. **Guard against losing unsaved
+  edits:** `RulesTree` refuses to collapse a folder that contains the edited rule,
+  refuses pagination while editing (a `window.alert` warning), and skips its normal
+  re-fold-on-groups-change while `editingId` is set. Only one rule can be edited
+  at a time (`onEditRule` warns and blocks switching). Gotcha fixed: a Boolean
+  `editing` prop must be a real boolean — the computed returning `''`/truthy was
+  cast to `true` by Vue's Boolean-prop casting.
+
 - **QC-rules list: physical marks + shared tree-entry base class.** Rule leaves and
   folder headings share `.apqa-rules-tree-item` (indent/list flow), with
   `.apqa-rule-record` / `.apqa-rules-tree-group` kept as kind markers. `grouping.js`

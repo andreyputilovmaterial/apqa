@@ -29,6 +29,7 @@ function toRecord(rule) {
     group: rule.group || '',
     order: meta.order ?? 0,
     op: rule.op || '',
+    op_args: rule.op_args && typeof rule.op_args === 'object' ? { ...rule.op_args } : {},
     comment: meta.comment || '',
     tags: Array.isArray(meta.tags) ? meta.tags.slice() : [],
     created_at: meta.created_at || '',
@@ -36,6 +37,7 @@ function toRecord(rule) {
     markers: Array.isArray(meta.markers) ? meta.markers : [],
     left: Array.isArray(rule.left) ? rule.left : [],
     right: Array.isArray(rule.right) ? rule.right : [],
+    meta: { ...meta },
   };
 }
 
@@ -80,7 +82,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @save="onSaveRule" @cancel="onCancelEdit" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -95,6 +97,12 @@ const QcRulesList = {
     const loading = ref(true);
     const loadError = ref('');
     const cmdletMetadata = ref(null);
+    const editingId = ref('');
+
+    // The create/edit forms need the cmdlet + comparison-op metadata, fetched
+    // lazily on first use. These computed refs keep the template readable.
+    const cmdlets = computed(() => (cmdletMetadata.value && cmdletMetadata.value.cmdlets) || []);
+    const ops = computed(() => (cmdletMetadata.value && cmdletMetadata.value.ops) || []);
 
     // Tags and markers are multi-punch columns, so their allowed values depend
     // on the loaded records. Start from the static column shape and fill in the
@@ -317,16 +325,62 @@ const QcRulesList = {
       }
     }
 
-    // Placeholders for the rule actions. The edit/run UI is a separate roadmap
-    // item; for now the buttons just surface the selected rule to the console.
-    function onEditRule(record) {
-      // TODO(roadmap): open the rule editor once the CRUD UI is implemented.
-      console.debug('edit rule (not implemented yet):', record.name);
+    // Open the inline edit form for a rule. Only one rule can be edited at a
+    // time; starting another edit while one is open is blocked so unsaved
+    // changes are not silently dropped.
+    async function onEditRule(record) {
+      if (editingId.value && editingId.value !== record.id) {
+        window.alert('Finish or cancel editing the current rule first.');
+        return;
+      }
+      try {
+        await ensureCmdletMetadata();
+      } catch (e) {
+        window.alert(`Failed to load cmdlet metadata: ${e}`);
+        logError(`Failed to load cmdlet metadata: ${e}`);
+        return;
+      }
+      editingId.value = record.id;
     }
 
     function onRunRule(record) {
       // TODO(roadmap): run the rule once the runner UI is implemented.
       console.debug('run rule (not implemented yet):', record.name);
+    }
+
+    // Persist the edits from the inline form. Only the fields the form manages
+    // are sent; the existing meta (order, created/modified, unknown keys) is
+    // preserved so editing does not reset it.
+    async function onSaveRule(record, changes) {
+      const meta = { ...(record.meta || {}) };
+      if (changes.comment && changes.comment.trim()) meta.comment = changes.comment.trim();
+      else delete meta.comment;
+      if (Array.isArray(changes.tags) && changes.tags.length) meta.tags = changes.tags.slice();
+      else delete meta.tags;
+      if (Array.isArray(changes.markers) && changes.markers.length) meta.markers = changes.markers.slice();
+      else delete meta.markers;
+
+      const payload = {
+        name: changes.name,
+        left: Array.isArray(changes.left) ? changes.left : [],
+        op: changes.op || '',
+        op_args: changes.op_args && typeof changes.op_args === 'object' ? changes.op_args : {},
+        right: Array.isArray(changes.right) ? changes.right : [],
+        meta,
+      };
+
+      try {
+        await putJson(`/qc/rules/${encodeURIComponent(record.id)}`, payload);
+        editingId.value = '';
+        await load();
+      } catch (e) {
+        window.alert(`Failed to update QC rule: ${e}`);
+        logError(`Failed to update QC rule: ${e}`);
+      }
+    }
+
+    function onCancelEdit() {
+      editingId.value = '';
     }
 
     async function onDeleteRule(record) {
@@ -362,6 +416,9 @@ const QcRulesList = {
       groups,
       loading,
       loadError,
+      editingId,
+      cmdlets,
+      ops,
       load,
       createRule,
       createGroup,
@@ -369,6 +426,8 @@ const QcRulesList = {
       onEditRule,
       onRunRule,
       onDeleteRule,
+      onSaveRule,
+      onCancelEdit,
     };
   },
 };

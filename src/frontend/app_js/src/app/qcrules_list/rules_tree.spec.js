@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 
 import RulesTree from './rules_tree.js';
@@ -23,6 +23,11 @@ function rule(name, group = '', extra = {}) {
 function group(name, parent = '', aliases = []) {
   return { id: name, name, parent, aliases };
 }
+
+// `input_cmdlet` references the chain component by its global name for the
+// `cmdlet-chains` arg type; a stub silences the resolution warning when the
+// inline edit form renders.
+const ChainStub = { template: '<div class="chain-stub" />' };
 
 describe('RulesTree', () => {
   it('starts with folders folded and expands on click', async () => {
@@ -169,6 +174,74 @@ describe('RulesTree', () => {
     expect(summary.text()).toContain('includes rules marked');
     const badges = summary.findAll('.apqa-mark-badge');
     expect(badges.map((badge) => badge.text())).toEqual(['skip', 'unfinished']);
+  });
+
+  it('refuses to collapse a folder that contains the rule being edited', async () => {
+    const wrapper = mount(RulesTree, {
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data')],
+      },
+      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    });
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+    expect(wrapper.text()).toContain('r1');
+
+    await wrapper.setProps({ editingId: 'r1' });
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+
+    // The folder stays expanded and the edit form is not destroyed.
+    expect(wrapper.find('input[name="name"]').element.value).toBe('r1');
+    expect(wrapper.text()).toContain('[-]');
+    expect(alert).toHaveBeenCalled();
+
+    alert.mockRestore();
+  });
+
+  it('refuses to change page while a rule is being edited', async () => {
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const wrapper = mount(RulesTree, {
+      props: {
+        groups: [],
+        records: [rule('r1'), rule('r2')],
+        recordsPerPage: 1,
+        editingId: 'r1',
+      },
+      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    });
+
+    await wrapper.findAll('.apqa-rules-tree-page')[1].trigger('click');
+
+    // The edited rule's form stays mounted; the page does not change to r2.
+    expect(wrapper.find('input[name="name"]').element.value).toBe('r1');
+    expect(wrapper.find('.apqa-rule-edit-form').exists()).toBe(true);
+    expect(alert).toHaveBeenCalled();
+
+    alert.mockRestore();
+  });
+
+  it('forwards save and cancel from an editing rule', async () => {
+    const wrapper = mount(RulesTree, {
+      props: {
+        groups: [],
+        records: [rule('r1')],
+        editingId: 'r1',
+      },
+      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    });
+
+    await wrapper.find('input[name="name"]').setValue('renamed');
+    await wrapper.find('form').trigger('submit');
+
+    expect(wrapper.emitted('save')).toHaveLength(1);
+    expect(wrapper.emitted('save')[0][0]).toMatchObject({ name: 'r1' });
+    expect(wrapper.emitted('save')[0][1]).toMatchObject({ name: 'renamed' });
+
+    await wrapper.find('.apqa-rule-form-button').trigger('click');
+    expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
 
 });

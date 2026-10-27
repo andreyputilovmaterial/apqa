@@ -4,18 +4,23 @@ import RuleRecord from './rule_record.js';
 
 function makeRecord(overrides = {}) {
   return {
+    id: 'Rule A',
     name: 'Rule A',
     comment: 'check the count',
     left: [{ cmdlet: 'get-content', args: { path: 'a.sav' } }],
     op: 'eq',
+    op_args: {},
     right: [{ cmdlet: 'count' }],
     markers: [],
     tags: [],
+    meta: {},
     created_at: '',
     _filterMeta: { cssClasses: [] },
     ...overrides,
   };
 }
+
+const ChainStub = { template: '<div class="chain-stub" />' };
 
 describe('RuleRecord', () => {
   it('starts collapsed (compact view, no actions)', () => {
@@ -78,6 +83,33 @@ describe('RuleRecord', () => {
     });
 
     expect(wrapper.find('li').classes()).toContain('apqa-u-hidden');
+  });
+
+  it('renders the inline edit form when it is the rule being edited', () => {
+    const wrapper = mount(RuleRecord, {
+      props: { record: makeRecord(), editingId: 'Rule A' },
+      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    });
+
+    expect(wrapper.find('.apqa-rule-edit-form').exists()).toBe(true);
+    expect(wrapper.find('.apqa-rule-body-action').exists()).toBe(false);
+  });
+
+  it('forwards save and cancel from the inline edit form', async () => {
+    const wrapper = mount(RuleRecord, {
+      props: { record: makeRecord(), editingId: 'Rule A' },
+      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    });
+
+    await wrapper.find('input[name="name"]').setValue('Renamed');
+    await wrapper.find('form').trigger('submit');
+
+    expect(wrapper.emitted('save')).toHaveLength(1);
+    expect(wrapper.emitted('save')[0][0]).toMatchObject({ name: 'Rule A' });
+    expect(wrapper.emitted('save')[0][1]).toMatchObject({ name: 'Renamed' });
+
+    await wrapper.find('.apqa-rule-form-button').trigger('click');
+    expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
 
 });

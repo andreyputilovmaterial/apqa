@@ -8,19 +8,24 @@ import { buildGroupNodes } from './grouping';
 // Foldable tree of QC rules: renders folders (groups) and rules as a single
 // depth-first list, indenting by depth and hiding every descendant of a
 // collapsed folder. Rules reuse the existing `rule-record` component, so each
-// rule still expands/collapses and emits its edit/run actions up to the page.
+// rule still expands/collapses and emits its edit/run/delete/save/cancel
+// actions up to the page.
 //
-// Pagination applies to the *visible* node list (folder headings and rule
-// leaves alike), so both "many rules in a folder" and "many folders at a
-// level" page the same way a flat list would.
+// While a rule is being edited (`editingId` is set), the tree refuses to
+// collapse the folder that contains it (or change pagination), so the inline
+// edit form is not destroyed and unsaved changes are not silently dropped.
 const RulesTree = {
   props: {
     records: { type: Array, default: () => [] },
     groups: { type: Array, default: () => [] },
     recordsPerPage: { type: Number, default: 25 },
+    editingId: { type: String, default: '' },
+    cmdlets: { type: Array, default: () => [] },
+    ops: { type: Array, default: () => [] },
+    tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'delete'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
 
   components: {
     'alias-record': AliasRecord,
@@ -56,9 +61,15 @@ const RulesTree = {
         v-else
         :record="node.record"
         :style="{ '--rules-tree-depth': node.depth }"
+        :editing-id="editingId"
+        :cmdlets="cmdlets"
+        :ops="ops"
+        :tag-suggestions="tagSuggestions"
         @edit="$emit('edit', $event)"
         @run="$emit('run', $event)"
         @delete="$emit('delete', $event)"
+        @save="onSave"
+        @cancel="onCancel"
       />
     </template>
   </ul>
@@ -70,7 +81,7 @@ const RulesTree = {
       type="button"
       class="apqa-rules-tree-page"
       :class="{ 'is-active': n - 1 === page }"
-      @click="page = n - 1"
+      @click="goToPage(n - 1)"
     >
       {{ n }}
     </button>
@@ -78,15 +89,18 @@ const RulesTree = {
 </div>
 `,
 
-  setup(props) {
+  setup(props, { emit }) {
     const collapsed = reactive({});
     const page = ref(0);
 
     // Every folder starts folded. Re-fold whenever the group set is (re)loaded,
-    // e.g. after creating/renaming/deleting a group via the page.
+    // e.g. after creating/renaming/deleting a group via the page — but skip the
+    // reset while a rule is being edited, so a group mutation elsewhere cannot
+    // collapse the folder and destroy the inline form.
     watch(
       () => props.groups,
       () => {
+        if (props.editingId) return;
         for (const key of Object.keys(collapsed)) delete collapsed[key];
         for (const group of props.groups) collapsed[group.id] = true;
       },
@@ -115,13 +129,52 @@ const RulesTree = {
       return visibleNodes.value.slice(start, start + perPage.value);
     });
 
+    function editingNode() {
+      if (!props.editingId) return null;
+      return (
+        nodes.value.find(
+          (node) => node.kind === 'rule' && node.record.id === props.editingId,
+        ) || null
+      );
+    }
+
+    function warnEditing() {
+      window.alert('Finish or cancel editing the rule before changing this view.');
+    }
+
     function toggle(node) {
+      // Refuse to collapse a folder while a rule inside it is being edited, so
+      // the inline form (and its unsaved changes) is not destroyed.
+      if (node.kind === 'group') {
+        const target = editingNode();
+        if (!collapsed[node.id] && target && target.parents.includes(node.id)) {
+          warnEditing();
+          return;
+        }
+      }
       if (collapsed[node.id]) delete collapsed[node.id];
       else collapsed[node.id] = true;
     }
 
-    return { collapsed, page, numPages, pagedNodes, toggle };
+    function goToPage(index) {
+      if (props.editingId && index !== page.value) {
+        warnEditing();
+        return;
+      }
+      page.value = index;
+    }
+
+    function onSave(record, changes) {
+      emit('save', record, changes);
+    }
+
+    function onCancel(record) {
+      emit('cancel', record);
+    }
+
+    return { collapsed, page, numPages, pagedNodes, toggle, goToPage, onSave, onCancel };
   },
 };
 
 export default RulesTree;
+
