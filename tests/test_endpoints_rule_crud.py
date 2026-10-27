@@ -66,12 +66,19 @@ def test_create_and_list(config):
     assert [r['id'] for r in data['rules']] == ['r1']
 
 
-def test_create_duplicate_name_dedups_id(config):
+def test_create_duplicate_id_returns_400(config):
     status, data = call(config, 'POST', '/qc/rules', {'name': 'r1'})
     assert status == 201
     status, data = call(config, 'POST', '/qc/rules', {'name': 'r1'})
-    assert status == 201
-    assert data['rule']['id'] == 'r1-2'
+    assert status == 400
+    assert 'already exists' in data['error']
+
+
+def test_create_explicit_duplicate_id_returns_400(config):
+    call(config, 'POST', '/qc/rules', {'name': 'r1'})
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'different', 'id': 'r1'})
+    assert status == 400
+    assert 'already exists' in data['error']
 
 
 def test_create_missing_name(config):

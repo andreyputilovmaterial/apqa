@@ -66,10 +66,16 @@ def test_add_rule_from_dict(dbfile):
     assert dbfile.get_rule("new-rule").op == "eq"
 
 
-def test_add_rule_duplicate_name_dedups_id(dbfile):
-    added = dbfile.add_rule({"name": "wave69-counts-equal-9002"})
-    assert added.id == "wave69-counts-equal-9002-2"
-    assert len(dbfile) == 2
+def test_add_rule_duplicate_id_raises(dbfile):
+    with pytest.raises(ValueError):
+        dbfile.add_rule({"name": "wave69-counts-equal-9002"})
+    assert len(dbfile) == 1
+
+
+def test_add_rule_explicit_duplicate_id_raises(dbfile):
+    with pytest.raises(ValueError):
+        dbfile.add_rule({"name": "different", "id": "wave69-counts-equal-9002"})
+    assert len(dbfile) == 1
 
 
 def test_update_rule(dbfile):

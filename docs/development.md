@@ -339,8 +339,11 @@ identity — an ASCII alphanumeric slug auto-generated from the display `name`
 `src/db_processors/ids.py` — and `name` is the free-form, user-visible display
 name. References (`Rule.group`, `Group.parent`) point at group **ids**, so a
 display-name change (e.g. a translation) never breaks references. Ids are
-unique per entity type and auto-deduplicated on add by appending `-2`, `-3`, …;
-display names may repeat. On load, data written before the split (a single
+unique per entity type; display names may repeat. When a rule is added its id
+must already be unique — the UI deduplicates a generated slug by appending
+`-2`, `-3`, … and the backend rejects a duplicate rule id (`add_rule` raises) —
+while groups still auto-deduplicate their generated id on add. On load, data
+written before the split (a single
 `name` used for both identity and display) is migrated: `id` is generated from
 the old `name` and old `name`-based references are remapped to the new ids.
 

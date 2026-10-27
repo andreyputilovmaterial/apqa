@@ -20,12 +20,30 @@ export function makeSlug(text, fallback = 'rule') {
   return slug;
 }
 
+// Mirror of `src/db_processors/ids.py:ensure_unique` so a generated slug avoids
+// ids that already exist (`-2`, `-3`, …) instead of waiting for the backend to
+// reject a duplicate.
+export function ensureUnique(base, existing = []) {
+  const ids = new Set(existing);
+  let candidate = base;
+  let n = 2;
+  while (ids.has(candidate)) {
+    candidate = `${base}-${n}`;
+    n += 1;
+  }
+  return candidate;
+}
+
+export function makeUniqueSlug(text, existing = [], fallback = 'rule') {
+  return ensureUnique(makeSlug(text, fallback), existing);
+}
+
 // Modal form for creating a QC rule: one input per rule field. New rules are
 // always created at the top level (`group: ''`); moving a rule into a folder is
 // a separate, later flow. On submit it builds the payload and resolves the
 // surrounding modal promise with it (the page then POSTs and reloads).
 const RuleForm = {
-  props: ['resolve', 'reject', 'cmdlets', 'ops', 'tagSuggestions'],
+  props: ['resolve', 'reject', 'cmdlets', 'ops', 'tagSuggestions', 'existingIds'],
 
   components: {
     'input-cmdlet-chain': InputCmdletChain,
@@ -102,9 +120,10 @@ const RuleForm = {
     const comparison = ref(null);
     const error = ref('');
 
-    // Auto-fill the technical id from the display name until the user edits it.
+    // Auto-fill the technical id from the display name until the user edits it,
+    // deduplicating against the ids already in use so the generated slug is unique.
     watch(name, (value) => {
-      if (!idTouched.value) id.value = makeSlug(value);
+      if (!idTouched.value) id.value = makeUniqueSlug(value, props.existingIds || []);
     });
 
     function onIdInput(event) {
@@ -118,6 +137,17 @@ const RuleForm = {
         error.value = 'Name is required.';
         return;
       }
+      error.value = '';
+
+      const existingIds = props.existingIds || [];
+      const trimmedId = id.value.trim();
+      let finalId = trimmedId;
+      if (!finalId) {
+        finalId = makeUniqueSlug(trimmedName, existingIds);
+      } else if (existingIds.includes(finalId)) {
+        error.value = `Technical id "${finalId}" is already used by another rule.`;
+        return;
+      }
 
       const meta = {};
       if (comment.value.trim()) meta.comment = comment.value.trim();
@@ -126,13 +156,13 @@ const RuleForm = {
 
       const payload = {
         name: trimmedName,
+        id: finalId,
         group: '',
         left: left.value || [],
         op: comparison.value?.op || '',
         op_args: comparison.value?.op_args || {},
         right: right.value || [],
       };
-      if (id.value) payload.id = id.value;
       if (Object.keys(meta).length) payload.meta = meta;
 
       props.resolve(payload);

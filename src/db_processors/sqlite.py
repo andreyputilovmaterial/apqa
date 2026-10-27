@@ -239,7 +239,7 @@ class DBFileSqlite(DBFileBase):
     def add_rule(self, rule):
         if not isinstance(rule, Rule):
             rule = Rule.from_dict(rule)
-        rule.id = ensure_unique(rule.id, self._existing_rule_ids())
+        self._ensure_rule_id_available(rule)
         rule.group = self.resolve_group_ref(rule.group)
         with self._lock:
             self._conn.execute(

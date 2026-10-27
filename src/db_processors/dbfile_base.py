@@ -133,6 +133,17 @@ class DBFile:
     def _existing_group_ids(self):
         return {group.id for group in self.list_groups()}
 
+    def _ensure_rule_id_available(self, rule):
+        """Reject a rule whose ``id`` already exists.
+
+        The id is the stable technical identity, so adding a rule that reuses an
+        existing id is an error. (Auto-deduplication of a *generated* slug moved
+        to the UI; the backend stays the authority and refuses a duplicate.)
+        """
+        if self.has_rule(rule.id):
+            raise ValueError(f'rule with id already exists: {rule.id}')
+        return rule
+
     def _validate_group_parent(self, group, parent):
         """Return the canonical parent id, or raise on an invalid reference.
 

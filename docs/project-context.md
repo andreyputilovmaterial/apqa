@@ -4,6 +4,19 @@
 
 ## Last state
 
+- **Rule ids are now enforced unique on create (roadmap item).** Previously
+  `DBFile.add_rule` silently auto-deduplicated a colliding id (`-2`, `-3`, …);
+  now the backend rejects a duplicate rule id with a `ValueError`
+  (`_ensure_rule_id_available` on `DBFile`, used by both the YAML and SQLite
+  backends), which `POST /qc/rules` surfaces as a `400`. The dedup moved to the
+  UI: `rule_form.js` gained `makeUniqueSlug`/`ensureUnique` (mirrors of
+  `ids.py`), the form receives `existingIds` from the page and (a) auto-fills a
+  unique slug from the display name, (b) re-generates a unique slug when the id
+  is cleared, and (c) shows an inline error instead of submitting when a
+  manually-entered id collides. Groups are unchanged (their generated id is
+  still auto-deduplicated on add). Updated Python tests (yaml/sqlite crud,
+  endpoints) and the `rule_form` Vitest spec.
+
 - Renamed the multi-punch dropdown component `multipunch` → `input_multipunch` to
   match the other `input_*` controls. Global registration
   `component-multipunch` → `component-input-multipunch`, local usage
@@ -88,8 +101,10 @@
   `rule`/`group`) — plus the free-form, user-visible `name`. References
   (`Rule.group`, `Group.parent`) now use the **group id**, so a display-name
   change (e.g. a future translation) never breaks references. Ids are unique per
-  entity type and auto-deduplicated on add (`-2`, `-3`, …); display names may
-  repeat. `rename_rule`/`rename_group` now change the display name only (no
+  entity type; display names may repeat. (Later changed: adding a rule with an
+  existing id now raises, and the UI deduplicates the generated slug; groups
+  still auto-deduplicate on add.) `rename_rule`/`rename_group` now change the
+  display name only (no
   cascade). Lookups (`get_rule`/`has_rule`/`get_group`/`has_group`, CRUD
   endpoints) take the id; `DBFile.resolve_group_ref()` accepts either an id or a
   display name for incoming references. **Migration**: loading pre-split data

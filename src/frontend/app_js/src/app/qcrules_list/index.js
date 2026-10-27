@@ -124,6 +124,12 @@ const QcRulesList = {
       return Array.from(seen).sort();
     });
 
+    // Ids already in use, passed to the create form so its generated slug can
+    // avoid colliding with an existing rule id.
+    const existingRuleIds = computed(() =>
+      records.value.map((record) => record.id).filter(Boolean),
+    );
+
     // Resolve a user-typed group reference (display name or id) to the group id
     // stored on rules/groups. Unknown values are passed through for the backend
     // to reject with a clear message.
@@ -216,6 +222,7 @@ const QcRulesList = {
             cmdlets: metadata.cmdlets || [],
             ops: metadata.ops || [],
             tagSuggestions: tagSuggestions.value,
+            existingIds: existingRuleIds.value,
           }),
       });
 
