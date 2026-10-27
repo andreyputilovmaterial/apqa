@@ -1,6 +1,6 @@
 import { computed, reactive, ref, watch } from 'vue';
 
-import SearchSelect from '../search_select/index';
+import InputSearchSelect from '../input_search_select/index';
 
 import './styles.css';
 
@@ -52,12 +52,12 @@ const InputCmdlet = {
   emits: ['update:modelValue', 'change', 'input'],
 
   components: {
-    'search-select': SearchSelect,
+    'input-search-select': InputSearchSelect,
   },
 
   template: `
 <div class="apqa-input-cmdlet">
-  <search-select
+  <input-search-select
     v-if="!selected"
     :model-value="null"
     :options="candidateNames"

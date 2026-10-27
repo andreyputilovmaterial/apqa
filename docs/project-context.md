@@ -15,14 +15,14 @@
   (`rule_record`, `rules_tree`, `rule_delete_confirm`).
 
 - Added a **searchable single-select drop-down** component
-  (`src/frontend/app_js/src/common_components/search_select/`) and wired it into
+  (`src/frontend/app_js/src/common_components/input_search_select/`) and wired it into
   the cmdlet selector (`input_cmdlet`), replacing the native `<select>`. The new
   control's search box is focused by default when the drop-down opens; typing
   filters the pre-defined options (case-insensitive substring), arrow keys move
   the highlight and Enter selects. It only allows choosing from the list (no
-  free-form value). Registered globally as `component-search-select` in `app.js`
+  free-form value). Registered globally as `component-input-search-select` in `app.js`
   and imported locally in `input_cmdlet` (same pattern as `multipunch`). Updated
-  `input_cmdlet`/`input_cmdlet_chain` specs and added a `search_select` spec; all
+  `input_cmdlet`/`input_cmdlet_chain` specs and added an `input_search_select` spec; all
   app/common-components specs pass (the 4 `myers-diff` suites fail on a
   pre-existing module-resolution error, unrelated). Follow-up fix: removed the
   `opacity: 0.85` on the trailing chain slot — it made the open menu translucent

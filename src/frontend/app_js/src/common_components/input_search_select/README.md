@@ -1,7 +1,7 @@
-# SearchSelect
+# InputSearchSelect
 
 Single-select drop down with a search box, registered in `app.js` as
-`component-search-select`.
+`component-input-search-select`.
 
 The search box is focused automatically when the menu opens; typing filters the
 options (case-insensitive substring match). Clicking an option selects it and

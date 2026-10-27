@@ -35,33 +35,33 @@ function mountHarness() {
 describe('InputCmdletChain', () => {
   it('renders a single source placeholder when empty', () => {
     const wrapper = mountChain();
-    const triggers = wrapper.findAll('.apqa-search-select-trigger');
+    const triggers = wrapper.findAll('.apqa-input-search-select-trigger');
     expect(triggers).toHaveLength(1);
     expect(triggers[0].text()).toContain('source');
   });
 
   it('offers only source readers in the first slot', async () => {
     const wrapper = mountChain();
-    await wrapper.find('.apqa-search-select-trigger').trigger('click');
-    const options = wrapper.findAll('.apqa-search-select-option');
+    await wrapper.find('.apqa-input-search-select-trigger').trigger('click');
+    const options = wrapper.findAll('.apqa-input-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['get-content-excel']);
   });
 
   it('shows a new placeholder after the first cmdlet is selected', async () => {
     const wrapper = mountHarness();
-    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    await wrapper.find('.apqa-input-search-select-trigger').trigger('click');
     const first = wrapper
-      .findAll('.apqa-search-select-option')
+      .findAll('.apqa-input-search-select-option')
       .find((o) => o.text() === 'get-content-excel');
     await first.trigger('click');
 
     expect(wrapper.findAll('.apqa-input-cmdlet-selected')).toHaveLength(1);
-    const triggers = wrapper.findAll('.apqa-search-select-trigger');
+    const triggers = wrapper.findAll('.apqa-input-search-select-trigger');
     expect(triggers).toHaveLength(1);
     // The new placeholder must stay empty, not pre-select the next candidate.
     expect(triggers[0].text()).toContain('Select next cmdlet');
     await triggers[0].trigger('click');
-    const options = wrapper.findAll('.apqa-search-select-option');
+    const options = wrapper.findAll('.apqa-input-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['count']);
   });
 });

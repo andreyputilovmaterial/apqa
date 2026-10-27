@@ -1,9 +1,9 @@
-.apqa-search-select {
+.apqa-input-search-select {
   position: relative;
   width: 100%;
 }
 
-.apqa-search-select-trigger {
+.apqa-input-search-select-trigger {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -21,16 +21,16 @@
   box-sizing: border-box;
 }
 
-.apqa-search-select-trigger:hover {
+.apqa-input-search-select-trigger:hover {
   border-color: #999;
 }
 
-.apqa-search-select-trigger:focus-visible {
+.apqa-input-search-select-trigger:focus-visible {
   outline: none;
   border-color: #385;
 }
 
-.apqa-search-select-trigger-value {
+.apqa-input-search-select-trigger-value {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -38,18 +38,18 @@
   white-space: nowrap;
 }
 
-.apqa-search-select-trigger-value.is-placeholder {
+.apqa-input-search-select-trigger-value.is-placeholder {
   color: #888;
 }
 
-.apqa-search-select-trigger-caret {
+.apqa-input-search-select-trigger-caret {
   flex: 0 0 auto;
   color: #385;
   font-size: 0.8rem;
   line-height: 1;
 }
 
-.apqa-search-select-menu {
+.apqa-input-search-select-menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -65,7 +65,7 @@
   overflow: hidden;
 }
 
-.apqa-search-select-search {
+.apqa-input-search-select-search {
   font: inherit;
   font-size: 0.9rem;
   padding: 6px 8px;
@@ -77,18 +77,18 @@
   width: 100%;
 }
 
-.apqa-search-select-search:focus {
+.apqa-input-search-select-search:focus {
   outline: none;
   background: #fff;
 }
 
-.apqa-search-select-list {
+.apqa-input-search-select-list {
   max-height: 240px;
   overflow: auto;
   padding: 2px;
 }
 
-.apqa-search-select-option {
+.apqa-input-search-select-option {
   display: block;
   width: 100%;
   padding: 4px 8px;
@@ -104,12 +104,12 @@
   box-sizing: border-box;
 }
 
-.apqa-search-select-option:hover,
-.apqa-search-select-option.is-highlighted {
+.apqa-input-search-select-option:hover,
+.apqa-input-search-select-option.is-highlighted {
   background: #eaf6ef;
 }
 
-.apqa-search-select-empty {
+.apqa-input-search-select-empty {
   padding: 6px 8px;
   font-size: 0.85rem;
   color: #999;

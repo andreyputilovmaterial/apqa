@@ -23,7 +23,7 @@ function mountCmdlet(props = {}) {
 describe('InputCmdlet', () => {
   it('renders a searchable drop down when nothing is selected', () => {
     const wrapper = mountCmdlet();
-    const trigger = wrapper.find('.apqa-search-select-trigger');
+    const trigger = wrapper.find('.apqa-input-search-select-trigger');
     expect(trigger.exists()).toBe(true);
     expect(trigger.text()).toContain('Select cmdlet');
   });
@@ -34,26 +34,26 @@ describe('InputCmdlet', () => {
       props: { cmdlets: CMDLETS },
       global: { components: { 'component-input-cmdlet-chain': ChainStub } },
     });
-    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    await wrapper.find('.apqa-input-search-select-trigger').trigger('click');
     await flushPromises();
     expect(document.activeElement).toBe(
-      wrapper.find('.apqa-search-select-search').element,
+      wrapper.find('.apqa-input-search-select-search').element,
     );
     wrapper.unmount();
   });
 
   it('filters the drop down by kind', async () => {
     const wrapper = mountCmdlet({ kinds: ['source'] });
-    await wrapper.find('.apqa-search-select-trigger').trigger('click');
-    const options = wrapper.findAll('.apqa-search-select-option');
+    await wrapper.find('.apqa-input-search-select-trigger').trigger('click');
+    const options = wrapper.findAll('.apqa-input-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['literal']);
   });
 
   it('emits the chosen cmdlet as the model value', async () => {
     const wrapper = mountCmdlet();
-    await wrapper.find('.apqa-search-select-trigger').trigger('click');
+    await wrapper.find('.apqa-input-search-select-trigger').trigger('click');
     const option = wrapper
-      .findAll('.apqa-search-select-option')
+      .findAll('.apqa-input-search-select-option')
       .find((o) => o.text() === 'count');
     await option.trigger('click');
     expect(wrapper.emitted('update:modelValue').at(-1)).toEqual([

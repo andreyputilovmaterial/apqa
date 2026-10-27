@@ -13,7 +13,7 @@ import './styles.css';
 // `options` may be a plain array of strings/numbers, or an array of
 // `{ value, label }` objects. When only one of `value`/`label` is given for an
 // object option, the other falls back to the same value.
-const SearchSelect = {
+const InputSearchSelect = {
   inheritAttrs: false,
 
   props: {
@@ -26,38 +26,38 @@ const SearchSelect = {
   emits: ['update:modelValue', 'change', 'input'],
 
   template: `
-<div ref="rootEl" class="apqa-search-select">
+<div ref="rootEl" class="apqa-input-search-select">
   <button
     type="button"
-    class="apqa-search-select-trigger"
+    class="apqa-input-search-select-trigger"
     :aria-expanded="String(open)"
     aria-haspopup="listbox"
     @click="toggle"
   >
     <span
-      class="apqa-search-select-trigger-value"
+      class="apqa-input-search-select-trigger-value"
       :class="{ 'is-placeholder': !selectedLabel }"
     >{{ selectedLabel || placeholder }}</span>
-    <span class="apqa-search-select-trigger-caret" aria-hidden="true">▾</span>
+    <span class="apqa-input-search-select-trigger-caret" aria-hidden="true">▾</span>
   </button>
 
   <input v-if="modelValue != null" type="hidden" :name="name" :value="modelValue" />
 
-  <div v-if="open" class="apqa-search-select-menu">
+  <div v-if="open" class="apqa-input-search-select-menu">
     <input
       ref="searchEl"
       type="text"
-      class="apqa-search-select-search"
+      class="apqa-input-search-select-search"
       :placeholder="placeholder"
       v-model="query"
       @keydown="onKeydown"
     />
-    <div class="apqa-search-select-list" role="listbox">
+    <div class="apqa-input-search-select-list" role="listbox">
       <button
         v-for="(option, index) in filtered"
         :key="optionKey(option)"
         type="button"
-        class="apqa-search-select-option"
+        class="apqa-input-search-select-option"
         :class="{ 'is-highlighted': index === highlight }"
         role="option"
         :aria-selected="String(isSelected(option))"
@@ -66,7 +66,7 @@ const SearchSelect = {
       >
         {{ optionLabel(option) }}
       </button>
-      <div v-if="!filtered.length" class="apqa-search-select-empty">No matches</div>
+      <div v-if="!filtered.length" class="apqa-input-search-select-empty">No matches</div>
     </div>
   </div>
 </div>
@@ -208,4 +208,4 @@ const SearchSelect = {
   },
 };
 
-export default SearchSelect;
+export default InputSearchSelect;
