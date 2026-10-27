@@ -55,6 +55,8 @@ def test_source_readers_are_marked_as_sources():
     kinds = {c['name']: c['kind'] for c in get_cmdlet_metadata()['cmdlets']}
     assert kinds['get-content-excel'] == 'source'
     assert kinds['get-content-mdd'] == 'source'
+    assert kinds['get-content-text'] == 'source'
+    assert kinds['get-content'] == 'source'
     assert kinds['literal'] == 'source'
     # Processors cannot be the first cmdlet in a chain.
     assert kinds['as-date'] == 'processor'

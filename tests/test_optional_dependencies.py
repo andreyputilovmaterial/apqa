@@ -47,6 +47,11 @@ def test_get_content_mdd_is_always_known():
     assert 'get-content-mdd' in cmdlets.names()
 
 
+def test_get_content_text_and_proxy_are_always_known():
+    assert 'get-content-text' in cmdlets.names()
+    assert 'get-content' in cmdlets.names()
+
+
 def test_validate_xml_compatible_is_always_known():
     # xml.etree.ElementTree is stdlib, but the cmdlet still follows the optional
     # dependency pattern: it is always registered and only fails if the import is
@@ -70,6 +75,8 @@ def test_optional_dependency_requirements_are_discoverable():
     assert 'get_content_excel/requirements.txt' in relative
     assert 'get_content_mdd/requirements.txt' in relative
     assert 'get_content_network_fetch/requirements.txt' in relative
+    assert 'get_content_text/requirements.txt' in relative
+    assert 'get_content/requirements.txt' in relative
     assert 'validate_xml_compatible/requirements.txt' in relative
     assert 'format_strip_html/requirements.txt' in relative
 

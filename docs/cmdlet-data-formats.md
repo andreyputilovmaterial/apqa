@@ -304,6 +304,13 @@ read their input from ``args``). Currently implemented:
   array of blocks (one block per data row, keyed by header cell). Optional
   dependency: ``openpyxl``.
 
+- **`get-content-text`** — reads a text file into a single text value. Args:
+  ``path`` (required), ``encoding`` (optional text encoding, default
+  ``"utf-8"``). Uses the stdlib ``pathlib.Path.read_text``; no pip dependency.
+
+- **`get-content`** — a proxy/alias for `get-content-text`: same args, same
+  result, kept so the familiar ``get-content`` name works for plain text files.
+
 - **`get-content-mdd`** — reads an MDD metadata document into a hierarchical
   block. Args: ``path`` (required), ``method`` (``"open"`` or ``"join"``),
   ``contexts`` (label/property contexts, default ``["Question", "Analysis"]``),

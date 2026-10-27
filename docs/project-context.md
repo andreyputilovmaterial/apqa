@@ -4,6 +4,17 @@
 
 ## Last state
 
+- **Added `get-content-text` source reader and a `get-content` proxy.** New
+  `src/cmdlets/get_content_text/` (registered as `get-content-text`, a *source*)
+  reads a text file into a single text value via the stdlib
+  `pathlib.Path.read_text`; args `path` (required) and `encoding` (default
+  `utf-8`). New `src/cmdlets/get_content/` registers `get-content` as a thin
+  proxy that delegates to `get-content-text` and shares its arg schema (`ARGS`).
+  Both use only the stdlib, carry comment-only `requirements.txt` files for
+  build.sh discovery, and are covered by `tests/test_get_content_text.py` plus
+  metadata/discoverability assertions in `tests/test_cmdlet_metadata.py` and
+  `tests/test_optional_dependencies.py`.
+
 - **Added two network cmdlets for verifying CDN/image availability.** New
   `src/cmdlets/get_content_network_fetch/` (registered as
   `get-content-network-fetch`, a *processor*) takes a URL from the **piped value**

@@ -1,0 +1,6 @@
+# get-content is a proxy for get-content-text and uses the Python standard
+# library (pathlib), so there is no pip package to install. This file exists so
+# build.sh's optional-dependency discovery still copies it into
+# dist/optional_dependencies/ and documents that this cmdlet is intentionally
+# self-contained (a comment-only requirements file is a no-op for
+# `pip install -r`).
