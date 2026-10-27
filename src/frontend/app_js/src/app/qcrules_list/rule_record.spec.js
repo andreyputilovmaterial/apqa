@@ -59,4 +59,25 @@ describe('RuleRecord', () => {
     expect(wrapper.emitted('delete')).toHaveLength(1);
     expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'Rule A' });
   });
+
+  it('adds the shared base, rule kind and mark classes to the <li>', () => {
+    const wrapper = mount(RuleRecord, {
+      props: { record: makeRecord({ markers: ['skip'], op: '', right: [] }) },
+    });
+
+    const li = wrapper.find('li');
+    expect(li.classes()).toContain('apqa-rules-tree-item');
+    expect(li.classes()).toContain('apqa-rule-record');
+    expect(li.classes()).toContain('skip');
+    expect(li.classes()).toContain('unfinished');
+  });
+
+  it('keeps filter CSS classes from the record', () => {
+    const wrapper = mount(RuleRecord, {
+      props: { record: makeRecord({ _filterMeta: { cssClasses: ['apqa-u-hidden'] } }) },
+    });
+
+    expect(wrapper.find('li').classes()).toContain('apqa-u-hidden');
+  });
+
 });

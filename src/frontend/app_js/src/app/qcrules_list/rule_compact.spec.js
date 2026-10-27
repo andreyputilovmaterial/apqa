@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RuleCompact from './rule_compact.js';
+import { UNFINISHED_MESSAGE } from './marks_badges.js';
 
 function makeRecord(overrides = {}) {
   return {
@@ -41,5 +42,28 @@ describe('RuleCompact', () => {
     const wrapper = mount(RuleCompact, { props: { record: makeRecord() } });
     await wrapper.find('.apqa-rule-compact-description').trigger('click');
     expect(wrapper.emitted('toggle')).toHaveLength(1);
+  });
+
+  it('does not render a badges line for an unmarked rule', () => {
+    const wrapper = mount(RuleCompact, { props: { record: makeRecord() } });
+    expect(wrapper.find('.apqa-marks-badges').exists()).toBe(false);
+  });
+
+  it('renders mark badges as the last line', () => {
+    const wrapper = mount(RuleCompact, {
+      props: { record: makeRecord({ markers: ['skip', 'xfail'] }) },
+    });
+
+    const badges = wrapper.findAll('.apqa-mark-badge');
+    expect(badges.map((badge) => badge.text())).toEqual(['skip', 'xfail']);
+  });
+
+  it('shows an unfinished helper note under the name', () => {
+    const wrapper = mount(RuleCompact, {
+      props: { record: makeRecord({ op: '', right: [] }) },
+    });
+
+    expect(wrapper.find('.apqa-rule-unfinished-note').text()).toBe(UNFINISHED_MESSAGE);
+    expect(wrapper.find('.apqa-mark-badge-unfinished').exists()).toBe(true);
   });
 });

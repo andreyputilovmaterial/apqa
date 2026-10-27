@@ -162,19 +162,32 @@
   font-weight: 600;
 }
 
-.apqa-qcrules-list-item-markers {
-  display: flex;
+/* Short mark badges shown on rules and folders (marks_badges.js). */
+.apqa-marks-badges {
+  display: inline-flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
-.apqa-qcrules-list-item-marker {
+.apqa-mark-badge {
   font-size: 0.8rem;
   padding: 1px 7px;
   background: #fff3cd;
   color: #856404;
   border-radius: 10px;
+}
+
+/* Grey helper text under an unfinished rule's name. */
+.apqa-rule-unfinished-note {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+/* In the compact header (a wrapping row) force the note onto its own line,
+   directly under the name/comment, without a gap above it. */
+.apqa-rule-compact-description .apqa-rule-unfinished-note {
+  flex-basis: 100%;
 }
 
 .apqa-qcrules-list-item-meta {
@@ -268,12 +281,22 @@
   margin-right: 6px;
 }
 
-/* Rule record wrapper: the `<li>` in the list. The bordered card is rendered by
-   the inner compact/full rule views; this unit only participates in list flow.
-   `--rules-tree-depth` is set inline by the rules tree so nested rules indent. */
-.apqa-rule-record {
+/* Shared base for every entry in the rules tree — a QC-rule leaf or a folder
+   heading. It is the `<li>` unit; the bordered card inside is rendered by the
+   inner `.apqa-qcrules-entry` element. `--rules-tree-depth` is set inline by the
+   rules tree so nested entries indent. */
+.apqa-rules-tree-item {
   list-style-type: none;
   padding-left: calc(var(--rules-tree-depth, 0) * var(--mdm-space));
+}
+
+/* Kind markers: which kind of entry this is (QC rule vs folder). Empty for now —
+   kept as hooks so rule/folder-specific layout can be added without touching the
+   shared base above. */
+.apqa-rule-record {
+}
+
+.apqa-rules-tree-group {
 }
 
 .apqa-rule-body {
@@ -330,19 +353,14 @@
   gap: 4px;
 }
 
-.apqa-rules-tree-group {
-  list-style-type: none;
-  padding-left: calc(var(--rules-tree-depth, 0) * var(--mdm-space));
-}
-
 /* A folder is the same box as a QC rule (it also carries `.apqa-qcrules-entry`);
-   only its layout and the expand toggle differ. All entries render uniformly
-   white for now — color later via `.apqa-qcrules-entry-folder`/`-rule`. */
+   only its layout and the expand toggle differ. Mark/color highlighting is
+   applied via the shared `.apqa-rules-tree-item` base + short mark classes. */
 .apqa-rules-tree-group-header {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 5px; /* reduced from 8px so that text in folder title after the [+] toggle is better aligned with rules below */
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   width: 100%;
   margin: 0;
   appearance: none;
@@ -352,8 +370,39 @@
   text-align: left;
 }
 
+/* First line of a folder heading: the [+]/[-] toggle and the folder name. */
+.apqa-rules-tree-group-header-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px; /* reduced from 8px so that text in folder title after the [+] toggle is better aligned with rules below */
+  min-width: 0;
+}
+
 .apqa-rules-tree-group-header:hover {
   border-color: #999;
+}
+
+/* Mark highlights. The short, non-prefixed classes below (`xfail`, `skip`,
+   `unfinished`) live on the `.apqa-rules-tree-item` <li> and are styled only
+   through that base + the inner `.apqa-qcrules-entry` box, so they never leak
+   into the global namespace. A rule (or an aggregated folder) may carry several
+   marks at once: the cascade order is the provisional precedence — `unfinished`
+   (most important) beats `skip`, which beats `xfail`. Colors are intentionally
+   light with a colored left accent; only the important marks stand out clearly. */
+.apqa-rules-tree-item.xfail .apqa-qcrules-entry {
+  background: #f7f4fb;
+  border-left: 3px solid #b9a6d6;
+}
+
+.apqa-rules-tree-item.skip .apqa-qcrules-entry {
+  background: #fff6e0;
+  border-left: 3px solid #e0a800;
+}
+
+.apqa-rules-tree-item.unfinished .apqa-qcrules-entry {
+  background: #ffe4e4;
+  border-left: 3px solid #d64545;
 }
 
 .apqa-rules-tree-group-toggle {
@@ -371,6 +420,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Folder mark summary: "includes rules marked …" preceding the badges, so it is
+   clear the folder itself is not marked but contains rules that are. */
+.apqa-rules-tree-group-marks {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: #888;
+  font-size: 0.8rem;
 }
 
 .apqa-rules-tree-pagination {

@@ -1,11 +1,14 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import RuleBody from './rule_body';
+import { markClassesForRecord } from './grouping';
 
 // Outer "record" wrapper for a QC rule. It owns the expanded/condensed state and
 // toggles it when the inner rule's header is clicked. It forwards
 // `edit`/`run`/`delete` actions to the page. This is the `<li>` unit rendered
-// inside the rules list.
+// inside the rules list. Its classes are the shared tree-entry base plus the
+// rule kind marker, the rule's mark classes, and any classes the records filter
+// attached (e.g. `.apqa-u-hidden`).
 const RuleRecord = {
   props: ['record'],
 
@@ -16,7 +19,7 @@ const RuleRecord = {
   },
 
   template: `
-<li class="apqa-rule-record" :class="record._filterMeta.cssClasses">
+<li :class="classes">
   <rule-body
     :record="record"
     :expanded="expanded"
@@ -28,9 +31,24 @@ const RuleRecord = {
 </li>
 `,
 
-  setup() {
+  setup(props) {
     const expanded = ref(false);
-    return { expanded };
+
+    const classes = computed(() => {
+      const filterMeta = props.record._filterMeta;
+      const filterClasses =
+        filterMeta && Array.isArray(filterMeta.cssClasses)
+          ? filterMeta.cssClasses
+          : [];
+      return [
+        'apqa-rules-tree-item',
+        'apqa-rule-record',
+        ...markClassesForRecord(props.record),
+        ...filterClasses,
+      ];
+    });
+
+    return { expanded, classes };
   },
 };
 

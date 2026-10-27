@@ -1,9 +1,25 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildGroupNodes } from './grouping.js';
+import {
+  buildGroupNodes,
+  isUnfinished,
+  markClassesForRecord,
+  markNamesForRecord,
+  markerClass,
+} from './grouping.js';
 
-function rule(name, group = '', order = 0) {
-  return { id: name, name, group, order };
+function rule(name, group = '', order = 0, extra = {}) {
+  return {
+    id: name,
+    name,
+    group,
+    order,
+    markers: [],
+    left: [],
+    op: '',
+    right: [],
+    ...extra,
+  };
 }
 
 function group(name, parent = '', order = 0, aliases = []) {
@@ -103,3 +119,66 @@ describe('buildGroupNodes', () => {
     expect(nodes).toEqual([]);
   });
 });
+
+describe('marks', () => {
+  it('maps markers to short, safe CSS class names', () => {
+    expect(markerClass('skip')).toBe('skip');
+    expect(markerClass('xfail')).toBe('xfail');
+    expect(markerClass('Win 32')).toBe('win-32');
+    expect(markerClass('')).toBe('');
+    expect(markerClass(undefined)).toBe('');
+  });
+
+  it('treats a rule as unfinished when any of left, op or right is missing', () => {
+    const left = [{ cmdlet: 'count' }];
+    const right = [{ cmdlet: 'count' }];
+    expect(isUnfinished(rule('r', '', 0, { left, op: '', right: [] }))).toBe(true);
+    expect(isUnfinished(rule('r', '', 0, { left, op: 'eq', right: [] }))).toBe(true);
+    expect(isUnfinished(rule('r', '', 0, { left: [], op: 'eq', right }))).toBe(true);
+    expect(isUnfinished(rule('r', '', 0, { left: [], op: '', right: [] }))).toBe(true);
+    expect(isUnfinished(rule('r', '', 0, { left, op: 'eq', right }))).toBe(false);
+  });
+
+  it('returns marker classes plus a derived unfinished class', () => {
+    const left = [{ cmdlet: 'count' }];
+    expect(
+      markClassesForRecord(rule('r', '', 0, { markers: ['skip', 'xfail'], left, op: '', right: [] })),
+    ).toEqual(['skip', 'xfail', 'unfinished']);
+    expect(
+      markClassesForRecord(rule('r', '', 0, { markers: ['skip'], left, op: 'eq', right: [{ cmdlet: 'count' }] })),
+    ).toEqual(['skip']);
+  });
+
+  it('returns display mark names including a derived unfinished mark', () => {
+    const left = [{ cmdlet: 'count' }];
+    expect(
+      markNamesForRecord(rule('r', '', 0, { markers: ['skip', 'xfail'], left, op: '', right: [] })),
+    ).toEqual(['skip', 'xfail', 'unfinished']);
+    expect(
+      markNamesForRecord(rule('r', '', 0, { left, op: 'eq', right: [{ cmdlet: 'count' }] })),
+    ).toEqual([]);
+  });
+
+  it('aggregates rule mark classes up to ancestor folders', () => {
+    const left = [{ cmdlet: 'count' }];
+    const nodes = buildGroupNodes(
+      [group('Data'), group('Metadata', 'Data')],
+      [
+        rule('r1', 'Data', 0, { markers: ['skip'], left, op: 'eq', right: [{ cmdlet: 'count' }] }),
+        rule('r2', 'Metadata', 0, { left, op: '', right: [] }),
+      ],
+    );
+
+    const data = nodes.find((n) => n.kind === 'group' && n.name === 'Data');
+    const metadata = nodes.find((n) => n.kind === 'group' && n.name === 'Metadata');
+    const r1 = nodes.find((n) => n.kind === 'rule' && n.record.name === 'r1');
+
+    expect(r1.markClasses).toEqual(['skip']);
+    expect(metadata.markClasses).toEqual(['unfinished']);
+    expect(data.markClasses).toEqual(['skip', 'unfinished']);
+    expect(r1.marks).toEqual(['skip']);
+    expect(metadata.marks).toEqual(['unfinished']);
+    expect(data.marks).toEqual(['skip', 'unfinished']);
+  });
+});
+

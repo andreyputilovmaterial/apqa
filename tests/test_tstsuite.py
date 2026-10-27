@@ -10,11 +10,28 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.db_processors.rule_base import Rule
-from src.tstsuite import load_case_params, markers_for, pytest_param_for, run_tst_case
+from src.tstsuite import (
+    is_unfinished,
+    load_case_params,
+    markers_for,
+    pytest_param_for,
+    run_tst_case,
+)
 
 
 def _rule(markers):
     return Rule(name='r', meta={'markers': markers})
+
+
+def _complete_rule(markers):
+    literal = {'cmdlet': 'literal', 'args': {'value': 1}}
+    return Rule(
+        name='r',
+        meta={'markers': markers},
+        left=[literal],
+        op='eq',
+        right=[literal],
+    )
 
 
 def test_markers_for_normalizes_values():
@@ -25,7 +42,7 @@ def test_markers_for_normalizes_values():
 
 
 def test_skip_marker_becomes_skip_mark():
-    param = pytest_param_for(_rule(['skip']))
+    param = pytest_param_for(_complete_rule(['skip']))
     assert param.id == 'r'
     assert any(m.name == 'skip' for m in param.marks)
 
@@ -37,13 +54,30 @@ def test_pytest_param_uses_rule_id_not_display_name():
 
 
 def test_xfail_marker_becomes_xfail_mark():
-    param = pytest_param_for(_rule(['xfail']))
+    param = pytest_param_for(_complete_rule(['xfail']))
     assert any(m.name == 'xfail' for m in param.marks)
 
 
 def test_no_markers_produce_no_marks():
-    param = pytest_param_for(_rule([]))
+    param = pytest_param_for(_complete_rule([]))
     assert list(param.marks) == []
+
+
+def test_is_unfinished():
+    assert is_unfinished(_rule([])) is True
+    assert is_unfinished(_rule(['skip'])) is True
+    assert is_unfinished(_complete_rule([])) is False
+
+
+def test_unfinished_rule_becomes_skip_mark():
+    param = pytest_param_for(_rule([]))
+    assert any(m.name == 'skip' for m in param.marks)
+
+
+def test_unfinished_takes_precedence_over_xfail():
+    param = pytest_param_for(_rule(['xfail']))
+    assert any(m.name == 'skip' for m in param.marks)
+    assert not any(m.name == 'xfail' for m in param.marks)
 
 
 def _lit(value):
@@ -69,6 +103,15 @@ def test_load_case_params_from_yaml(tmp_path):
             '  meta:',
             '    markers: [skip]',
             '- name: normal-rule',
+            '  left:',
+            '    - cmdlet: literal',
+            '      args:',
+            '        value: 1',
+            '  op: eq',
+            '  right:',
+            '    - cmdlet: literal',
+            '      args:',
+            '        value: 1',
         ]),
         encoding='utf-8',
     )

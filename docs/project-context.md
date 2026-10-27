@@ -4,6 +4,19 @@
 
 ## Last state
 
+- **QC-rules list: physical marks + shared tree-entry base class.** Rule leaves and
+  folder headings share `.apqa-rules-tree-item` (indent/list flow), with
+  `.apqa-rule-record` / `.apqa-rules-tree-group` kept as kind markers. `grouping.js`
+  now derives a physical `unfinished` mark when **any** of left / op / right is
+  missing (`isUnfinished`); `markNamesForRecord` returns stored markers + that
+  derived mark, and `markClassesForRecord` maps them to short CSS classes. Every
+  rule (compact + full) renders a final badge line (`marks_badges.js`) and an
+  unfinished rule gets a grey helper note under its name + a `title` tooltip on the
+  badge. Folders render "includes rules marked …" with aggregated badges/classes
+  (`groupMarks` / `groupMarkClasses`). `tstsuite.pytest_param_for` now skips
+  unfinished rules at run time. Highlighting precedence is still provisional
+  `unfinished` > `skip` > `xfail`. Documented in `docs/development.md` "Markers".
+
 - **Rule ids are now enforced unique on create (roadmap item).** Previously
   `DBFile.add_rule` silently auto-deduplicated a colliding id (`-2`, `-3`, …);
   now the backend rejects a duplicate rule id with a `ValueError`

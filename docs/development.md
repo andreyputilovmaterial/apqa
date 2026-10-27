@@ -310,6 +310,27 @@ The same design principles apply to the DB storage format, the UI, and what flow
 through the pipe. Rules may carry pytest modifiers in `meta.markers`: `skip`
 (do not run) and `xfail` (a failure is expected and treated as normal).
 
+In the QC-rules list UI each rule entry (`<li class="apqa-rules-tree-item">` with
+the `.apqa-rule-record` kind marker) carries short CSS classes for its marks: one
+per `meta.markers` value (`skip`, `xfail`, …) plus a derived `unfinished` mark
+when any of the three essential parts (left chain, comparison op, right chain) is
+missing — i.e. the rule was saved mid-edit and cannot run. The marks are also
+rendered as physical badges (a short line at the bottom of every rule, and inside
+each folder heading prefixed with "includes rules marked"); the `unfinished`
+badge carries a `title` tooltip and an unfinished rule gets a grey helper note
+under its name. Folders (`.apqa-rules-tree-group`) aggregate both the classes and
+badge names of every rule inside them (recursively), like VSCode's "changed
+files" bubble up to their folder. The classes are styled only as
+`.apqa-rules-tree-item.<mark> .apqa-qcrules-entry`, so the short names never leak
+into the global CSS namespace. Colors are light with a colored left accent.
+**Provisional (review later):** the combination precedence (`unfinished` > `skip`
+> `xfail`, by cascade order in
+`src/frontend/app_js/src/app/qcrules_list/styles.css`).
+
+At run time an unfinished rule is skipped: `tstsuite.pytest_param_for` treats it
+as `pytest.mark.skip(reason="rule is unfinished")` before considering
+`meta.markers`, so "cannot run" is enforced, not just displayed.
+
 **Planned (not implemented): conditional markers.** Some rules rely on cmdlets
 whose tools exist only on some platforms (e.g. `pywin32` on Windows). The idea is
 a marker that skips a rule unless a condition holds, driven by environment

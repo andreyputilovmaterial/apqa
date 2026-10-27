@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 
 import RulesTree from './rules_tree.js';
 
-function rule(name, group = '') {
+function rule(name, group = '', extra = {}) {
   return {
     id: name,
     name,
@@ -16,6 +16,7 @@ function rule(name, group = '') {
     tags: [],
     created_at: '',
     _filterMeta: { cssClasses: [] },
+    ...extra,
   };
 }
 
@@ -132,4 +133,42 @@ describe('RulesTree', () => {
     expect(wrapper.emitted('delete')).toHaveLength(1);
     expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'r1' });
   });
+
+  it('assigns mark classes to rule leaves', () => {
+    const wrapper = mount(RulesTree, {
+      props: { groups: [], records: [rule('r1', '', { markers: ['skip'] })] },
+    });
+
+    const li = wrapper.find('li.apqa-rule-record');
+    expect(li.classes()).toContain('apqa-rules-tree-item');
+    expect(li.classes()).toContain('skip');
+  });
+
+  it('aggregates rule mark classes onto a folder heading', () => {
+    const wrapper = mount(RulesTree, {
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data', { markers: ['skip'] })],
+      },
+    });
+
+    const folder = wrapper.find('.apqa-rules-tree-group');
+    expect(folder.classes()).toContain('apqa-rules-tree-item');
+    expect(folder.classes()).toContain('skip');
+  });
+
+  it('shows a folder mark summary with aggregated badges', () => {
+    const wrapper = mount(RulesTree, {
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data', { markers: ['skip'] })],
+      },
+    });
+
+    const summary = wrapper.find('.apqa-rules-tree-group-marks');
+    expect(summary.text()).toContain('includes rules marked');
+    const badges = summary.findAll('.apqa-mark-badge');
+    expect(badges.map((badge) => badge.text())).toEqual(['skip', 'unfinished']);
+  });
+
 });
