@@ -4,7 +4,18 @@ from ..registry import cmdlets
 from ..value_types import PipeValue
 
 
-@cmdlets.register('literal')
+@cmdlets.register(
+    'literal',
+    kind='source',
+    args=[
+        {
+            'name': 'value',
+            'type': 'json',
+            'required': True,
+            'description': 'The fixed constant value (any JSON scalar, array, or object).',
+        },
+    ],
+)
 def literal(value: PipeValue, args: dict) -> PipeValue:
     """Return the fixed value carried in ``args['value']``.
 

@@ -5,7 +5,7 @@ from ..registry import cmdlets
 from ..value_types import Integer, PipeValue
 
 
-@cmdlets.register('bit-not')
+@cmdlets.register('bit-not', kind='processor')
 def bit_not(value: PipeValue, args: dict) -> Integer:
     """Return ``~value``; the value must be an integer (bool excluded)."""
     return ~require_int(value, 'bit-not')

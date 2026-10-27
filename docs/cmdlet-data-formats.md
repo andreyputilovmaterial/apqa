@@ -313,6 +313,22 @@ read their input from ``args``). Currently implemented:
   categories, a ``categories`` block keyed by category name → detailed category
   block (for a categorical scalar its keys are the available response options).
 
+## Editor metadata (`kind` and arg schemas)
+
+The rule *editor* needs more than the runtime knows: for each cmdlet, whether it
+can be the first in a chain, and the shape of each argument. This is declared
+next to each `@cmdlets.register(...)` / `@comparisons.register(...)` call and
+served to the frontend by `GET /functionality/cmdlet-metadata` (see
+`docs/development.md` "Cmdlet & comparison-op editor metadata"):
+
+- a cmdlet carries a `kind` — `source` (needs no piped value, can be first),
+  `processor` (transforms the piped value), or `terminal` (validation/predicate);
+- an arg (and an op's `op_args`) carries `{ name, type, required, description }`
+  plus optional `default` and `options`.
+
+Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
+`json`, and `cmdlet-chains` (a list of cmdlet chains).
+
 ## Folder aliases
 
 A folder (group) may define aliases: `{ name, chain }` entries where `chain` is a

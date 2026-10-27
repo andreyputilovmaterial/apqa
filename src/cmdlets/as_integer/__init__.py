@@ -4,7 +4,7 @@ from ..registry import cmdlets
 from ..value_types import Integer, PipeValue
 
 
-@cmdlets.register('as-integer')
+@cmdlets.register('as-integer', kind='processor')
 def as_integer(value: PipeValue, args: dict) -> Integer:
     """Convert ``value`` to an integer via Python's ``int()``.
 

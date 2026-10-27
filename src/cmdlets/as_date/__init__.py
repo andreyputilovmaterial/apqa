@@ -8,7 +8,18 @@ from ..registry import cmdlets
 from ..value_types import DateTime, PipeValue
 
 
-@cmdlets.register('as-date')
+@cmdlets.register(
+    'as-date',
+    kind='processor',
+    args=[
+        {
+            'name': 'tz',
+            'type': 'text',
+            'required': False,
+            'description': "IANA name or UTC offset used when the value has no timezone.",
+        },
+    ],
+)
 def as_date(value: PipeValue, args: dict) -> DateTime:
     """Convert ``value`` to a timezone-aware ``datetime``.
 

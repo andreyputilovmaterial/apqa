@@ -5,7 +5,18 @@ from ..registry import cmdlets
 from ..value_types import Boolean, PipeValue
 
 
-@cmdlets.register('and')
+@cmdlets.register(
+    'and',
+    kind='source',
+    args=[
+        {
+            'name': 'operands',
+            'type': 'cmdlet-chains',
+            'required': True,
+            'description': 'Cmdlet chains combined with logical AND.',
+        },
+    ],
+)
 def and_(value: PipeValue, args: dict) -> Boolean:
     """Return ``True`` iff every operand chain's value is truthy.
 

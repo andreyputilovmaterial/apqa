@@ -5,7 +5,18 @@ from ..registry import cmdlets
 from ..value_types import Boolean, PipeValue
 
 
-@cmdlets.register('or')
+@cmdlets.register(
+    'or',
+    kind='source',
+    args=[
+        {
+            'name': 'operands',
+            'type': 'cmdlet-chains',
+            'required': True,
+            'description': 'Cmdlet chains combined with logical OR.',
+        },
+    ],
+)
 def or_(value: PipeValue, args: dict) -> Boolean:
     """Return ``True`` iff any operand chain's value is truthy.
 

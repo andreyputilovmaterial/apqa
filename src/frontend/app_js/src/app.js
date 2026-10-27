@@ -19,6 +19,11 @@ import ComponentFormatLocalFilePath from './common_components/format_local_file_
 import ComponentInputNumericRange from './common_components/input_numeric_range/index';
 import ComponentInputDatetimeRange from './common_components/input_datetime_range/index';
 import ComponentMultipunch from './common_components/multipunch/index';
+import ComponentInputCmdlet from './common_components/input_cmdlet/index';
+import ComponentInputCmdletChain from './common_components/input_cmdlet_chain/index';
+import ComponentInputComparisonOp from './common_components/input_comparison_op/index';
+import ComponentInputQcruleTags from './common_components/input_qcrule_tags/index';
+import ComponentInputQcruleMarks from './common_components/input_qcrule_marks/index';
 import ComponentLoaderSpinner from './common_components/loader_spinner/index';
 import ComponentLoaderInProgress from './common_components/loader_inprogress/index';
 import './common_components/css_grid/styles.css';
@@ -83,6 +88,11 @@ document.addEventListener("DOMContentLoaded", () => {
   app.component('component-input-numericrange',ComponentInputNumericRange);
   app.component('component-input-datetimerange',ComponentInputDatetimeRange);
   app.component('component-multipunch', ComponentMultipunch);
+  app.component('component-input-cmdlet', ComponentInputCmdlet);
+  app.component('component-input-cmdlet-chain', ComponentInputCmdletChain);
+  app.component('component-input-comparison-op', ComponentInputComparisonOp);
+  app.component('component-input-qcrule-tags', ComponentInputQcruleTags);
+  app.component('component-input-qcrule-marks', ComponentInputQcruleMarks);
   app.component('component-loader-spinner', ComponentLoaderSpinner);
   app.component('component-loader-inprogress', ComponentLoaderInProgress);
   app.mount('#ui_app');

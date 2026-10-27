@@ -6,7 +6,27 @@ from ..registry import cmdlets
 from ..value_types import Boolean, PipeValue
 
 
-@cmdlets.register('matches')
+@cmdlets.register(
+    'matches',
+    kind='processor',
+    args=[
+        {'name': 'pattern', 'type': 'text', 'required': True, 'description': 'Substring or regular expression to look for.'},
+        {
+            'name': 'case_insensitive',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Ignore case when matching.',
+        },
+        {
+            'name': 'regex',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Treat the pattern as a regular expression.',
+        },
+    ],
+)
 def matches(value: PipeValue, args: dict) -> Boolean:
     """Return ``True`` when the text matches ``args['pattern']``.
 

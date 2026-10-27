@@ -1,0 +1,157 @@
+.apqa-input-cmdlet {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-input-cmdlet-select {
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+}
+
+.apqa-input-cmdlet-selected {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.apqa-input-cmdlet-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.apqa-input-cmdlet-toggle-help {
+  appearance: none;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 2px 6px;
+}
+
+.apqa-input-cmdlet-toggle-help:hover {
+  border-color: #999;
+}
+
+.apqa-input-cmdlet-help {
+  font-size: 0.8rem;
+  color: #999;
+  white-space: pre-wrap;
+}
+
+.apqa-input-cmdlet-clear,
+.apqa-input-cmdlet-chain-item-remove {
+  appearance: none;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 2px 6px;
+}
+
+.apqa-input-cmdlet-clear:hover,
+.apqa-input-cmdlet-chain-item-remove:hover {
+  border-color: #999;
+  color: #990000;
+}
+
+.apqa-input-cmdlet-args {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 8px;
+  border-left: 2px solid #eee;
+}
+
+.apqa-input-cmdlet-arg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apqa-input-cmdlet-arg-label {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.apqa-input-cmdlet-arg-required {
+  color: #990000;
+}
+
+.apqa-input-cmdlet-arg-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+}
+
+.apqa-input-cmdlet-arg-bool {
+  align-self: flex-start;
+}
+
+.apqa-input-cmdlet-arg-help {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.apqa-input-cmdlet-arg-error {
+  font-size: 0.8rem;
+  color: #cc0000;
+}
+
+.apqa-input-cmdlet-arg-chains {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-input-cmdlet-chain-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.apqa-input-cmdlet-chain-item .apqa-input-cmdlet-chain {
+  flex: 1 1 auto;
+}
+
+.apqa-input-cmdlet-add-chain {
+  align-self: flex-start;
+  appearance: none;
+  border: 1px dashed #c0c0c0;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.apqa-input-cmdlet-add-chain:hover {
+  border-color: #999;
+}

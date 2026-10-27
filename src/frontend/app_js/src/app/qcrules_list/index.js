@@ -1,10 +1,12 @@
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, defineComponent, h } from 'vue';
 
 import RecordsFilter from '../../common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '../../common_defs/helper_functions';
 import logError from '../../common_components/_log_error_proxy';
+import { createModal } from '../../common_components/modals/modals';
 import RuleRecord from './rule_record';
 import RulesTree from './rules_tree';
+import RuleForm from './rule_form';
 
 import './styles.css';
 
@@ -91,6 +93,7 @@ const QcRulesList = {
     const groups = ref([]);
     const loading = ref(true);
     const loadError = ref('');
+    const cmdletMetadata = ref(null);
 
     // Tags and markers are multi-punch columns, so their allowed values depend
     // on the loaded records. Start from the static column shape and fill in the
@@ -110,6 +113,15 @@ const QcRulesList = {
     });
 
     const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
+
+    // Distinct tags across loaded rules, used as suggestions in the create form.
+    const tagSuggestions = computed(() => {
+      const seen = new Set();
+      for (const record of records.value) {
+        for (const tag of record.tags) seen.add(tag);
+      }
+      return Array.from(seen).sort();
+    });
 
     // Resolve a user-typed group reference (display name or id) to the group id
     // stored on rules/groups. Unknown values are passed through for the backend
@@ -172,20 +184,55 @@ const QcRulesList = {
       }
     }
 
-    async function createRule() {
-      const name = window.prompt('New QC rule name');
-      if (name == null || name.trim() === '') return;
-      let group = '';
-      if (groups.value.length) {
-        const answer = window.prompt(
-          `Group for "${name.trim()}"? (leave empty for none)\nExisting groups: ${groupNames.value}`,
-          '',
-        );
-        if (answer == null) return;
-        group = groupIdFor(answer);
+    async function ensureCmdletMetadata() {
+      if (!cmdletMetadata.value) {
+        cmdletMetadata.value = await requestJson('/functionality/cmdlet-metadata');
       }
+      return cmdletMetadata.value;
+    }
+
+    async function createRule() {
+      let metadata;
       try {
-        await postJson('/qc/rules', { name: name.trim(), group });
+        metadata = await ensureCmdletMetadata();
+      } catch (e) {
+        window.alert(`Failed to load cmdlet metadata: ${e}`);
+        logError(`Failed to load cmdlet metadata: ${e}`);
+        return;
+      }
+
+      const MyForm = defineComponent({
+        setup: (_, { attrs }) => () =>
+          h(RuleForm, {
+            ...attrs,
+            cmdlets: metadata.cmdlets || [],
+            ops: metadata.ops || [],
+            tagSuggestions: tagSuggestions.value,
+          }),
+      });
+
+      let payload;
+      try {
+        payload = await createModal(MyForm);
+      } catch (e) {
+        // Modal dismissed — nothing to create.
+        return;
+      }
+
+      // Append the new rule at the end of the top-level list: give it an order
+      // just past the largest existing order (rules and folders share one order
+      // space). Without an explicit order it would sort first, not last.
+      let maxOrder = 0;
+      for (const record of records.value) {
+        if (record.order > maxOrder) maxOrder = record.order;
+      }
+      for (const group of groups.value) {
+        if (group.order > maxOrder) maxOrder = group.order;
+      }
+      payload.meta = { ...(payload.meta || {}), order: maxOrder + 1 };
+
+      try {
+        await postJson('/qc/rules', payload);
         await load();
       } catch (e) {
         window.alert(`Failed to create QC rule: ${e}`);

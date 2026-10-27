@@ -8,7 +8,18 @@ from ..registry import cmdlets
 from ..value_types import Integer, PipeValue
 
 
-@cmdlets.register('bit-or')
+@cmdlets.register(
+    'bit-or',
+    kind='source',
+    args=[
+        {
+            'name': 'operands',
+            'type': 'cmdlet-chains',
+            'required': True,
+            'description': 'Integer cmdlet chains combined with bitwise OR.',
+        },
+    ],
+)
 def bit_or(value: PipeValue, args: dict) -> Integer:
     """Return the bitwise OR of the integer operand chains.
 

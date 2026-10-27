@@ -21,7 +21,15 @@ else:
     _openpyxl_import_error = None
 
 
-@cmdlets.register('get-content-excel')
+@cmdlets.register(
+    'get-content-excel',
+    kind='source',
+    help='Read the first sheet of an Excel workbook into an array of row blocks.',
+    args=[
+        {'name': 'path', 'type': 'path', 'required': True, 'description': 'Full path to the Excel workbook.'},
+        {'name': 'sheet', 'type': 'text', 'required': False, 'description': 'Sheet name; defaults to the active (first) sheet.'},
+    ],
+)
 def get_content_excel(value: PipeValue, args: dict) -> Array:
     if _openpyxl_import_error is not None:
         raise ImportError(

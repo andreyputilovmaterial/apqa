@@ -37,6 +37,12 @@ def handle_functionality(net_request_handler, config: dict, added_data=None):
             return json_response(404, {'error': 'help pages are not available'})
         return json_response(200, {'help_pages': get_help_pages()})
 
+    def handle_cmdlet_metadata():
+        get_cmdlet_metadata = (config.get('iface') or {}).get('get_cmdlet_metadata')
+        if not callable(get_cmdlet_metadata):
+            return json_response(404, {'error': 'cmdlet metadata is not available'})
+        return json_response(200, get_cmdlet_metadata())
+
     method = net_request_handler.command
     path_with_query = net_request_handler.path
     path_parsed = f'{urlparse(path_with_query).path}'
@@ -49,6 +55,9 @@ def handle_functionality(net_request_handler, config: dict, added_data=None):
     elif path_parsed == '/functionality/help-pages':
         if method == 'GET':
             renderer = handle_help_pages
+    elif path_parsed == '/functionality/cmdlet-metadata':
+        if method == 'GET':
+            renderer = handle_cmdlet_metadata
 
     if renderer is None:
         return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})

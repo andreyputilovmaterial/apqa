@@ -587,7 +587,36 @@ class _MDDReader:
             ) from error
 
 
-@cmdlets.register('get-content-mdd')
+@cmdlets.register(
+    'get-content-mdd',
+    kind='source',
+    help='Read an MDD metadata document into a structured block.',
+    args=[
+        {'name': 'path', 'type': 'path', 'required': True, 'description': 'Full path to the .mdd file.'},
+        {
+            'name': 'method',
+            'type': 'options',
+            'required': False,
+            'default': 'open',
+            'options': ['open', 'join'],
+            'description': 'How to open the document.',
+        },
+        {
+            'name': 'contexts',
+            'type': 'list',
+            'required': False,
+            'default': ['Question', 'Analysis'],
+            'description': 'Label/property contexts to read.',
+        },
+        {
+            'name': 'step_into',
+            'type': 'boolean',
+            'required': False,
+            'default': True,
+            'description': 'Expand shared-list references into their elements.',
+        },
+    ],
+)
 def get_content_mdd(value: PipeValue, args: dict) -> Block:
     if _import_error is not None:
         raise ImportError(

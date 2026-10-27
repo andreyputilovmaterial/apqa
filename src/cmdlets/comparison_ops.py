@@ -1,7 +1,9 @@
 
+import inspect
 import operator
 from datetime import date, datetime
 
+from .registry import normalize_args
 from .sysmissing import is_sysmissing
 
 
@@ -12,14 +14,24 @@ class ComparisonRegistry:
     comparing two values. ``args`` is an optional mapping of op-specific options
     (e.g. ``eq`` accepts ``{'unordered_arrays': True}``). Register an op with
     ``@comparisons.register('<name>')``.
+
+    The decorator also records editor metadata: ``op_args`` (a list of arg
+    schemas the rule form renders as op-specific inputs) and ``help`` (a short
+    description, defaulting to the function docstring).
     """
 
     def __init__(self):
         self._ops = {}
+        self._meta = {}
 
-    def register(self, name):
+    def register(self, name, help=None, op_args=None):
         def decorator(fn):
             self._ops[name] = fn
+            self._meta[name] = {
+                'name': name,
+                'help': help if help is not None else (inspect.getdoc(fn) or ''),
+                'op_args': normalize_args(op_args),
+            }
             return fn
         return decorator
 
@@ -30,6 +42,12 @@ class ComparisonRegistry:
 
     def names(self):
         return list(self._ops)
+
+    def describe(self, name):
+        return self._meta.get(name)
+
+    def metadata(self):
+        return [self._meta[name] for name in self._ops]
 
 
 comparisons = ComparisonRegistry()
@@ -97,7 +115,19 @@ def _to_number(value):
     return None
 
 
-@comparisons.register('eq')
+@comparisons.register(
+    'eq',
+    help='Equal (deep; arrays order-sensitive unless unordered_arrays).',
+    op_args=[
+        {
+            'name': 'unordered_arrays',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Compare arrays as multisets (order does not matter).',
+        },
+    ],
+)
 def eq(left, right, args=None):
     unordered = bool(args and args.get('unordered_arrays'))
     if is_sysmissing(left) or is_sysmissing(right):
@@ -128,12 +158,24 @@ def eq(left, right, args=None):
     return left == right
 
 
-@comparisons.register('ne')
+@comparisons.register(
+    'ne',
+    help='Not equal.',
+    op_args=[
+        {
+            'name': 'unordered_arrays',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Compare arrays as multisets (order does not matter).',
+        },
+    ],
+)
 def ne(left, right, args=None):
     return not eq(left, right, args)
 
 
-@comparisons.register('eq-unordered')
+@comparisons.register('eq-unordered', help='Equal with order-agnostic arrays.')
 def eq_unordered(left, right, args=None):
     return eq(left, right, {'unordered_arrays': True})
 
@@ -158,27 +200,30 @@ def _ordered(op, left, right):
     return False
 
 
-@comparisons.register('lt')
+@comparisons.register('lt', help='Less than (scalar only).')
 def lt(left, right, args=None):
     return _ordered(operator.lt, left, right)
 
 
-@comparisons.register('le')
+@comparisons.register('le', help='Less than or equal (scalar only).')
 def le(left, right, args=None):
     return _ordered(operator.le, left, right)
 
 
-@comparisons.register('gt')
+@comparisons.register('gt', help='Greater than (scalar only).')
 def gt(left, right, args=None):
     return _ordered(operator.gt, left, right)
 
 
-@comparisons.register('ge')
+@comparisons.register('ge', help='Greater than or equal (scalar only).')
 def ge(left, right, args=None):
     return _ordered(operator.ge, left, right)
 
 
-@comparisons.register('contains')
+@comparisons.register(
+    'contains',
+    help='Membership (substring for text, membership for arrays).',
+)
 def contains(left, right, args=None):
     if is_sysmissing(left) or is_sysmissing(right):
         return False

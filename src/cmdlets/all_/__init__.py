@@ -4,7 +4,7 @@ from ..registry import cmdlets
 from ..value_types import Boolean, PipeValue
 
 
-@cmdlets.register('all')
+@cmdlets.register('all', kind='processor')
 def all_(value: PipeValue, args: dict) -> Boolean:
     """Return ``True`` iff every iteration of the array is truthy."""
     if not isinstance(value, list):

@@ -5,7 +5,20 @@ from ..sysmissing import is_sysmissing
 from ..value_types import Array
 
 
-@cmdlets.register('sort')
+@cmdlets.register(
+    'sort',
+    kind='processor',
+    args=[
+        {'name': 'by', 'type': 'text', 'required': False, 'description': 'Block field to sort by.'},
+        {
+            'name': 'descending',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Sort in descending order.',
+        },
+    ],
+)
 def sort(value: Array, args: dict) -> Array:
     """Sort an array. ``args['by']`` (optional) is the block field to sort by;
     without it an array of scalars is sorted by its natural order. The optional

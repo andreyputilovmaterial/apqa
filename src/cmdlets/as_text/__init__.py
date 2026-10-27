@@ -5,7 +5,7 @@ from ..sysmissing import is_sysmissing
 from ..value_types import PipeValue, Text
 
 
-@cmdlets.register('as-text')
+@cmdlets.register('as-text', kind='processor')
 def as_text(value: PipeValue, args: dict) -> Text:
     """Convert ``value`` to text using Python's natural ``str()``.
 

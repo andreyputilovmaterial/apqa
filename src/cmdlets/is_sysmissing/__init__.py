@@ -4,7 +4,7 @@ from ..registry import cmdlets
 from ..value_types import PipeValue
 
 
-@cmdlets.register('is-sysmissing')
+@cmdlets.register('is-sysmissing', kind='terminal')
 def is_sysmissing(value: PipeValue, args: dict) -> bool:
     """Return ``True`` when the value is ``sysmissing`` (Python ``None``).
 

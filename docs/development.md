@@ -361,6 +361,54 @@ name. The
 SQLite backend is thread-safe (the web server is a `ThreadingHTTPServer`) via a
 re-entrant lock around a single shared connection.
 
+## Cmdlet & comparison-op editor metadata
+
+The rule form needs to know, for every cmdlet and comparison op, what to render:
+its name, a short help text, and the arguments/options it accepts. This metadata
+is declared **next to each registration** (never hardcoded in the frontend):
+
+- `src/cmdlets/registry.py` — `@cmdlets.register(name, kind=..., args=[...],
+  help=...)` stores a per-cmdlet entry. `kind` is `'source'` (the cmdlet can be
+  the first in a chain — it needs no piped value), `'processor'` (it transforms
+  the piped value), or `'terminal'` (a validation/predicate cmdlet that answers
+  a question about the piped value). `help` defaults to the function docstring.
+- `src/cmdlets/comparison_ops.py` — `@comparisons.register(name, help=...,
+  op_args=[...])` stores the same for ops.
+
+An **arg schema** is `{ name, type, required, description }` plus optional
+`default` and `options`. Arg `type`s understood by the editor:
+
+- `text` (default), `number`, `boolean`, `path`, `options` (single-select from
+  `options`), `list` (comma-separated text → array), `json` (e.g.
+  `literal.value`), and `cmdlet-chains` (a list of cmdlet chains, e.g.
+  `and`/`or`/`bit-*` `operands`).
+
+`src/cmdlets/meta.py` snapshots both registries into `{ cmdlets, ops }`, exposed
+as `get_cmdlet_metadata` on `config['iface']` and served by
+`GET /functionality/cmdlet-metadata` (`endpoints_functionality.py`).
+
+The frontend consumes this through app-level input components (all plain `.js` +
+`.css`, all following the native input contract — `modelValue` +
+`update:modelValue` + `input`/`change`):
+
+- `common_components/input_cmdlet` — one cmdlet: a drop down when empty, one
+  input per arg once selected, plus a clear button. Value `{ cmdlet, args }`.
+- `common_components/input_cmdlet_chain` — a dotted-border chain area; offers
+  `source` cmdlets in the first slot and `processor`/`terminal` afterwards, and
+  always shows a trailing placeholder for the next cmdlet. Value an array of
+  cmdlets (empty array when nothing selected).
+- `common_components/input_comparison_op` — op selector + `op_args` inputs. Value
+  `{ op, op_args }`.
+- `common_components/input_qcrule_tags` — blog-style tags input (suggestions +
+  allow-new). Value an array of strings.
+- `common_components/input_qcrule_marks` — the single owner of the supported
+  marker list (`skip`, `xfail`; future conditional markers), wrapping the
+  multi-punch drop down. Value an array of marker names.
+
+The create-rule form itself is `app/qcrules_list/rule_form.js` (opened through
+`createModal`); it builds the `POST /qc/rules` payload and resolves the modal
+promise with it, and the page then POSTs and reloads.
+
 ## Code style & error handling
 
 - **Fail early** with a **readable error message** — detect wrong/missing things

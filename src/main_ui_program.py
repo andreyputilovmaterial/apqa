@@ -24,6 +24,7 @@ from .helper_utilities import (
 
 from .endpoints import endpoints
 from .rule_runner import run_rule
+from .cmdlets.meta import get_cmdlet_metadata
 
 if is_in_pinliner():
     from .GENERATED.HARDCODED import _CREDENTIALS_STR as credentials_str
@@ -98,6 +99,7 @@ def main(*argcs,**kwargs):
             'HTTP404': HTTP404,
             'get_help_pages': get_help_pages,
             'run_rule': run_rule,
+            'get_cmdlet_metadata': get_cmdlet_metadata,
         },
     }
 

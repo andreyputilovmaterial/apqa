@@ -5,7 +5,19 @@ from ..sysmissing import is_sysmissing
 from ..value_types import PipeValue
 
 
-@cmdlets.register('count')
+@cmdlets.register(
+    'count',
+    kind='processor',
+    args=[
+        {
+            'name': 'fail_on_sysmissing',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Raise instead of returning 0 for a sysmissing value.',
+        },
+    ],
+)
 def count(value: PipeValue, args: dict) -> int:
     """Count the meaningful entries in the incoming value.
 

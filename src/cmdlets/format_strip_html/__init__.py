@@ -33,7 +33,7 @@ else:
     _import_error = None
 
 
-@cmdlets.register('format-strip-html')
+@cmdlets.register('format-strip-html', kind='processor')
 def format_strip_html(value: PipeValue, args: dict) -> PipeValue:
     if _import_error is not None:
         raise ImportError(

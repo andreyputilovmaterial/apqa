@@ -4,7 +4,7 @@ from ..registry import cmdlets
 from ..value_types import Boolean, PipeValue
 
 
-@cmdlets.register('as-boolean')
+@cmdlets.register('as-boolean', kind='processor')
 def as_boolean(value: PipeValue, args: dict) -> Boolean:
     """Convert ``value`` to a boolean using Python's truthiness.
 

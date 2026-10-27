@@ -30,7 +30,7 @@ else:
     _import_error = None
 
 
-@cmdlets.register('validate-xml-compatible')
+@cmdlets.register('validate-xml-compatible', kind='terminal')
 def validate_xml_compatible(value: PipeValue, args: dict) -> bool:
     if _import_error is not None:
         raise ImportError(

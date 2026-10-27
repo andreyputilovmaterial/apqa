@@ -1,0 +1,52 @@
+.apqa-input-qcrule-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-input-qcrule-tags-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.apqa-input-qcrule-tags-item {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  background: #eef4ee;
+  border: 1px solid #cddccd;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.apqa-input-qcrule-tags-remove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 0;
+}
+
+.apqa-input-qcrule-tags-remove:hover {
+  color: #990000;
+}
+
+.apqa-input-qcrule-tags-input {
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+}

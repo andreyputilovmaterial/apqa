@@ -4,6 +4,37 @@
 
 ## Last state
 
+- **Implemented "create QC rule" as a modal form.** The green "Create new QC
+  rule" button now opens a modal (the existing `createModal` system) with **one
+  input per rule field**: the auto-filled technical name (`id`, shown first — a
+  slug mirroring `src/db_processors/ids.py:make_slug`, which stops following the
+  display name once the user edits it), the display `name` (required),
+  `meta.comment`, `meta.tags`, `meta.markers`, the `left`/`right` **cmdlet
+  chains**, and the `op`/`op_args` comparison (`meta.order` is not exposed — on
+  create the page sets it to `max(existing order) + 1` so the new rule is
+  appended last). New rules are created at the top level
+  (`group: ''`) for now; dragging a rule into a folder is a later flow. To feed
+  the form, cmdlets and
+  comparison ops now carry **editor metadata** declared next to each
+  registration: a cmdlet has a `kind` (`source` = can be first in a chain,
+  `processor`, or `terminal`) and an `args` schema (`name`, `type`, `required`,
+  `default`, `description`); an op carries `op_args` schemas. The registry
+  `register(...)` decorators store this (`src/cmdlets/registry.py`,
+  `src/cmdlets/comparison_ops.py`) and a new
+  `GET /functionality/cmdlet-metadata` endpoint (`src/cmdlets/meta.py`, exposed
+  through `config['iface']`) serves `{ cmdlets, ops }`. New app-level input
+  components live in `src/frontend/app_js/src/common_components/` and all follow
+  the native input contract (`v-model`/`modelValue` + `update:modelValue` +
+  `input`/`change`): `input_cmdlet`, `input_cmdlet_chain`, `input_comparison_op`,
+  `input_qcrule_tags`, `input_qcrule_marks`. Cmdlet **arg types**: `text`
+  (default), `number`, `boolean`, `path`, `options`, `list`, `json`
+  (`literal.value`), and `cmdlet-chains` (a list of chains, e.g.
+  `and`/`or`/`bit-*` `operands`). `input_cmdlet_chain` offers source readers
+  first and processors/terminals afterwards, always showing a trailing
+  placeholder for the next cmdlet. Tests: `tests/test_cmdlet_metadata.py` plus
+  five new Vitest specs; full Python suite 641 passed.
+
+
 - Added a **CLI storage initializer** (`--program init`, new
   `src/main_init_program.py`) that creates an empty QC-rules storage at a given
   path. It parses a required `--db-file` and an optional `--db-format`; the
@@ -650,12 +681,12 @@
   to exist (currently it matches YAML's fail-early behavior).
 - `.db` extension is intentionally **not** mapped to SQLite (ambiguous); add it
   only if a concrete need appears.
-- The QC-rules page can now *create* a rule (optionally assigning it a group),
-  *create* a group, and *add a folder alias* (all via `window.prompt`, hitting
-  `/qc/rules`/`/qc/groups`), but full rule/group CRUD UI (edit, delete, rename,
-  move rules between groups, and the Edit/Run action buttons) is still not
-  implemented — the endpoints exist and are exercised by
-  `tests/test_endpoints_rule_crud.py` and `tests/test_endpoints_group_crud.py`,
-  but the frontend's Edit/Run buttons are placeholders and there is no UI yet to
-  move an existing rule into/out of a group.
+- The QC-rules page can now **create a rule via a modal form** (one input per
+  field, always at the top level), **create a group**, and **add a folder alias**
+  (the latter two still via `window.prompt`, hitting `/qc/groups`). Full
+  rule/group CRUD UI is still not implemented: edit, delete, rename, move rules
+  between groups, and the Edit/Run action buttons remain placeholders — the
+  endpoints exist and are exercised by `tests/test_endpoints_rule_crud.py` and
+  `tests/test_endpoints_group_crud.py`, but there is no UI yet to move an
+  existing rule into/out of a group.
 
