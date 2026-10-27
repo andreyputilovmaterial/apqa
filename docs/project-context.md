@@ -4,6 +4,23 @@
 
 ## Last state
 
+- **Removed the unused `myers-diff` vendored package (roadmap item).** It lived at
+  `src/frontend/app_js/src/lib/myers-diff/`, was never imported by the app, and its 4
+  mocha/chai test suites were being picked up by Vitest (`test/*.test.js`) and failing
+  on a module-resolution error: the package's own `src/index.js` uses an extensionless
+  ESM import (`import { diff } from './myers'`), which Vitest's native ESM resolver
+  rejects (`Cannot find module '.../src/myers'`). So it was neither a typo in our code
+  nor a `py_js_bundler` bug — it is obsolete third-party code written for a
+  bundler/CommonJS-mocha setup; removed entirely (trivial to re-add if a real diff
+  use-case ever appears). Verified safe re: submodules — `myers-diff` is **not** in
+  `.gitmodules` (only `pinliner`, `webserve`, `py_js_bundler` are) and is tracked as
+  plain files, not a gitlink; its stray `myers-diff/.git` gitfile (a leftover from its
+  submodule past in `gitgui`) pointed at a non-existent `.git/modules/...` path and was
+  removed with the directory. Full frontend suite is now **146 passed across 19 files**,
+  no myers-diff. Gotcha: in this checkout `node_modules/.bin/vitest` is a flattened
+  regular file (not a symlink), so `npm run test:unit` fails before running any tests
+  (`Cannot find module '.../node_modules/.bin/dist/cli.js'`); I ran
+  `node node_modules/vitest/vitest.mjs run` instead — fix with `npm ci`/`npm install`.
 - **Implemented in-place "Edit rule" (roadmap item).** Clicking Edit now swaps the
   expanded rule's display for an inline form (`rule_edit_form.js`) inside the same
   rule container, pre-filled from the stored record (`name`, read-only `id`,
