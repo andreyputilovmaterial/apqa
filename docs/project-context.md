@@ -4,6 +4,16 @@
 
 ## Last state
 
+- Added a **Delete rule** action to the QC-rules list. Each expanded rule row now
+  shows an explicit "Delete" button next to "Edit"/"Run" (neutral by default,
+  red on hover — not inviting to click). Clicking it opens a small centered
+  confirmation modal (`rule_delete_confirm`) that names the rule and warns it
+  cannot be undone; confirming calls the existing `DELETE /qc/rules/<id>`
+  endpoint and reloads the list. The `delete` event is forwarded up
+  rule_body → rule_record → rules_tree → the page. Backend already had the
+  endpoint + `DBFile.delete_rule`, so this is frontend-only. Tests updated/added
+  (`rule_record`, `rules_tree`, `rule_delete_confirm`).
+
 - Added a **searchable single-select drop-down** component
   (`src/frontend/app_js/src/common_components/search_select/`) and wired it into
   the cmdlet selector (`input_cmdlet`), replacing the native `<select>`. The new

@@ -7,6 +7,7 @@ import { createModal } from '../../common_components/modals/modals';
 import RuleRecord from './rule_record';
 import RulesTree from './rules_tree';
 import RuleForm from './rule_form';
+import RuleDeleteConfirm from './rule_delete_confirm';
 
 import './styles.css';
 
@@ -79,7 +80,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" @edit="onEditRule" @run="onRunRule" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -179,6 +180,13 @@ const QcRulesList = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      if (!response.ok) {
+        throw new Error(await makeFetchResponseErrorMessage(response));
+      }
+    }
+
+    async function deleteJson(url) {
+      const response = await fetch(url, { method: 'DELETE' });
       if (!response.ok) {
         throw new Error(await makeFetchResponseErrorMessage(response));
       }
@@ -314,6 +322,31 @@ const QcRulesList = {
       console.debug('run rule (not implemented yet):', record.name);
     }
 
+    async function onDeleteRule(record) {
+      const Confirm = defineComponent({
+        setup: (_, { attrs }) => () =>
+          h(RuleDeleteConfirm, { ...attrs, record }),
+      });
+
+      let confirmed;
+      try {
+        confirmed = await createModal(Confirm);
+      } catch (e) {
+        // Modal dismissed — nothing to delete.
+        return;
+      }
+
+      if (!confirmed) return;
+
+      try {
+        await deleteJson(`/qc/rules/${encodeURIComponent(record.id)}`);
+        await load();
+      } catch (e) {
+        window.alert(`Failed to delete QC rule: ${e}`);
+        logError(`Failed to delete QC rule: ${e}`);
+      }
+    }
+
     onMounted(load);
 
     return {
@@ -328,6 +361,7 @@ const QcRulesList = {
       createAlias,
       onEditRule,
       onRunRule,
+      onDeleteRule,
     };
   },
 };

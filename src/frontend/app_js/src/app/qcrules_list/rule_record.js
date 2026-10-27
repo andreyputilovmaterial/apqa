@@ -3,12 +3,13 @@ import { ref } from 'vue';
 import RuleBody from './rule_body';
 
 // Outer "record" wrapper for a QC rule. It owns the expanded/condensed state and
-// toggles it when the inner rule's header is clicked. It forwards `edit`/`run`
-// actions to the page. This is the `<li>` unit rendered inside the rules list.
+// toggles it when the inner rule's header is clicked. It forwards
+// `edit`/`run`/`delete` actions to the page. This is the `<li>` unit rendered
+// inside the rules list.
 const RuleRecord = {
   props: ['record'],
 
-  emits: ['edit', 'run'],
+  emits: ['edit', 'run', 'delete'],
 
   components: {
     'rule-body': RuleBody,
@@ -22,6 +23,7 @@ const RuleRecord = {
     @toggle="expanded = !expanded"
     @edit="$emit('edit', record)"
     @run="$emit('run', record)"
+    @delete="$emit('delete', record)"
   />
 </li>
 `,

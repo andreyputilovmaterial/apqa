@@ -19,7 +19,7 @@ const RulesTree = {
     recordsPerPage: { type: Number, default: 25 },
   },
 
-  emits: ['edit', 'run'],
+  emits: ['edit', 'run', 'delete'],
 
   components: {
     'alias-record': AliasRecord,
@@ -50,6 +50,7 @@ const RulesTree = {
         :style="{ '--rules-tree-depth': node.depth }"
         @edit="$emit('edit', $event)"
         @run="$emit('run', $event)"
+        @delete="$emit('delete', $event)"
       />
     </template>
   </ul>

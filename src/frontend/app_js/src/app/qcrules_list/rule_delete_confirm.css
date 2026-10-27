@@ -1,0 +1,58 @@
+/* The delete confirmation is a small centered box, not the full-height modal. */
+.mdm-git-ui-modal-wrapper:has(.apqa-rule-delete-confirm) {
+  top: 50%;
+  bottom: auto;
+  left: 50%;
+  width: min(460px, 92%);
+  transform: translate(-50%, -50%);
+  padding: 18px;
+}
+
+.apqa-modal-form.apqa-rule-delete-confirm {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.apqa-rule-delete-confirm-text {
+  margin: 0;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.apqa-rule-delete-confirm-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.apqa-rule-delete-confirm-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.apqa-rule-delete-confirm-button {
+  padding: 6px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.apqa-rule-delete-confirm-button:hover {
+  border-color: #999;
+}
+
+/* The destructive action stays neutral by default and only turns red on hover,
+   so it is not inviting to click. */
+.apqa-rule-delete-confirm-button-danger:hover {
+  border-color: #990000;
+  color: #990000;
+}

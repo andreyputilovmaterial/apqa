@@ -121,4 +121,15 @@ describe('RulesTree', () => {
     expect(wrapper.text()).toContain('r2');
     expect(wrapper.text()).not.toContain('r1');
   });
+
+  it('forwards delete actions from an expanded rule', async () => {
+    const wrapper = mount(RulesTree, {
+      props: { groups: [], records: [rule('r1')] },
+    });
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+    await wrapper.find('.apqa-rule-body-action-delete').trigger('click');
+
+    expect(wrapper.emitted('delete')).toHaveLength(1);
+    expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'r1' });
+  });
 });

@@ -304,6 +304,13 @@
   border-color: #999;
 }
 
+/* Delete stays neutral by default and only turns red on hover, so it is not
+   inviting to click (an explicit, destructive action). */
+.apqa-rule-body-action-delete:hover {
+  border-color: #990000;
+  color: #990000;
+}
+
 /* Foldable QC-rule tree (rules_tree.js). Groups are simple [+]/[-] folder
    headers that toggle their descendants; rule leaves reuse `rule-record`.
    Depth is expressed as a CSS custom property so indentation scales without

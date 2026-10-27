@@ -2,12 +2,12 @@ import Rule from './rule';
 import RuleCompact from './rule_compact';
 
 // Inner wrapper of a rule record. It holds the rendered rule (compact or full,
-// chosen by `expanded`) plus a row of action buttons. The actions are currently
-// placeholders — they emit `edit`/`run` for the page to wire up.
+// chosen by `expanded`) plus a row of action buttons (Edit/Run/Delete). Edit/Run
+// are still placeholders; Delete is wired through the page to the CRUD endpoint.
 const RuleBody = {
   props: ['record', 'expanded'],
 
-  emits: ['toggle', 'edit', 'run'],
+  emits: ['toggle', 'edit', 'run', 'delete'],
 
   components: {
     'rule': Rule,
@@ -22,6 +22,7 @@ const RuleBody = {
   <div v-if="expanded" class="apqa-rule-body-actions">
     <button type="button" class="apqa-rule-body-action apqa-rule-body-action-edit" @click="$emit('edit', record)">Edit</button>
     <button type="button" class="apqa-rule-body-action apqa-rule-body-action-run" @click="$emit('run', record)">Run</button>
+    <button type="button" class="apqa-rule-body-action apqa-rule-body-action-delete" @click="$emit('delete', record)">Delete</button>
   </div>
 </div>
 `,
