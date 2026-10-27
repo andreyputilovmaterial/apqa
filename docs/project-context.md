@@ -4,6 +4,25 @@
 
 ## Last state
 
+- **Added two network cmdlets for verifying CDN/image availability.** New
+  `src/cmdlets/get_content_network_fetch/` (registered as
+  `get-content-network-fetch`, a *processor*) takes a URL from the **piped value**
+  and returns a block `{status, body, headers}`; `urllib.request` is stdlib and the
+  import is unguarded (no optional pip dep), with a comment-only `requirements.txt`
+  for build.sh discovery. Args: `method` (default `GET`), `read_only` (bool, default
+  `true` — non-`GET`/`HEAD` raises), and `timeout` (number, default `30`; added
+  proactively so a dead CDN can't hang the whole QC run). Non-2xx responses are
+  returned as a block (caught `urllib.error.HTTPError`) rather than raising.
+  Only `http`/`https` schemes are accepted as a minimal safety guard. New
+  `src/cmdlets/validate_network_request_result/` (registered as
+  `validate-network-request-result`, a *terminal*) returns `True` iff the block's
+  `status` is 2xx, and raises `TypeError`/`ValueError` when the input is not the
+  fetch block's shape (dict with `status`/`body`/`headers`, `status` an int).
+  Both registered in `src/cmdlets/__init__.py`. Tests in
+  `tests/test_network_cmdlets.py` (mocked `urlopen`), plus metadata/kind and
+  optional-deps-discoverability assertions. Security permission model recorded in
+  `docs/roadmap.md` (future work, not implemented).
+
 - **Cleaned unnecessary deep upward imports in the frontend JS.** Replaced the
   `../../common_components/...` and `../../common_defs/...` imports (2 levels up,
   reaching shared components/defs placed relative to the app root) with the `@/...`

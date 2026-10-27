@@ -19,6 +19,7 @@ from . import bit_xor  # noqa: F401 - import registers the cmdlet
 from . import count  # noqa: F401 - import registers the cmdlet
 from . import get_content_excel  # noqa: F401 - import registers the optional-dep cmdlet
 from . import get_content_mdd  # noqa: F401 - import registers the optional-dep cmdlet
+from . import get_content_network_fetch  # noqa: F401 - import registers the cmdlet
 from . import is_sysmissing  # noqa: F401 - import registers the cmdlet
 from . import length  # noqa: F401 - import registers the cmdlet
 from . import literal  # noqa: F401 - import registers the cmdlet
@@ -27,5 +28,6 @@ from . import not_  # noqa: F401 - import registers the cmdlet
 from . import or_  # noqa: F401 - import registers the cmdlet
 from . import sort  # noqa: F401 - import registers the cmdlet
 from . import format_strip_html  # noqa: F401 - import registers the optional-dep cmdlet
+from . import validate_network_request_result  # noqa: F401 - import registers the cmdlet
 from . import validate_xml_compatible  # noqa: F401 - import registers the optional-dep cmdlet
 from .comparison_ops import ComparisonRegistry, comparisons

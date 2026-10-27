@@ -69,6 +69,7 @@ def test_optional_dependency_requirements_are_discoverable():
     }
     assert 'get_content_excel/requirements.txt' in relative
     assert 'get_content_mdd/requirements.txt' in relative
+    assert 'get_content_network_fetch/requirements.txt' in relative
     assert 'validate_xml_compatible/requirements.txt' in relative
     assert 'format_strip_html/requirements.txt' in relative
 

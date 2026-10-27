@@ -62,6 +62,14 @@ def test_source_readers_are_marked_as_sources():
     assert kinds['is-sysmissing'] == 'terminal'
 
 
+def test_network_cmdlet_kinds():
+    kinds = {c['name']: c['kind'] for c in get_cmdlet_metadata()['cmdlets']}
+    # Fetching takes the URL from the piped value, so it is a processor, not a
+    # source reader; the validator is a terminal predicate.
+    assert kinds['get-content-network-fetch'] == 'processor'
+    assert kinds['validate-network-request-result'] == 'terminal'
+
+
 def test_comparison_ops_and_op_args():
     ops = {o['name']: o for o in get_cmdlet_metadata()['ops']}
     for name in ('eq', 'ne', 'eq-unordered', 'lt', 'le', 'gt', 'ge', 'contains'):

@@ -131,6 +131,12 @@ the piped value instead of producing a value for comparison. The common prefix i
   is vacuously valid). Uses the stdlib `xml.etree.ElementTree`, guarded as an
   optional dependency (see `docs/development.md` "Optional dependencies").
 
+- `validate-network-request-result` — check whether a network result is
+  successful. It expects the block produced by `get-content-network-fetch`
+  (`status` integer, `body` text, `headers` block); a differently-shaped value
+  raises. Returns `true` when `status` is in `200..299` (the same condition as
+  `response.ok`), and `false` otherwise.
+
 ## Predicate cmdlets
 
 A **predicate** cmdlet is a terminal cmdlet that answers a simple yes/no question
@@ -312,6 +318,19 @@ read their input from ``args``). Currently implemented:
   arrays/grids, a block of subfields for classes/blocks) and, for items that own
   categories, a ``categories`` block keyed by category name → detailed category
   block (for a categorical scalar its keys are the available response options).
+
+## Network cmdlets
+
+- **`get-content-network-fetch`** — fetch a URL taken from the **piped value** and
+  return a block with `status` (integer), `body` (text), and `headers` (block keyed
+  by header name; repeated values joined with `", "`). It is a *processor* (it
+  needs a URL as its piped value), not a source reader. Args: `method` (default
+  `"GET"`; any method string is accepted), `read_only` (bool, default `true` —
+  only `GET`/`HEAD` are allowed and anything else raises), and `timeout` (number,
+  default `30`, seconds). Only `http`/`https` URLs are accepted as a minimal
+  safety guard. A non-2xx response is still returned as a block (via
+  `urllib.error.HTTPError`) rather than raising, so a rule can assert on the
+  status.
 
 ## Editor metadata (`kind` and arg schemas)
 
