@@ -15,9 +15,11 @@
   flex-direction: column;
   gap: 2px;
   padding: 6px 10px;
-  background: #b00020;
-  color: #fff;
+  background: #f9c7bf;
+  color: #320101;
   font-size: 0.9rem;
+  outline: 1px solid #a00;
+  font-weight: 500;
 }
 
 .apqa-error-banner-item-time {
