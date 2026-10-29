@@ -4,6 +4,16 @@
 
 ## Last state
 
+- **Committed the `py_js_bundler` submodule bump and a new rule.** The
+  `src/frontend/bundler_engine/lib/py_js_bundler` gitlink moved `a19bb77` →
+  `09e4094` ("Support full ES6+ import/export syntax in bundler"); the target
+  commit is on that submodule's `origin/main`, so it satisfies the new
+  `.clinerules/11-submodules-commits.md` rule (a submodule pointer's target
+  commit must exist on the submodule's own remote). Both were committed in
+  `01388dd` on `main` (the two changes ended up in one commit after a parallel
+  git-index race; the commit is fine and the working tree is clean).
+
+
 - **Reworked `get-content-excel` to return a block of sheets (roadmap item).**
   Removed the unstable `sheet` arg; the cmdlet now reads the whole workbook and
   returns a block keyed by sheet name, each value an array of row blocks (header
