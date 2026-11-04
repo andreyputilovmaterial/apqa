@@ -4,11 +4,22 @@ from datetime import datetime, timezone
 import argparse
 
 
-from .db_processors import DBFile
-from .db_processors.detect_type import detect_type
+if __package__:
+    from .db_processors import DBFile
+    from .db_processors.detect_type import detect_type
 
-from .GENERATED.VERSION import _VERSION as script_version
-from .helper_utilities import prettyprint_config
+    from .GENERATED.VERSION import _VERSION as script_version
+    from .helper_utilities import prettyprint_config
+else:
+    # script context: `python src/main_init_program.py`. Add the repo root to
+    # sys.path, then import through the `src` package.
+    import os as _os, sys as _sys
+    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+    from src.db_processors import DBFile
+    from src.db_processors.detect_type import detect_type
+
+    from src.GENERATED.VERSION import _VERSION as script_version
+    from src.helper_utilities import prettyprint_config
 
 
 script_version = f'{script_version}'.strip()
@@ -65,3 +76,7 @@ def main(*argcs,**kwargs):
 
     print(f'{STDOUT_COLOR_GREEN}created {created_path}{STDOUT_COLOR_RESET}')
     return created_path
+
+
+if __name__ == '__main__':
+    main()

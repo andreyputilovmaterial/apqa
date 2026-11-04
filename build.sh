@@ -198,45 +198,14 @@ echo -
 
 
 
-echo "Calling pinliner..."
-"$pythonexecutable" "src_dev_build/lib/pinliner/pinliner/pinliner.py" src -o "$DIST_DIR/apqa_bundle.py"
+echo "Calling pinliner (with --main entry point)..."
+"$pythonexecutable" "src_dev_build/lib/pinliner/pinliner/pinliner.py" src -o "$DIST_DIR/apqa_bundle.py" --main src.launcher --main-attr main
 echo "done"
-echo "Patching apqa_bundle.py..."
-printf '%s' "
-# ...
-# print('within apqa_bundle')
-" >> "$DIST_DIR/apqa_bundle.py"
-# no need for this, the root package is loaded automatically
-# printf '%s' "
-# # import apqa_bundle
-# " >> "$DIST_DIR/apqa_bundle.py"
-printf '%s' "
-
-# code for pytest
-import pytest
-from src import tstsuite
-
-tst_load_error = None
-tst_cases = []
-try:
-    tst_cases = [ t for t in tstsuite.load_case_params() ]
-except Exception as e:
-    tst_load_error = e
-
-@pytest.mark.parametrize('case', tst_cases)
-def test_run_case(case):
-    return tstsuite.run_tst_case(case)
-
-
-from src import launcher
-if __name__ == '__main__':
-    launcher.main()
-else:
-    if tst_load_error:
-        raise tst_load_error
-# print('out of apqa_bundle')
-
-" >> "$DIST_DIR/apqa_bundle.py"
+echo "Appending the pytest entry point..."
+{
+    printf '\n'
+    cat src_dev_build/bundle_pytest_postfix.py
+} >> "$DIST_DIR/apqa_bundle.py"
 echo "done"
 echo -
 echo -

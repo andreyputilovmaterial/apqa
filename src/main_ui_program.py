@@ -7,24 +7,50 @@ from dotenv import load_dotenv # for loading .env
 import os # for loading .env
 
 
-from .webserver_engine.webserve.src.webserver import Webserver # a wrapper around python http.server - no flask or django
-from .webserver_engine.webserve.src.webserver import HTTP403, HTTP404, WebResponse
-from .webserver_engine.webserve.src.find_free_port import find_free_port
-from .webserver_engine.webserve.src.launch_browser import launch_browser
+# Entry-point module: import either relatively (inside the `src` package /
+# pinliner bundle) or flat (run directly as `python src/main_ui_program.py`).
+if __package__:
+    from .webserver_engine.webserve.src.webserver import Webserver # a wrapper around python http.server - no flask or django
+    from .webserver_engine.webserve.src.webserver import HTTP403, HTTP404, WebResponse
+    from .webserver_engine.webserve.src.find_free_port import find_free_port
+    from .webserver_engine.webserve.src.launch_browser import launch_browser
 
-from .db_processors import DBFile
+    from .db_processors import DBFile
 
-from .GENERATED.VERSION import _VERSION as script_version
-from .GENERATED.HELP import _MD as help_md
-from .helper_utilities import (
-    prettyprint_config,
-    is_in_pinliner,
-    assess_python_ver,
-)
+    from .GENERATED.VERSION import _VERSION as script_version
+    from .GENERATED.HELP import _MD as help_md
+    from .helper_utilities import (
+        prettyprint_config,
+        is_in_pinliner,
+        assess_python_ver,
+    )
 
-from .endpoints import endpoints
-from .rule_runner import run_rule
-from .cmdlets.meta import get_cmdlet_metadata
+    from .endpoints import endpoints
+    from .rule_runner import run_rule
+    from .cmdlets.meta import get_cmdlet_metadata
+else:
+    # script context: `python src/main_ui_program.py`. Add the repo root to
+    # sys.path, then import through the `src` package.
+    import os as _os, sys as _sys
+    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+    from src.webserver_engine.webserve.src.webserver import Webserver
+    from src.webserver_engine.webserve.src.webserver import HTTP403, HTTP404, WebResponse
+    from src.webserver_engine.webserve.src.find_free_port import find_free_port
+    from src.webserver_engine.webserve.src.launch_browser import launch_browser
+
+    from src.db_processors import DBFile
+
+    from src.GENERATED.VERSION import _VERSION as script_version
+    from src.GENERATED.HELP import _MD as help_md
+    from src.helper_utilities import (
+        prettyprint_config,
+        is_in_pinliner,
+        assess_python_ver,
+    )
+
+    from src.endpoints import endpoints
+    from src.rule_runner import run_rule
+    from src.cmdlets.meta import get_cmdlet_metadata
 
 if is_in_pinliner():
     from .GENERATED.HARDCODED import _CREDENTIALS_STR as credentials_str
@@ -136,3 +162,7 @@ def main(*argcs,**kwargs):
 
     launch_browser(f'{config.get("http_address")}/')
     server.run()
+
+
+if __name__ == '__main__':
+    main()
