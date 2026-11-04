@@ -4,6 +4,22 @@
 
 ## Last state
 
+- **Added a "Test page" navbar link that opens a reusable form-control gallery
+  modal.** New reusable `form_field` component
+  (`common_components/form_field`: label above/beside the control + optional
+  help/required marker, no forced widths) and an `input_gallery` catalog
+  (`common_components/input_gallery`) that shows every native input type
+  (text/number/date/time/file/color/range, selects, checkboxes, radios, toggle,
+  buttons) plus the existing reusable inputs (`input_numeric_range`,
+  `input_datetime_range`, `input_search_select`, `input_multipunch`). New
+  `app/testpage` modal host opens the gallery directly (not via iframe): the
+  header nav gains `<li navigation-role="testpage">…` with
+  `data-open-vue-modal="testpage"`, and `manipulate_links.js` gained a small
+  `VUE_MODALS` registry + handler that calls `createModal(TestPageModal)` for such
+  links. `endpoints_html_paths.py` + dev `index.html` updated. Validated: 151 JS
+  tests pass (2 new spec files), `vite build` 94 modules, and the self-written
+  `py_js_bundler` still bundles `app.js` (contains the gallery + modal + handler).
+
 - **Taught pinliner to emit an executable-bundle entry point; standardized
   entry-point imports to a two-branch `__package__` split.** pinliner now accepts
   `--main <module> --main-attr <attr>` and appends an `if __name__ == '__main__'`

@@ -1,0 +1,33 @@
+/* Shrink the test-page modal to its content (still scrolls when tall) instead of
+   pinning it to full height like the iframe-based navbar modals. */
+.mdm-git-ui-modal-wrapper:has(.apqa-testpage-form) {
+  bottom: auto;
+  max-height: calc(100vh - 48px);
+}
+
+.apqa-testpage-form {
+  gap: 12px;
+}
+
+.apqa-testpage-form-header {
+  flex: 0 0 auto;
+}
+
+.apqa-testpage-form-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.apqa-testpage-form-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.apqa-testpage-form-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}

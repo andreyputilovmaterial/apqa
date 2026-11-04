@@ -1,0 +1,171 @@
+.apqa-input-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.apqa-input-gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apqa-input-gallery-section-title {
+  margin: 0;
+  padding: 0 0 2px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #555;
+}
+
+.apqa-input-gallery-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .apqa-input-gallery-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+    align-items: start;
+  }
+}
+
+/* Native text-like controls share one consistent look (matches rule_form.css). */
+.apqa-input-gallery input[type="text"],
+.apqa-input-gallery input[type="password"],
+.apqa-input-gallery input[type="email"],
+.apqa-input-gallery input[type="url"],
+.apqa-input-gallery input[type="tel"],
+.apqa-input-gallery input[type="search"],
+.apqa-input-gallery input[type="number"],
+.apqa-input-gallery input[type="date"],
+.apqa-input-gallery input[type="datetime-local"],
+.apqa-input-gallery input[type="time"],
+.apqa-input-gallery input[type="month"],
+.apqa-input-gallery input[type="week"],
+.apqa-input-gallery input[type="numericrange"],
+.apqa-input-gallery input[type="datetimerange"],
+.apqa-input-gallery textarea,
+.apqa-input-gallery select {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 5px 7px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.apqa-input-fullwidth {
+  width: 100%;
+}
+
+/* Checkbox / radio groups. */
+.apqa-input-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-input-options-inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.apqa-input-option {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.apqa-input-option input {
+  margin: 0;
+  accent-color: #385;
+}
+
+/* Toggle switch. */
+.apqa-input-switch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.apqa-input-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.apqa-input-switch-track {
+  display: inline-block;
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border-radius: 11px;
+  background: #d0d0d0;
+  transition: background 200ms ease;
+}
+
+.apqa-input-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 200ms ease;
+}
+
+.apqa-input-switch input:checked + .apqa-input-switch-track {
+  background: #385;
+}
+
+.apqa-input-switch input:checked + .apqa-input-switch-track .apqa-input-switch-thumb {
+  transform: translateX(20px);
+}
+
+/* Buttons. */
+.apqa-input-button {
+  padding: 6px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.apqa-input-button:hover {
+  border-color: #999;
+}
+
+.apqa-input-button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.apqa-input-button-primary {
+  background: #385;
+  border-color: #385;
+  color: #fff;
+}
+
+.apqa-input-button-primary:hover {
+  background: #217346;
+  border-color: #217346;
+}

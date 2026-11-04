@@ -5,6 +5,7 @@ import Window from './window_component';
 import safetyUrlCheck from './safetycheck';
 import logError from '@/common_components/_log_error_proxy';
 import { createModal } from '@/common_components/modals/modals';
+import TestPageModal from '@/app/testpage/index';
 
 
 const LinksSiteComponent = {
@@ -52,8 +53,31 @@ const LinksSiteComponent = {
         }
       }
 
+      const VUE_MODALS = {
+        testpage: TestPageModal,
+      };
+
+      const createVueModalHandler = ( name ) => function( event ) {
+        event.preventDefault();
+        const Component = VUE_MODALS[ name ];
+        if( !Component ) {
+          logError( `Unknown vue modal name: ${name}` );
+          return false;
+        }
+        ( async function() {
+          await createModal( Component );
+        } )();
+        return false;
+      };
+
       Array.from( document.querySelectorAll( '[navigation-role] a, a[navigation-role]' ) ).forEach( function( linkEl ) {
         try {
+
+          const vueModalName = linkEl.getAttribute( 'data-open-vue-modal' );
+          if( vueModalName ) {
+            linkEl.addEventListener( 'click', createVueModalHandler( vueModalName ) );
+            return;
+          }
 
           const url = readUrl( linkEl );
           if( safetyUrlCheck( url ) )

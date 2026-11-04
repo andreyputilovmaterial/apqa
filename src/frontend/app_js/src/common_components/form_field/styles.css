@@ -1,0 +1,49 @@
+.apqa-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.apqa-form-field-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.apqa-form-field-label-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.apqa-form-field-required-mark {
+  color: #990000;
+  font-style: normal;
+  padding-left: 2px;
+}
+
+.apqa-form-field-control {
+  min-width: 0;
+}
+
+.apqa-form-field-help {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* Label beside the control (e.g. "text box and text next to it"). */
+.apqa-form-field-label-left .apqa-form-field-body {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.apqa-form-field-label-left .apqa-form-field-label-text {
+  flex: 0 0 auto;
+  min-width: 8em;
+}
+
+.apqa-form-field-label-left .apqa-form-field-control {
+  flex: 1 1 auto;
+}
