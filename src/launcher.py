@@ -9,16 +9,14 @@ import traceback, sys
 
 # necessary adjustment for pinliner, as how I am using it.
 #
-# The SAME source file must work in several contexts, so imports are selected
-# on `__package__` (which the import system sets reliably in every case):
+# The SAME source file is imported in two contexts, so imports are selected on
+# `__package__` (set reliably by the import system in every case):
 #
 #   * inside the `src` package  ->  relative imports (`from .GENERATED…`)
 #     - `python -m src.launcher`            (`__package__ == 'src'`)
 #     - `from src import launcher` in the pinliner bundle
-#   * outside any package       ->  bootstrap the repo root onto sys.path and
-#     import through `src` (absolute imports), so the package's relative imports
-#     keep working further down
-#     - `python src/launcher.py`            (script, repo root not yet on path)
+#   * with no parent package    ->  flat imports (`from GENERATED…`)
+#     - inlined into a multi-package bundle with no default package
 #
 # Only entry-point modules need this conditional import; every other module is
 # only ever imported and uses plain relative imports.
@@ -30,15 +28,13 @@ if __package__:
     from .main_ui_program import main as call_ui_program
     from .main_init_program import main as call_init_program
 else:
-    # script context: `python src/launcher.py`. The repo root is not on sys.path
-    # yet, so add it, then import through the `src` package.
-    import os as _os, sys as _sys
-    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
-    from src.GENERATED.VERSION import _VERSION as gitgui_script_version
-    from src.GENERATED.HELP import _MD as help_md
-    from src.main_print_help import print_help
-    from src.main_ui_program import main as call_ui_program
-    from src.main_init_program import main as call_init_program
+    # flat context: inlined with no parent package (a pinliner bundle without a
+    # default package). Plain `python src/launcher.py` is NOT supported (use -m).
+    from GENERATED.VERSION import _VERSION as gitgui_script_version
+    from GENERATED.HELP import _MD as help_md
+    from main_print_help import print_help
+    from main_ui_program import main as call_ui_program
+    from main_init_program import main as call_init_program
 
 gitgui_script_version = gitgui_script_version.strip()
 

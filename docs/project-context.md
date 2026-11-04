@@ -4,6 +4,28 @@
 
 ## Last state
 
+- **Taught pinliner to emit an executable-bundle entry point; standardized
+  entry-point imports to a two-branch `__package__` split.** pinliner now accepts
+  `--main <module> --main-attr <attr>` and appends an `if __name__ == '__main__'`
+  block that imports the module and calls its attribute, so the bundle runs
+  `src.launcher.main()` without `build.sh` hand-patching `launcher.main()`.
+  `build.sh` passes `--main src.launcher --main-attr main` and only appends the
+  app-specific pytest entry point from `src_dev_build/bundle_pytest_postfix.py`.
+  The entry-point modules (`src/launcher.py`, `src/main_ui_program.py`,
+  `src/main_init_program.py`, `src/main_print_help.py`) select imports on
+  `__package__`: relative inside `src`, flat with no parent package. Plain-script
+  invocation (`python src/X.py`, without `-m`) is dropped (no `sys.path` bootstrap,
+  no `src.*` absolute imports). pinliner README + `tests/test_inliner.py` updated.
+  pinliner changes committed + pushed (`3c0ba17`, `7152465`); the
+  `src_dev_build/lib/pinliner` gitlink is bumped to `7152465`.
+
+- **Added `docs/maintenance-log.md`.** A cross-project log for structural changes
+  shared by every repo of the same shape (launcher `--program` router + pinliner
+  one-file bundle). First entry records the entry-point import/bundling/call
+  convention; a second entry records the log's own creation. Repo-specific
+  changes stay out of it (they live here and in the commit history).
+
+
 - **Committed the `py_js_bundler` submodule bump and a new rule.** The
   `src/frontend/bundler_engine/lib/py_js_bundler` gitlink moved `a19bb77` →
   `09e4094` ("Support full ES6+ import/export syntax in bundler"); the target
@@ -758,9 +780,10 @@
 
 ## Key conventions / gotchas
 
-- `src/launcher.py` must be run as `python -m src.launcher` (its `__main__` branch
-  imports `src.GENERATED.*`, which needs the repo root on `sys.path`); `python
-  src/launcher.py` fails with `ModuleNotFoundError: No module named 'src'`.
+- Entry-point modules (`src/launcher.py` + the starter scripts it dispatches to)
+  select imports on `__package__` — relative inside `src`, flat otherwise. Run
+  them via the bundle or `python -m src.X`; plain `python src/X.py` (without
+  `-m`) is not supported.
 - The `run_*.sh`/`run_*.bat` scripts are root-oriented (launch `-m src.launcher`, use
   `tests-real-sensitive-data/`); `build.sh` rewrites them for `dist/` via
   `build_templates.py --program transform-run-script` (`-m src.launcher` →

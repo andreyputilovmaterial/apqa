@@ -35,15 +35,40 @@ produced by `build.sh` using [pinliner]
 (`src_dev_build/lib/pinliner`, a git submodule). Everything in the codebase is
 shaped so that this bundle keeps working:
 
-- **Relative imports only.** `.py` files use only relative imports. The single
-  exception is `src/launcher.py`, which conditionally imports depending on how it
-  is invoked (as `__main__`, as a package, or inlined with no parent package).
+- **Relative imports only.** `.py` files use only relative imports. The exception
+  is the *entry-point* modules — `src/launcher.py` and the starter scripts it
+  dispatches to (`src/main_ui_program.py`, `src/main_init_program.py`,
+  `src/main_print_help.py`) — which select imports on `__package__` (see
+  "Entry-point modules" below).
 - **No top-level imports.** If genuinely needed, `src/launcher.py` loads the entry
   module, that module imports what it needs and stores it on a global config
   object, which is then passed down. This is discouraged — avoid it.
 - **`__init__.py` at every level.** pinliner requires `__init__.py` on every
   imported-module path even though modern Python does not. When adding a package
   or submodule, add its `__init__.py`.
+
+### Entry-point modules and the three ways to invoke
+
+The same functionality can be invoked three ways:
+
+1. **The bundle** — `python apqa_bundle.py --program ui …` (pinliner runs
+   `src.launcher.main()` via its `--main` entry point).
+2. **The launcher** — `python -m src.launcher --program ui …`.
+3. **A starter script directly** — a module the launcher dispatches to, e.g.
+   `python -m src.main_init_program --db-file …`.
+
+Plain-script invocation (`python src/X.py`, without `-m`) is **not** supported.
+
+Only these entry-point modules need conditional imports. They select imports on
+`__package__` (reliable in every context):
+
+- `__package__` truthy — inside the `src` package: relative imports
+  (`from .GENERATED…`). Covers `python -m src.X` and `from src import X` in the
+  bundle.
+- `__package__` falsy — no parent package (inlined into a multi-package bundle):
+  flat imports (`from GENERATED…`).
+
+Every other module is only ever imported, so it uses plain relative imports.
 
 ### No runtime files
 
@@ -63,8 +88,10 @@ source data from a full filesystem path).
 - It generates `src/GENERATED/` (version, embedded help) and
   `src/frontend/GENERATED/` (bundled/minified assets) so the program can run even
   in development.
-- It runs pinliner to produce `dist/apqa_bundle.py`, then **patches** the bundle by
-  appending the pytest entry point at the end.
+- It runs pinliner to produce `dist/apqa_bundle.py` with `--main src.launcher
+  --main-attr main` (pinliner generates the `if __name__ == '__main__'` entry
+  point), then appends the app-specific pytest entry point from
+  `src_dev_build/bundle_pytest_postfix.py` at the end.
 
 Only append to the bundle — pinliner hard-codes where each module starts and ends,
 so patching anywhere else would corrupt it. Appending at the very end is safe

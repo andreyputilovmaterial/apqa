@@ -4,7 +4,7 @@ The program is bundled with `pinliner` (submodule `src_dev_build/lib/pinliner`) 
 
 ## Imports
 
-- Use **only relative imports** in `.py` files. The **only** exception is `src/launcher.py`, which uses conditional imports depending on how it is invoked (`__name__`, module, package, program).
+- Use **only relative imports** in `.py` files. The **only** exception is the set of *entry-point* modules: `src/launcher.py` and the starter scripts it dispatches to (`src/main_ui_program.py`, `src/main_init_program.py`, `src/main_print_help.py`). Each selects its imports on `__package__` — relative inside the `src` package, or flat (no parent package) otherwise. Plain-script invocation (`python src/X.py`, without `-m`) is **not** supported. See `docs/development.md` "Entry-point modules".
 - Do **not** import from the top/outer level. If top-level code is genuinely needed: (1) `src/launcher.py` loads the starting module, (2) that module imports what it needs and stores it in a global config object, (3) the config object is passed down to where it is used. This is discouraged — avoid it.
 - Every imported-module path **must** contain `__init__.py` at each level (pinliner requires this even though modern Python does not). When adding a package or submodule, ensure `__init__.py` exists.
 
@@ -17,5 +17,5 @@ The program is bundled with `pinliner` (submodule `src_dev_build/lib/pinliner`) 
 ## Bundling & submodules
 
 - The distributable is produced by `build.sh` (output: `dist/apqa_bundle.py`). `build.sh` also generates the `GENERATED/` artifacts needed even for development runs.
-- `build.sh` "patches" the bundle by appending the pytest entry point at the end. Do **not** patch the bundle anywhere else — pinliner hard-codes module start/end positions.
+- pinliner generates the bundle's `if __name__ == '__main__'` entry point via `--main src.launcher --main-attr main`; `build.sh` only appends the app-specific pytest entry point (`src_dev_build/bundle_pytest_postfix.py`) at the very end. Do **not** patch the bundle anywhere else — pinliner hard-codes module start/end positions.
 - Reusable code is deliberately extracted into git submodules (an established habit in this repo). Prefer submodules for separable pieces.

@@ -74,8 +74,8 @@ process.
 I prefer to have the final form of py bundle, made with pinliner (`src_dev_build/lib/pinliner`, a submodule).
 It implies several architectural decisions:
 
-- Only relative imports in .py files are allowed, with the exception of starter `src/launcher.py` file.
-  - `src/launcher.py` is the only exception from this rule - it uses conditional logic for import statements - depending if it is called as a module, as a package, as a program.
+- Only relative imports in .py files are allowed, with the exception of the *entry-point* modules (`src/launcher.py` and the starter scripts it dispatches to: `src/main_ui_program.py`, `src/main_init_program.py`, `src/main_print_help.py`).
+  - Each entry-point module selects imports on `__package__`: relative when inside the `src` package (`python -m src.X`, or `from src import X` in the pinliner bundle), and flat (`from X import …`) when there is no parent package. Plain-script invocation (`python src/X.py`, without `-m`) is not supported.
   - If we need to import something from top level, it means we need: 1. `src/launcher.py` loads the module that is the starting point for the program (for example, `src/main_ui_program.py`), 2. the module that is the starting point for the program imports what is needed and puts it somewhere in global config object, 3. this config object is passed to a place where imported code is used. This should be only done
   when necessairy - in overall, discouraged. We should avoid importing things from
   outer level.
