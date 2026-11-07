@@ -1,4 +1,4 @@
-"""`format-strip-html` — remove HTML markup from text, leaving plain text.
+"""`transform-strip-html` — remove HTML markup from text, leaving plain text.
 
 Terminal cmdlet: it turns a text value such as ``how <i>would</i> you rate...``
 into ``how would you rate...``. The conversion is intentionally permissive:
@@ -33,11 +33,11 @@ else:
     _import_error = None
 
 
-@cmdlets.register('format-strip-html', kind='processor')
-def format_strip_html(value: PipeValue, args: dict) -> PipeValue:
+@cmdlets.register('transform-strip-html', kind='processor')
+def transform_strip_html(value: PipeValue, args: dict) -> PipeValue:
     if _import_error is not None:
         raise ImportError(
-            "format-strip-html: missing optional dependency 'beautifulsoup4'"
+            "transform-strip-html: missing optional dependency 'beautifulsoup4'"
         ) from _import_error
 
     if value is None:
@@ -46,11 +46,11 @@ def format_strip_html(value: PipeValue, args: dict) -> PipeValue:
         return _strip_html(value)
     if isinstance(value, dict):
         return {
-            key: format_strip_html(field, args)
+            key: transform_strip_html(field, args)
             for key, field in value.items()
         }
     if isinstance(value, list):
-        return [format_strip_html(item, args) for item in value]
+        return [transform_strip_html(item, args) for item in value]
     return as_text(value, args)
 
 

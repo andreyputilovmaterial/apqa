@@ -180,15 +180,18 @@ Bitwise operators require integer operands (bool excluded) and use
 
 String helpers: `length` returns the text length; `matches` searches text for
 `args['pattern']` with optional `case_insensitive` / `regex` flags (default:
-case-sensitive literal substring).
+case-sensitive literal substring); `transform-text-regex` replaces every regex match of
+`args['pattern']` with `args['replacement']` (Python's `re.sub`, so replacement
+backreferences like `\1` work), with optional `case_insensitive` and `count`
+(maximum number of replacements; `0` replaces all).
 
 ## Text cleaning cmdlets
 
 A **text cleaning** cmdlet turns text into plainer text by removing one kind of
-markup/formatting. The common prefix is `format-` (provisional — see
+markup/formatting. The common prefix is `transform-` (see
 `docs/roadmap.md`):
 
-- `format-strip-html` — remove HTML tags, leaving the text content. Uses
+- `transform-strip-html` — remove HTML tags, leaving the text content. Uses
   `BeautifulSoup(..., "html.parser")`, so misformatted/unbalanced markup is
   handled best-effort rather than rejected. `sysmissing` becomes `""`; a block or
   array is processed recursively and returned in the same shape; any other scalar

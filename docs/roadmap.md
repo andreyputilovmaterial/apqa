@@ -16,7 +16,7 @@ This sections is to capture everything that comes to mind that should ideally be
 - We currently have the run-rule endpoint that receives a rule in json - review how would it work with aliases and what should we do to implement alias substitution.
 - Continue implementation - edit qc rule, test run the qc rule, delete/rename/move rules, etc... (creating a rule via the modal form is now done; the rest of the CRUD UI — edit/run/delete/rename/move — is still pending)
 - Online status indicator
-- Reconsider the name and common prefix for text-formatting (markup-to-text) cmdlets. `format-strip-html` was added as the first member, but `strip` alone is both too narrow (it names a single op) and too vague (it doesn't say the domain — stripping tags from text vs. stripping sensitive data from files), while `format` is only a placeholder for a "formatting update". Candidates: `text-…` or `format-…`. Decide the family name before adding more cmdlets of this kind.
+- Reconsider the name and common prefix for text-formatting (markup-to-text) cmdlets. (Done: the family prefix is now `transform-` — `format-strip-html` became `transform-strip-html`, and the new regex-replace cmdlet is `transform-text-regex`.)
 - (partaially - started) Implement exact cmdlets and providers - that read Excel, CSV, SPSS, retrieve rows, object fields, etc...
 - (getting really close to this, as of 10/24/2026) Go ahead and try on real project, and then update the list here with all key findings.
 - (will check soon once implement other basic functions) Condensed form of records filtering component - review when pagination controls are visible, in condensed or expanded mode.

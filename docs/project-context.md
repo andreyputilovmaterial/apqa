@@ -4,6 +4,21 @@
 
 ## Last state
 
+- **Added `transform-text-regex`; settled the text-transform family prefix as `transform-`.**
+  New processor cmdlet at `src/cmdlets/transform_text_regex/` registered as
+  `transform-text-regex`: takes a text value and returns text, replacing every match of
+  `args['pattern']` (a regex) with `args['replacement']` via Python's `re.sub`
+  (so backreferences like `\1` work). Optional `case_insensitive` (bool) and
+  `count` (number, default `0` = replace all). Mirrors the `matches`/`length`
+  string helpers: raises `TypeError` on non-text (incl. `sysmissing`) and fails
+  early on a missing `pattern`/`replacement`. Registered in
+  `src/cmdlets/__init__.py`, tested in `tests/test_standard_cmdlets.py` (11 new
+  tests), documented in `docs/cmdlet-data-formats.md` under "String helpers".
+  Also renamed `format-strip-html` → `transform-strip-html` (module
+  `src/cmdlets/format_strip_html/` → `transform_strip_html/`), settling the
+  text-transform family prefix as `transform-`.
+  Validated: full `tests/` suite 350 passed / 3 skipped.
+
 - **Made modal content scroll uniformly (whole content, no sticky header).**
   The modal shell (`common_components/modals`) previously pinned the wrapper
   full-height and clipped the inner, so scrollability was bolted on per component
@@ -286,7 +301,7 @@
   files were migrated to the new format.
 
 
-- Added a `format-strip-html` terminal cmdlet (`src/cmdlets/format_strip_html/__init__.py`,
+- Added a `transform-strip-html` terminal cmdlet (`src/cmdlets/transform_strip_html/__init__.py`,
   registered in `src/cmdlets/__init__.py`) that removes HTML markup and leaves
   plain text (`how <i>would</i> you rate...` → `how would you rate...`). It uses
   `BeautifulSoup(..., "html.parser")`, so misformatted/unbalanced markup is parsed
@@ -295,7 +310,7 @@
   `beautifulsoup4` is an **optional dependency** — a per-cmdlet `requirements.txt`
   (`beautifulsoup4>=4`) plus the guarded-import pattern (the cmdlet is always
   registered and only raises a readable `ImportError` when run without the dep).
-  The family prefix `format-` is provisional — see `docs/roadmap.md`. Tests in
+  The family prefix was settled as `transform-` (renamed from `format-`); see `docs/roadmap.md`. Tests in
   `tests/test_standard_cmdlets.py` + `tests/test_optional_dependencies.py`.
 
 

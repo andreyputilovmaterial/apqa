@@ -59,8 +59,8 @@ def test_validate_xml_compatible_is_always_known():
     assert 'validate-xml-compatible' in cmdlets.names()
 
 
-def test_format_strip_html_is_always_known():
-    assert 'format-strip-html' in cmdlets.names()
+def test_transform_strip_html_is_always_known():
+    assert 'transform-strip-html' in cmdlets.names()
 
 
 def test_optional_dependency_requirements_are_discoverable():
@@ -78,7 +78,7 @@ def test_optional_dependency_requirements_are_discoverable():
     assert 'get_content_text/requirements.txt' in relative
     assert 'get_content/requirements.txt' in relative
     assert 'validate_xml_compatible/requirements.txt' in relative
-    assert 'format_strip_html/requirements.txt' in relative
+    assert 'transform_strip_html/requirements.txt' in relative
 
 
 def test_get_content_excel_raises_readable_error_without_openpyxl():
@@ -105,14 +105,14 @@ def test_get_content_mdd_raises_readable_error_without_pywin32():
     assert exc_info.value.__cause__ is not None
 
 
-def test_format_strip_html_raises_readable_error_without_beautifulsoup4():
+def test_transform_strip_html_raises_readable_error_without_beautifulsoup4():
     if _beautifulsoup4_installed():
         pytest.skip('beautifulsoup4 is installed; the missing-dependency path cannot be exercised')
     with pytest.raises(ImportError) as exc_info:
-        cmdlets.get('format-strip-html')('<b>bold</b>', {})
+        cmdlets.get('transform-strip-html')('<b>bold</b>', {})
 
     message = str(exc_info.value)
-    assert 'format-strip-html' in message
+    assert 'transform-strip-html' in message
     assert 'beautifulsoup4' in message
     assert exc_info.value.__cause__ is not None
 

@@ -210,36 +210,107 @@ def test_matches_requires_pattern():
         cmdlets.get('matches')('abc', {})
 
 
+def test_transform_text_regex_replaces_all_matches():
+    assert cmdlets.get('transform-text-regex')(
+        'abc 123 abc', {'pattern': 'abc', 'replacement': 'x'}
+    ) == 'x 123 x'
+
+
+def test_transform_text_regex_supports_backreferences():
+    assert cmdlets.get('transform-text-regex')(
+        'hello world', {'pattern': r'(\w+) (\w+)', 'replacement': r'\2 \1'}
+    ) == 'world hello'
+
+
+def test_transform_text_regex_empty_replacement_deletes_matches():
+    assert cmdlets.get('transform-text-regex')(
+        'a1b2c3', {'pattern': r'\d', 'replacement': ''}
+    ) == 'abc'
+
+
+def test_transform_text_regex_no_match_returns_original():
+    assert cmdlets.get('transform-text-regex')(
+        'hello', {'pattern': 'z', 'replacement': 'x'}
+    ) == 'hello'
+
+
+def test_transform_text_regex_case_insensitive():
+    assert cmdlets.get('transform-text-regex')(
+        'Hello hello',
+        {'pattern': 'hello', 'replacement': 'hi', 'case_insensitive': True},
+    ) == 'hi hi'
+
+
+def test_transform_text_regex_count_limits_replacements():
+    assert cmdlets.get('transform-text-regex')(
+        'aaa', {'pattern': 'a', 'replacement': 'b', 'count': 2}
+    ) == 'bba'
+
+
+def test_transform_text_regex_count_zero_replaces_all():
+    assert cmdlets.get('transform-text-regex')(
+        'aaa', {'pattern': 'a', 'replacement': 'b', 'count': 0}
+    ) == 'bbb'
+
+
+def test_transform_text_regex_requires_text():
+    with pytest.raises(TypeError):
+        cmdlets.get('transform-text-regex')(5, {'pattern': 'x', 'replacement': 'y'})
+    with pytest.raises(TypeError):
+        cmdlets.get('transform-text-regex')(
+            sysmissing, {'pattern': 'x', 'replacement': 'y'}
+        )
+
+
+def test_transform_text_regex_requires_pattern():
+    with pytest.raises(ValueError):
+        cmdlets.get('transform-text-regex')('abc', {'replacement': 'x'})
+    with pytest.raises(ValueError):
+        cmdlets.get('transform-text-regex')('abc', {'pattern': '', 'replacement': 'x'})
+
+
+def test_transform_text_regex_requires_replacement():
+    with pytest.raises(ValueError):
+        cmdlets.get('transform-text-regex')('abc', {'pattern': 'a'})
+
+
+def test_transform_text_regex_rejects_negative_count():
+    with pytest.raises(ValueError):
+        cmdlets.get('transform-text-regex')(
+            'abc', {'pattern': 'a', 'replacement': 'x', 'count': -1}
+        )
+
+
 # ---- text cleaning (markup -> plain text) -----------------------------------
 
-def test_format_strip_html_removes_inline_tags():
-    assert cmdlets.get('format-strip-html')('how <i>would</i> you rate...', {}) == \
+def test_transform_strip_html_removes_inline_tags():
+    assert cmdlets.get('transform-strip-html')('how <i>would</i> you rate...', {}) == \
         'how would you rate...'
 
 
-def test_format_strip_html_preserves_plain_text():
-    assert cmdlets.get('format-strip-html')('plain text, no tags', {}) == \
+def test_transform_strip_html_preserves_plain_text():
+    assert cmdlets.get('transform-strip-html')('plain text, no tags', {}) == \
         'plain text, no tags'
 
 
-def test_format_strip_html_decodes_entities():
-    assert cmdlets.get('format-strip-html')('fish &amp; chips', {}) == 'fish & chips'
+def test_transform_strip_html_decodes_entities():
+    assert cmdlets.get('transform-strip-html')('fish &amp; chips', {}) == 'fish & chips'
 
 
-def test_format_strip_html_is_lenient_with_unbalanced_markup():
-    assert cmdlets.get('format-strip-html')('a <b>bold', {}) == 'a bold'
+def test_transform_strip_html_is_lenient_with_unbalanced_markup():
+    assert cmdlets.get('transform-strip-html')('a <b>bold', {}) == 'a bold'
 
 
-def test_format_strip_html_leaves_math_operators_alone():
-    assert cmdlets.get('format-strip-html')('x < 3 and y > 2', {}) == 'x < 3 and y > 2'
+def test_transform_strip_html_leaves_math_operators_alone():
+    assert cmdlets.get('transform-strip-html')('x < 3 and y > 2', {}) == 'x < 3 and y > 2'
 
 
-def test_format_strip_html_sysmissing_becomes_empty_string():
-    assert cmdlets.get('format-strip-html')(sysmissing, {}) == ''
+def test_transform_strip_html_sysmissing_becomes_empty_string():
+    assert cmdlets.get('transform-strip-html')(sysmissing, {}) == ''
 
 
-def test_format_strip_html_other_scalars_use_as_text():
-    strip = cmdlets.get('format-strip-html')
+def test_transform_strip_html_other_scalars_use_as_text():
+    strip = cmdlets.get('transform-strip-html')
     assert strip(42, {}) == '42'
     assert strip(3.14, {}) == '3.14'
     assert strip(True, {}) == 'True'
@@ -249,28 +320,28 @@ def test_format_strip_html_other_scalars_use_as_text():
     assert strip(Path('/tmp/plain-name'), {}) == '/tmp/plain-name'
 
 
-def test_format_strip_html_block_processes_fields_and_keeps_shape():
-    assert cmdlets.get('format-strip-html')({
+def test_transform_strip_html_block_processes_fields_and_keeps_shape():
+    assert cmdlets.get('transform-strip-html')({
         'a': 'x <b>bold</b>',
         'b': 'plain',
         'c': 7,
     }, {}) == {'a': 'x bold', 'b': 'plain', 'c': '7'}
 
 
-def test_format_strip_html_array_processes_items_and_keeps_shape():
-    assert cmdlets.get('format-strip-html')(
+def test_transform_strip_html_array_processes_items_and_keeps_shape():
+    assert cmdlets.get('transform-strip-html')(
         ['a <b>bold</b>', 'plain', None, 7],
         {},
     ) == ['a bold', 'plain', '', '7']
 
 
-def test_format_strip_html_recurse_into_nested_compounds():
-    assert cmdlets.get('format-strip-html')(
+def test_transform_strip_html_recurse_into_nested_compounds():
+    assert cmdlets.get('transform-strip-html')(
         [{'label': 'how <i>would</i> you rate...'}],
         {},
     ) == [{'label': 'how would you rate...'}]
 
 
-def test_format_strip_html_empty_compounds_stay_empty():
-    assert cmdlets.get('format-strip-html')({}, {}) == {}
-    assert cmdlets.get('format-strip-html')([], {}) == []
+def test_transform_strip_html_empty_compounds_stay_empty():
+    assert cmdlets.get('transform-strip-html')({}, {}) == {}
+    assert cmdlets.get('transform-strip-html')([], {}) == []
