@@ -63,6 +63,11 @@
   box-sizing: border-box;
 }
 
+/* Textareas may be resized vertically only — the horizontal size stays fixed. */
+.apqa-input-gallery textarea {
+  resize: vertical;
+}
+
 .apqa-input-fullwidth {
   width: 100%;
 }
