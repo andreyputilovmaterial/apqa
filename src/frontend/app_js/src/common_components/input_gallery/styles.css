@@ -37,7 +37,7 @@
 }
 
 /* Native text-like controls share one consistent look (matches rule_form.css). */
-.apqa-input-gallery input[type="text"],
+.apqa-input-gallery input[type="text"]:not(.apqa-input-regex-text-input),
 .apqa-input-gallery input[type="password"],
 .apqa-input-gallery input[type="email"],
 .apqa-input-gallery input[type="url"],

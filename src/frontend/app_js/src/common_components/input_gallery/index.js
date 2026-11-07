@@ -5,6 +5,7 @@ import InputNumericRange from '../input_numeric_range/index';
 import InputDatetimeRange from '../input_datetime_range/index';
 import InputMultipunch from '../input_multipunch/index';
 import InputSearchSelect from '../input_search_select/index';
+import InputRegexText from '../input_regex_text/index';
 
 import './styles.css';
 
@@ -18,6 +19,7 @@ const InputGallery = {
     'input-datetime-range': InputDatetimeRange,
     'input-multipunch': InputMultipunch,
     'input-search-select': InputSearchSelect,
+    'input-regex-text': InputRegexText,
   },
 
   setup() {
@@ -28,6 +30,7 @@ const InputGallery = {
     });
     const searchSelect = ref('alpha');
     const multipunch = ref(['alpha', 'gamma']);
+    const regexText = ref({ text: '', regex: false });
 
     const selectOptions = [
       { value: 'alpha', label: 'Alpha' },
@@ -40,6 +43,7 @@ const InputGallery = {
       datetimeRange,
       searchSelect,
       multipunch,
+      regexText,
       selectOptions,
     };
   },
@@ -85,6 +89,9 @@ const InputGallery = {
       </form-field>
       <form-field label="Search">
         <input type="search" class="apqa-input-fullwidth" name="search" />
+      </form-field>
+      <form-field label="Regex text" help="Reusable input-regex-text component.">
+        <input-regex-text v-model="regexText" placeholder="Type to filter..." />
       </form-field>
     </div>
   </section>

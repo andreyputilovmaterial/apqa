@@ -1,0 +1,59 @@
+
+/* Regex-capable text input. A normal text box with a `.*` toggle at the right
+   inside the box. The component owns its whole look so it can be reused both in
+   the records filter and standalone. */
+
+.apqa-input-regex-text {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.apqa-input-regex-text .apqa-input-regex-text-input {
+  display: block;
+  width: 100%;
+  padding: 6px 2.2em 6px 8px; /* reserve room for the `.*` toggle */
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.apqa-input-regex-text .apqa-input-regex-text-input:hover {
+  border-color: #999;
+}
+
+.apqa-input-regex-text .apqa-input-regex-text-input:focus {
+  outline: none;
+  border-color: #385;
+}
+
+.apqa-input-regex-text .apqa-input-regex-text-toggle {
+  position: absolute;
+  right: 0.65em; /* matches the input side padding */
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  line-height: 1;
+  color: #999;
+}
+
+.apqa-input-regex-text .apqa-input-regex-text-toggle:hover {
+  color: #333;
+}
+
+/* Regex mode is on: highlight the `.*` in the standard green. */
+.apqa-input-regex-text .apqa-input-regex-text-toggle.is-active,
+.apqa-input-regex-text .apqa-input-regex-text-toggle.is-active:hover {
+  color: #385;
+  font-weight: 700;
+}

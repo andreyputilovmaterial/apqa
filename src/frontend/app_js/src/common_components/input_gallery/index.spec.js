@@ -29,6 +29,12 @@ describe('InputGallery', () => {
     expect(wrapper.find('.apqa-input-multipunch-trigger').exists()).toBe(true);
   });
 
+  it('renders the reusable regex text component', () => {
+    const wrapper = mountGallery();
+    expect(wrapper.find('.apqa-input-regex-text-input').exists()).toBe(true);
+    expect(wrapper.find('.apqa-input-regex-text-toggle').text()).toBe('.*');
+  });
+
   it('renders checkboxes, radios and a file picker', () => {
     const wrapper = mountGallery();
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);

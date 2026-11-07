@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RecordsFilter from './index.js';
 import InputMultipunch from '../input_multipunch/index.js';
+import InputRegexText from '../input_regex_text/index.js';
 
 const columns = {
   name: { label: 'Name', type: 'text' },
@@ -20,6 +21,11 @@ function mountFilter(props = {}) {
       records,
       keyField: 'id',
       ...props,
+    },
+    global: {
+      components: {
+        'component-input-regextext': InputRegexText,
+      },
     },
   });
 }
@@ -77,7 +83,7 @@ describe('RecordsFilter', () => {
     ];
     const wrapper = mount(RecordsFilter, {
       props: { columns: multipunchColumns, records: multipunchRecords, keyField: 'id' },
-      global: { components: { 'component-input-multipunch': InputMultipunch } },
+      global: { components: { 'component-input-multipunch': InputMultipunch, 'component-input-regextext': InputRegexText } },
     });
 
     await wrapper.find('.apqa-records-filter-header').trigger('click');
@@ -88,6 +94,20 @@ describe('RecordsFilter', () => {
     await wrapper.find('input[type="checkbox"][value="hiking"]').setValue(true);
 
     expect(wrapper.find('.apqa-records-filter-header').text()).toContain('Tags: hiking');
+  });
+
+  it('uses the regex-capable input for text columns and summarizes regex mode', async () => {
+    const wrapper = mountFilter();
+    await wrapper.find('.apqa-records-filter-header').trigger('click');
+
+    const input = wrapper.find('input[name="filter-name"]');
+    expect(input.classes()).toContain('apqa-input-regex-text-input');
+
+    await input.setValue('alp');
+    expect(wrapper.find('.apqa-records-filter-header').text()).toContain('Name: alp');
+
+    await wrapper.findAll('.apqa-input-regex-text-toggle')[0].trigger('click');
+    expect(wrapper.find('.apqa-records-filter-header').text()).toContain('Name: /alp/');
   });
 
   it('preserves a column description for future help messages', () => {

@@ -72,8 +72,7 @@
   color: #666;
 }
 
-.apqa-records-filter-field input:not([type="checkbox"]):not([type="radio"]),
-.apqa-records-filter-field .apqa-records-filter-field-input {
+.apqa-records-filter-field input:not([type="checkbox"]):not([type="radio"]):not(.apqa-input-regex-text-input) {
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #d0d0d0;
@@ -85,8 +84,7 @@
   box-sizing: border-box;
 }
 
-.apqa-records-filter-field input:not([type="checkbox"]):not([type="radio"]):focus,
-.apqa-records-filter-field .apqa-records-filter-field-input:focus {
+.apqa-records-filter-field input:not([type="checkbox"]):not([type="radio"]):not(.apqa-input-regex-text-input):focus {
   outline: none;
   border-color: #385;
 }

@@ -4,6 +4,26 @@
 
 ## Last state
 
+- **Ported the regex-capable text input from gitgui and made it the default text
+  filter in `RecordsFilter`.** New reusable component
+  `common_components/input_regex_text` (registered in `app.js` as
+  `component-input-regextext`): a normal text box with a `.*` toggle at the right
+  inside the box, regex mode **off by default**. It emits `{ text, regex }` via
+  `v-model` (also `input`/`change`/`focus`/`blur`), forwards `placeholder`/`name`
+  to the inner input, and fully owns its look (`.apqa-input-regex-text*` classes)
+  so it works standalone too. `RecordsFilter` now renders it for all text (and
+  unspecified-type) columns instead of the plain `<input>`; `matchers.js`
+  `matchText` and `summarizeFilters` understand the `{ text, regex }` value
+  (regex → `new RegExp(text)`; invalid regex matches nothing; summary shows
+  `/text/` when regex is on). Scoped the records-filter input CSS to
+  `:not(.apqa-input-regex-text-input)` so it no longer overrides the component's
+  own styling, and dropped the now-unused `.apqa-records-filter-field-input`
+  class. New specs: `input_regex_text/index.spec.js` (5), plus regex cases in
+  `records_filter/matchers.spec.js` and `records_filter/index.spec.js`.
+  Validated: full JS suite 163 passed / 22 files, and `vite build` 96 modules.
+  (Note: `node_modules/.bin/vitest` shim is broken — run vitest via
+  `node node_modules/vitest/vitest.mjs run`.)
+
 - **Added `transform-text-regex`; settled the text-transform family prefix as `transform-`.**
   New processor cmdlet at `src/cmdlets/transform_text_regex/` registered as
   `transform-text-regex`: takes a text value and returns text, replacing every match of

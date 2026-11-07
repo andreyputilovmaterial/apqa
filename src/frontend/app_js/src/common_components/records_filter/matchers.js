@@ -12,9 +12,29 @@ const isEmpty = (value) => {
   return value == null || /^\s*$/.test(String(value))
 }
 
+// The regex-text input emits `{ text, regex }`. Older code paths (e.g. the
+// initial empty value) may still pass a plain string, so treat that as
+// non-regex text.
+function parseTextFilter(matchValue) {
+  if (matchValue != null && typeof matchValue === 'object') {
+    return { text: matchValue.text ?? '', regex: !!matchValue.regex }
+  }
+  return { text: matchValue ?? '', regex: false }
+}
+
 export function matchText(fieldValue, matchValue) {
-  if (isEmpty(matchValue)) return true
-  return toText(fieldValue).toLowerCase().includes(String(matchValue).toLowerCase())
+  const { text, regex } = parseTextFilter(matchValue)
+  if (isEmpty(text)) return true
+  const fieldText = toText(fieldValue)
+  if (regex) {
+    try {
+      return new RegExp(text).test(fieldText)
+    } catch (e) {
+      // An invalid regex (e.g. while it is still being typed) matches nothing.
+      return false
+    }
+  }
+  return fieldText.toLowerCase().includes(String(text).toLowerCase())
 }
 
 export function matchNumericRange(fieldValue, matchValue) {
@@ -112,12 +132,22 @@ function summarizeRangeValue(value, type) {
   return `≤ ${toText}`
 }
 
+function summarizeTextValue(value) {
+  const { text, regex } = parseTextFilter(value)
+  const trimmed = text == null ? '' : String(text).trim()
+  if (!trimmed) return ''
+  return regex ? `/${trimmed}/` : trimmed
+}
+
 function summarizeFilterValue(value, type) {
   if (type === 'number' || type === 'date' || type === 'datetime') {
     return summarizeRangeValue(value, type)
   }
   if (type === 'multipunch') {
     return Array.isArray(value) ? value.filter((v) => !isEmpty(v)).join(', ') : ''
+  }
+  if (type === 'text') {
+    return summarizeTextValue(value)
   }
   return value == null ? '' : String(value).trim()
 }

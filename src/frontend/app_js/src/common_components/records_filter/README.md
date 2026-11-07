@@ -26,9 +26,11 @@ Props:
 - `columns` (object) — `{ key: label | { label, type, description, options } }`.
   One filter box per key. `type` is
   `'text' | 'number' | 'date' | 'datetime' | 'multipunch'` (default `text`).
-  Non-text types render a range input, except `multipunch` which renders the
-  globally registered `component-input-multipunch` drop down; a `multipunch` column
-  should also provide `options` (the allowed values), e.g.
+  Text (and unspecified) columns render the regex-capable text input
+  (`component-input-regextext`): a normal text box with a `.*` toggle, regex mode
+  **off by default**. Non-text types render a range input, except `multipunch`
+  which renders the globally registered `component-input-multipunch` drop down; a
+  `multipunch` column should also provide `options` (the allowed values), e.g.
   `{ label: 'Tags', type: 'multipunch', options: ['counts', 'wave69'] }`.
   `description` is an optional docstring kept for a future per-column help
   message.
@@ -56,7 +58,8 @@ The component is registered locally by consumers (see
 `app/qcrules_list/index.js`). For the number/date/datetime range inputs it uses
 the globally registered `component-input-numericrange` and
 `component-input-datetimerange` components; for `multipunch` columns it uses the
-globally registered `component-input-multipunch` component.
+globally registered `component-input-multipunch` component; for text columns it
+uses the globally registered `component-input-regextext` component.
 
 ## Collapsible header
 
@@ -79,3 +82,8 @@ Filter boxes are AND-ed together: a record must match every filled box. A
 `multipunch` column follows the same rule internally — it matches only when the
 record contains **all** of the selected values (an empty selection matches
 everything).
+
+Text columns store `{ text, regex }` as their filter value. With `regex` off
+(the default) the field matches by case-insensitive substring; with `regex` on
+it matches by regular expression (`new RegExp(text)`), and an invalid expression
+while typing matches nothing.

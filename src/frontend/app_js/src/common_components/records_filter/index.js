@@ -50,12 +50,11 @@ const RecordsFilter = {
           :name="'filter-' + key"
           :placeholder="'Filter ' + def.label.toLowerCase() + '...'"
         />
-        <input
+        <component
           v-else
+          :is="'component-input-regextext'"
           v-model="filters[key]"
-          type="text"
           :name="'filter-' + key"
-          class="apqa-records-filter-field-input"
           :placeholder="'Filter ' + def.label.toLowerCase() + '...'"
         />
       </label>

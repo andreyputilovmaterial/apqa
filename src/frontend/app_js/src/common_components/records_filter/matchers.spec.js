@@ -36,6 +36,22 @@ describe('matchText', () => {
     expect(matchText('', 'x')).toBe(false)
     expect(matchText(null, 'x')).toBe(false)
   })
+
+  it('matches by regular expression when regex mode is on', () => {
+    expect(matchText('Alps hiking 2025', { text: '^alps', regex: true })).toBe(false)
+    expect(matchText('Alps hiking 2025', { text: 'Alps.*hiking', regex: true })).toBe(true)
+    expect(matchText('Alps hiking 2025', { text: 'hiking$', regex: true })).toBe(false)
+    expect(matchText('file-123.txt', { text: 'file-\\d+\\.txt', regex: true })).toBe(true)
+  })
+
+  it('treats an invalid regex as matching nothing', () => {
+    expect(matchText('Alps', { text: '(', regex: true })).toBe(false)
+  })
+
+  it('treats an object value without regex flag as plain substring text', () => {
+    expect(matchText('Alps hiking 2025', { text: 'ALPS' })).toBe(true)
+    expect(matchText('Alps hiking 2025', { text: 'japan' })).toBe(false)
+  })
 })
 
 describe('matchNumericRange', () => {
@@ -267,5 +283,17 @@ describe('summarizeFilters', () => {
   it('uses the key as a fallback label when no label is given', () => {
     const noLabel = { name: { type: 'text' } }
     expect(summarizeFilters({ name: 'x' }, noLabel)).toEqual(['name: x'])
+  })
+
+  it('summarizes a non-regex object text filter as plain text', () => {
+    expect(summarizeFilters({ name: { text: 'alps', regex: false }, place: '', year: '', eventDate: '' }, columns)).toEqual(['Name: alps'])
+  })
+
+  it('summarizes a regex text filter with slashes', () => {
+    expect(summarizeFilters({ name: { text: 'alps', regex: true }, place: '', year: '', eventDate: '' }, columns)).toEqual(['Name: /alps/'])
+  })
+
+  it('ignores a regex text filter whose text is blank', () => {
+    expect(summarizeFilters({ name: { text: '  ', regex: true }, place: '', year: '', eventDate: '' }, columns)).toEqual([])
   })
 })
