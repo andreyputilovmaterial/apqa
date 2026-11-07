@@ -9,8 +9,6 @@
 }
 
 .apqa-modal-form.apqa-rule-delete-confirm {
-  flex: 0 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;

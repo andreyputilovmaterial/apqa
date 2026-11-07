@@ -4,6 +4,24 @@
 
 ## Last state
 
+- **Made modal content scroll uniformly (whole content, no sticky header).**
+  The modal shell (`common_components/modals`) previously pinned the wrapper
+  full-height and clipped the inner, so scrollability was bolted on per component
+  and was inconsistent: the iframe navbar modals and the test page scrolled, but
+  the create-QC-rule form did not (its `flex:0 1 auto; overflow:visible` chain
+  plus a `min-height:auto` form child blocked the scrollbar). The shell now owns
+  it: the wrapper is shrink-to-content and capped at `calc(100vh - 48px)`, and
+  `.mdm-git-ui-modal-inner` is the single `overflow-y: auto` region, so every
+  content modal scrolls its whole content when it does not fit (no sticky header).
+  Removed the per-component `:has(...)` shrink/scroll hacks from `rule_form.css`
+  and `testpage/styles.css`; kept one `:has(.apqa-ajax-pageview-form)` override so
+  the iframe navbar modal stays full-height (iframes need a definite height to
+  scroll internally). Validated: `vite build` 94 modules, 151 JS tests pass, the
+  self-written `py_js_bundler` still bundles `app.js` (contains `overflow-y:auto`
+  + `max-height:calc(100vh - 48px)`), and a real-browser harness confirmed the
+  rule form scrolls end-to-end with the actions reachable, the iframe modal stays
+  full-height, and the delete confirm stays a centered small box.
+
 - **Added a "Test page" navbar link that opens a reusable form-control gallery
   modal.** New reusable `form_field` component
   (`common_components/form_field`: label above/beside the control + optional

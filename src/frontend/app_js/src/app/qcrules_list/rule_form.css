@@ -1,20 +1,6 @@
-/* Shrink the rule-form modal to its content (still scrolls when tall) instead
-   of pinning it to full height like the iframe-based navbar modals. */
-.mdm-git-ui-modal-wrapper:has(.apqa-rule-form) {
-  bottom: auto;
-  max-height: calc(100vh - 48px);
-}
-
-.mdm-git-ui-modal-wrapper:has(.apqa-rule-form) .mdm-git-ui-modal-inner {
-  overflow: auto;
-}
-
-.apqa-modal-form.apqa-rule-form {
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow: visible;
-}
-
+/* The rule form is a normal content modal: the shared shell scrolls the whole
+   content (fields + actions together, no sticky header) when it is taller than
+   the viewport. */
 .apqa-rule-form-inner {
   display: flex;
   flex-direction: column;

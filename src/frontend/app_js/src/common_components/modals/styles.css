@@ -36,7 +36,8 @@
   z-index: 1001;
   left: 50%;
   top: 24px;
-  bottom: 24px;
+  bottom: auto;
+  max-height: calc(100vh - 48px);
   width: 92%;
   transform: translateX(-50%);
   padding: 15px;
@@ -47,7 +48,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 }
 @media all and (min-width: 1300px) {
     .mdm-ui-modals-site .mdm-git-ui-modal-wrapper {
@@ -92,13 +93,25 @@
 
 
 
+/* Content modals (rule form, test page, delete confirm, …) keep their natural
+   height and the whole content scrolls inside `.mdm-git-ui-modal-inner` when it
+   does not fit the viewport. No sticky header. */
 .apqa-modal-form {
   display: flex;
   flex-direction: column;
+}
+
+/* iframe-based navbar modal: it needs a definite full height so the iframe fills
+   and scrolls internally. This is the one modal that is not shrink-to-content. */
+.mdm-ui-modals-site .mdm-git-ui-modal-wrapper:has(.apqa-ajax-pageview-form) {
+  bottom: 24px;
+  max-height: none;
+}
+.mdm-ui-modals-site .mdm-git-ui-modal-wrapper:has(.apqa-ajax-pageview-form) .apqa-modal-form {
   flex: 1 1 auto;
   min-height: 0;
 }
-.apqa-modal-form > form.mdmreport-controls {
+.mdm-ui-modals-site .mdm-git-ui-modal-wrapper:has(.apqa-ajax-pageview-form) .apqa-modal-form > form.mdmreport-controls {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -107,13 +120,13 @@
   padding: 0;
   border: none;
 }
-.apqa-modal-form .apqa-fetched-content {
+.mdm-ui-modals-site .mdm-git-ui-modal-wrapper:has(.apqa-ajax-pageview-form) .apqa-fetched-content {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
-.apqa-modal-form .apqa-fetched-content iframe {
+.mdm-ui-modals-site .mdm-git-ui-modal-wrapper:has(.apqa-ajax-pageview-form) .apqa-fetched-content iframe {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
