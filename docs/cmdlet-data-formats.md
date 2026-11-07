@@ -22,6 +22,22 @@ identically on a sheet, a table, a query result, etc.
 The same design applies to the DB storage format, the UI, and the values that
 flow through the pipe.
 
+## How to read this document
+
+Sections fall into two groups:
+
+- **Data formats** — the values cmdlets operate on and return: `Scalar types`,
+  `sysmissing`, `Compound types`, the `Worked example`, `Comparison semantics`,
+  `Row & column names (missing or duplicate)`, `Representation`, and
+  `Dates & time`.
+- **Cmdlet behaviour** — what individual cmdlets (and the editor around them) do:
+  `Cmdlet naming`, `Validation cmdlets`, `Predicate cmdlets`, `Standard scalar
+  cmdlets`, `Text cleaning cmdlets`, `Shape-changing operations`, `Source
+  readers`, `Network cmdlets`, `Editor metadata`, and `Folder aliases`.
+
+So the "names" in `Row & column names (missing or duplicate)` are the
+**row/column (field/record) names inside the data**, not cmdlet names.
+
 ## Scalar types
 
 A cmdlet may produce/accept these scalar values:
@@ -97,7 +113,7 @@ Three compound types, which may nest (a field may itself be scalar or compound):
   addressable by name and by position).
 - Each sheet is an **array of rows**; each iteration (row) is a block with an
   implicit index (and an optional name read from an "index" column — see
-  "Missing & duplicate names" for the fallback when it does not exist).
+  "Row & column names (missing or duplicate)" for the fallback when it does not exist).
 - Each row is a **block** whose fields are the sheet's columns (column names from
   row 1, made unique).
 - `record.field["Title Details"]` reads the sheet by name; reading a column from
@@ -272,7 +288,13 @@ order-agnostically) and has no effect on blocks or scalars. A `sort` cmdlet is
 also available for the related but different job of *canonicalizing* an array's
 order before a strict comparison (see "Shape-changing operations").
 
-## Missing & duplicate names
+## Row & column names (missing or duplicate)
+
+When a source reader turns tabular input (an Excel sheet, a CSV file, a DB
+table, …) into blocks and arrays, it must give every **column** (a block field)
+and every **row** (an array iteration / record) a name. The input may not always
+provide such names, or may provide them twice, so readers normalize them as
+follows:
 
 - **Column with no header** → use the source's native coordinate: Excel letters
   (`"A"`, `"B"`, …), CSV/DB positions (`"1"`, `"2"`, …).
