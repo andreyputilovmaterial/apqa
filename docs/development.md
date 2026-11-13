@@ -249,12 +249,36 @@ rejected by `py_js_bundler`, update `py_js_bundler` rather than bending the JS.
 
 ### Ports
 
-The backend listens on `localhost`, default port `5180` (`PORT_START_WITH` in
-`src/main_ui_program.py`); `find_free_port` starts there and increments by one
-if it is taken. Whatever port it lands on is fine for the launched browser, but
-it **can** break the Vite dev server: `src/frontend/app_js/vite.config.js`
-hard-codes `http://localhost:5180` as the proxy target. While developing
-against Vite, keep the backend on `5180` (or update `vite.config.js`).
+The backend listens on `localhost`. The port is chosen with the
+`--config-webserver-port` flag (see `src/webserver_config.py`):
+
+- `<port>` — a fixed port: start there and fail if it is occupied.
+- `<port>+` — start at `<port>` and auto-increment by one until a free port is found.
+- (omitted) — the default: auto-increment starting at `5180` (same as `5180+`).
+
+The Vite dev server hard-codes `http://localhost:5180` as its proxy target
+(`src/frontend/app_js/vite.config.js`), so while developing against Vite keep
+the backend on `5180` (or update `vite.config.js`); without the dev frontend
+server (the normal backend-served bundle), any port works equally well.
+
+### Dev backend tooling
+
+To control that backend deterministically (check / start / stop / restart /
+health / logs) use the cross-platform, stdlib-only script `dev_backend.py` at
+the repo root — see the `backend` skill and
+`.clinerules/30-dev-backend-tooling.md`. It pins the port to 5180
+(`--config-webserver-port 5180`), starts headlessly (`--browser no-op`),
+records the spawned PID in a gitignored
+`.apqa-dev-backend.pid`, and health-checks `http://localhost:5180/`.
+`start`/`stop`/`restart` are idempotent; a backend started outside the script
+(e.g. by the VS Code debugger, which writes no pid file) is handled by an
+OS-branched port→PID fallback (`netstat` on Windows, `lsof` elsewhere). Backend
+output is captured in `.apqa-dev-backend.log` (`dev_backend.py logs`).
+
+The UI program also gained a `--browser` flag (see `src/browser_launcher.py`,
+used by the `main_ui_program` entry point): `launch-system-default-browser`
+(default), `no-op` (start without opening a browser), and `pywebview` (declared
+as a valid choice but raises `NotImplementedError`).
 
 ### HTTP methods and the Vite dev server
 

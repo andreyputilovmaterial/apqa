@@ -1,0 +1,41 @@
+
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backend: Start",
+      "type": "shell",
+      "command": "python",
+      "args": ["dev_backend.py", "start"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: Stop",
+      "type": "shell",
+      "command": "python",
+      "args": ["dev_backend.py", "stop"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: Health",
+      "type": "shell",
+      "command": "python",
+      "args": ["dev_backend.py", "health"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: Restart",
+      "type": "shell",
+      "command": "python",
+      "args": ["dev_backend.py", "restart"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: Logs",
+      "type": "shell",
+      "command": "python",
+      "args": ["dev_backend.py", "logs"],
+      "problemMatcher": []
+    },
+  ]
+}

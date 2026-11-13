@@ -27,6 +27,10 @@ __pycache__/
 # --- Exclude environment variables file ---
 .env
 
+# --- Dev backend tooling (dev_backend.py) ---
+.apqa-dev-backend.pid
+.apqa-dev-backend.log
+
 # --- Editor files ---
 # .vscode/*
 !.vscode/extensions.json

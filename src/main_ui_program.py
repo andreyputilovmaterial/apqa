@@ -12,8 +12,13 @@ import os # for loading .env
 if __package__:
     from .webserver_engine.webserve.src.webserver import Webserver # a wrapper around python http.server - no flask or django
     from .webserver_engine.webserve.src.webserver import HTTP403, HTTP404, WebResponse
-    from .webserver_engine.webserve.src.find_free_port import find_free_port
-    from .webserver_engine.webserve.src.launch_browser import launch_browser
+    from .webserver_config import select_webserver_port
+    from .browser_launcher import (
+        BROWSER_MODE_DEFAULT,
+        BROWSER_MODE_NOOP,
+        BROWSER_MODE_PYWEBVIEW,
+        launch_browser_for_mode,
+    )
 
     from .db_processors import DBFile
 
@@ -32,8 +37,13 @@ else:
     # flat context: inlined with no parent package.
     from webserver_engine.webserve.src.webserver import Webserver
     from webserver_engine.webserve.src.webserver import HTTP403, HTTP404, WebResponse
-    from webserver_engine.webserve.src.find_free_port import find_free_port
-    from webserver_engine.webserve.src.launch_browser import launch_browser
+    from webserver_config import select_webserver_port
+    from browser_launcher import (
+        BROWSER_MODE_DEFAULT,
+        BROWSER_MODE_NOOP,
+        BROWSER_MODE_PYWEBVIEW,
+        launch_browser_for_mode,
+    )
 
     from db_processors import DBFile
 
@@ -59,7 +69,11 @@ else:
 
 
 CONFIG_WEBSERVER_MULTITHREADED = True
-PORT_START_WITH = 5180
+# The default listen port (5180) and the `--config-webserver-port` options are
+# handled in src/webserver_config.py. NOTE for developers: the Vite frontend dev
+# server has 5180 pre-configured and hard-coded (vite.config.js proxies every
+# API call to http://localhost:5180), so while developing against Vite keep the
+# backend on 5180; without the dev frontend server any port works equally well.
 
 
 script_version = f'{script_version}'.strip()
@@ -92,7 +106,36 @@ def main(*argcs,**kwargs):
         type=str,
         required=True
     )
+    parser.add_argument(
+        '--browser',
+        choices=[BROWSER_MODE_DEFAULT, BROWSER_MODE_NOOP, BROWSER_MODE_PYWEBVIEW],
+        default=BROWSER_MODE_DEFAULT,
+        help=(
+            'how to open the web UI: launch-system-default-browser (default, '
+            'opens the OS default browser), no-op (start without a browser), '
+            'pywebview (reserved, not implemented yet)'
+        ),
+    )
+    parser.add_argument(
+        '--config-webserver-port',
+        type=str,
+        default=None,
+        help=(
+            'backend listen port: a fixed port (fail if it is occupied), or '
+            '"<port>+" to auto-increment by one until a free port is found; '
+            'the default is auto-increment starting at 5180. NOTE: the Vite '
+            'dev server hard-codes localhost:5180 as its proxy target, so keep '
+            'the backend on 5180 while developing against it; without it any '
+            'port works equally well.'
+        ),
+    )
     args = parser.parse_args(*argcs,**kwargs)
+
+    # Fail early: pywebview is declared as an option but not implemented yet.
+    if args.browser == BROWSER_MODE_PYWEBVIEW:
+        raise NotImplementedError(
+            f'--browser {BROWSER_MODE_PYWEBVIEW} is not implemented yet'
+        )
 
     print(f'{STDOUT_COLOR_GREEN}starting {script_name} at {time_start}{STDOUT_COLOR_RESET}')
     config = {
@@ -140,7 +183,7 @@ def main(*argcs,**kwargs):
 
     print('\npreparing webserver...\n')
     config['http_host'] = 'localhost'
-    config['http_port'] = find_free_port(config['http_host'], start=PORT_START_WITH)
+    config['http_port'] = select_webserver_port(config['http_host'], args.config_webserver_port)
     config['http_protocol'] = 'http'
     config['http_address'] = (
         f'{config["http_protocol"]}://'
@@ -157,7 +200,7 @@ def main(*argcs,**kwargs):
     server.assign_handlers(endpoints)
     # print(f'{STDOUT_COLOR_GREEN}starting webserver at {config.get("http_address")}{STDOUT_COLOR_RESET}')
 
-    launch_browser(f'{config.get("http_address")}/')
+    launch_browser_for_mode(args.browser, f'{config.get("http_address")}/')
     server.run()
 
 

@@ -4,6 +4,35 @@
 
 ## Last state
 
+- **Added `--config-webserver-port` (fixed / auto-increment / default 5180).**
+  New `src/webserver_config.py` (`parse_webserver_port` + `select_webserver_port`)
+  drives the port for the new `--config-webserver-port` flag on
+  `src/main_ui_program.py`: `<port>` fails if occupied, `<port>+` auto-increments
+  by one, and the default auto-increments from 5180 (the old `find_free_port`
+  behavior). `dev_backend.py` now pins the port via `--config-webserver-port 5180`
+  so the backend never drifts off Vite's hard-coded `localhost:5180` proxy target.
+  The Vite note is recorded in code comments + `--help`. Tests
+  `tests/test_webserver_config.py`; docs `docs/development.md` (Ports) +
+  `docs/maintenance-log.md`. Validated: full Python suite 435 passed / 3 skipped
+  (8 new port tests), `build.sh` OK, and both the bundle and the launcher reject
+  an occupied fixed port and an invalid value with readable errors (exit 1).
+
+- **Added cross-platform dev backend tooling + a `--browser` launch flag.**
+  New `dev_backend.py` at the repo root is the single control point for the dev
+  backend on `localhost:5180` (`status`/`start`/`stop`/`restart`/`health`/`logs`,
+  stdlib-only, identical on Windows/macOS/Linux): it pins the port, starts
+  headlessly, records the spawned PID in a gitignored `.apqa-dev-backend.pid`,
+  and health-checks `http://localhost:5180/`. `src/main_ui_program.py` gained a
+  `--browser` flag with `launch-system-default-browser` (default), `no-op`
+  (skip the browser), and `pywebview` (declared but raises `NotImplementedError`);
+  the decision lives in a new testable `src/browser_launcher.py`. A Cline skill
+  (`.clinerules/skills/backend/`) plus a rule (`.clinerules/30-dev-backend-tooling.md`)
+  point the agent at `dev_backend.py` and forbid `lsof`/`kill`/`sudo`. New tests
+  `tests/test_browser_launcher.py` + `tests/test_dev_backend.py`. Docs:
+  `docs/development.md` (Ports + dev backend tooling) and `docs/maintenance-log.md`.
+  Validated: full Python suite 427 passed / 3 skipped (17 new tests), `build.sh`
+  OK, and both the bundle and the launcher fail early on `--browser pywebview`.
+
 - **Project name/path/description now live in the page header (roadmap item).**
   The header (`.apqaui-html-page-header`) gained a left brand column with the
   "apqaui app" wordmark (`#dfdfdf`) and, directly under it with no vertical
