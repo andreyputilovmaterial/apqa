@@ -4,6 +4,17 @@
 
 ## Last state
 
+- **Changed the default dev port from `5180` to `5280`** (a global find-and-replace
+  across the tracked source/docs/tests): `src/webserver_config.py` `DEFAULT_PORT`,
+  `dev_backend.py` `DEFAULT_PORT` + the `--config-webserver-port 5280` pin,
+  `src/main_ui_program.py` dev notes, `src/frontend/app_js/vite.config.js` (all
+  proxy targets), `docs/*`, `.clinerules/*`, and the two port-literal tests.
+  Deliberately **not** changed: the vendored `remixicon.svg` (its `5180` is SVG
+  glyph path data, not a port) and the `src/webserver_engine/webserve` submodule's
+  `find_free_port(start=5180)` default (separate repo, and apqa always passes
+  `start=` explicitly, so that default is unused by apqa). No submodule pointer
+  moved.
+
 - **`dev_backend.py` color-codes success/failure output; the webserver's fixed-port
   pre-check no longer false-fails on `TIME_WAIT`.**
   `dev_backend.py` now prints its human-readable outcome lines in green (success)
@@ -52,13 +63,13 @@
   `/assets/vendorlibs/vue.js` — that one stays. Updated `docs/development.md`
   (Dual run mode) to document this split.
 
-- **Added `--config-webserver-port` (fixed / auto-increment / default 5180).**
+- **Added `--config-webserver-port` (fixed / auto-increment / default 5280).**
   New `src/webserver_config.py` (`parse_webserver_port` + `select_webserver_port`)
   drives the port for the new `--config-webserver-port` flag on
   `src/main_ui_program.py`: `<port>` fails if occupied, `<port>+` auto-increments
-  by one, and the default auto-increments from 5180 (the old `find_free_port`
-  behavior). `dev_backend.py` now pins the port via `--config-webserver-port 5180`
-  so the backend never drifts off Vite's hard-coded `localhost:5180` proxy target.
+  by one, and the default auto-increments from 5280 (the old `find_free_port`
+  behavior). `dev_backend.py` now pins the port via `--config-webserver-port 5280`
+  so the backend never drifts off Vite's hard-coded `localhost:5280` proxy target.
   The Vite note is recorded in code comments + `--help`. Tests
   `tests/test_webserver_config.py`; docs `docs/development.md` (Ports) +
   `docs/maintenance-log.md`. Validated: full Python suite 435 passed / 3 skipped
@@ -67,10 +78,10 @@
 
 - **Added cross-platform dev backend tooling + a `--browser` launch flag.**
   New `dev_backend.py` at the repo root is the single control point for the dev
-  backend on `localhost:5180` (`status`/`start`/`stop`/`restart`/`health`/`logs`,
+  backend on `localhost:5280` (`status`/`start`/`stop`/`restart`/`health`/`logs`,
   stdlib-only, identical on Windows/macOS/Linux): it pins the port, starts
   headlessly, records the spawned PID in a gitignored `.apqa-dev-backend.pid`,
-  and health-checks `http://localhost:5180/`. `src/main_ui_program.py` gained a
+  and health-checks `http://localhost:5280/`. `src/main_ui_program.py` gained a
   `--browser` flag with `launch-system-default-browser` (default), `no-op`
   (skip the browser), and `pywebview` (declared but raises `NotImplementedError`);
   the decision lives in a new testable `src/browser_launcher.py`. A Cline skill
@@ -249,7 +260,7 @@
   bundle (`build.sh` → `src/frontend/GENERATED/app.js`, served at
   `/assets/app.js`) needs only Python; the Vite dev server (`npm install` +
   `npm run dev` in `src/frontend/app_js`) additionally needs Node and a running
-  backend, and hard-codes `http://localhost:5180` in `vite.config.js`; every JS
+  backend, and hard-codes `http://localhost:5280` in `vite.config.js`; every JS
   change must work under both modes. Also documented that the backend webserver
   accepts any HTTP method name while the npm/Vite dev server (Node `http` +
   `llhttp`) rejects non-standard method names with `400 Bad Request` — not a

@@ -69,11 +69,11 @@ else:
 
 
 CONFIG_WEBSERVER_MULTITHREADED = True
-# The default listen port (5180) and the `--config-webserver-port` options are
+# The default listen port (5280) and the `--config-webserver-port` options are
 # handled in src/webserver_config.py. NOTE for developers: the Vite frontend dev
-# server has 5180 pre-configured and hard-coded (vite.config.js proxies every
-# API call to http://localhost:5180), so while developing against Vite keep the
-# backend on 5180; without the dev frontend server any port works equally well.
+# server has 5280 pre-configured and hard-coded (vite.config.js proxies every
+# API call to http://localhost:5280), so while developing against Vite keep the
+# backend on 5280; without the dev frontend server any port works equally well.
 
 
 script_version = f'{script_version}'.strip()
@@ -123,9 +123,9 @@ def main(*argcs,**kwargs):
         help=(
             'backend listen port: a fixed port (fail if it is occupied), or '
             '"<port>+" to auto-increment by one until a free port is found; '
-            'the default is auto-increment starting at 5180. NOTE: the Vite '
-            'dev server hard-codes localhost:5180 as its proxy target, so keep '
-            'the backend on 5180 while developing against it; without it any '
+            'the default is auto-increment starting at 5280. NOTE: the Vite '
+            'dev server hard-codes localhost:5280 as its proxy target, so keep '
+            'the backend on 5280 while developing against it; without it any '
             'port works equally well.'
         ),
     )

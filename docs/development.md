@@ -239,7 +239,7 @@ The frontend runs two ways, and **both must keep working**:
   entry point only (the backend never serves it); `vue` resolves from
   `node_modules` (the `vue` alias in `vite.config.js`), so `index.html` needs no
   importmap. `vite.config.js` proxies the backend paths (e.g. `/qc`,
-  `/functionality`, `/assets`) to `http://localhost:5180`. This is the fast
+  `/functionality`, `/assets`) to `http://localhost:5280`. This is the fast
   hot-reload path (and the one that enables Vitest/lint); use it while iterating
   on UI code.
 
@@ -257,11 +257,11 @@ The backend listens on `localhost`. The port is chosen with the
 
 - `<port>` — a fixed port: start there and fail if it is occupied.
 - `<port>+` — start at `<port>` and auto-increment by one until a free port is found.
-- (omitted) — the default: auto-increment starting at `5180` (same as `5180+`).
+- (omitted) — the default: auto-increment starting at `5280` (same as `5280+`).
 
-The Vite dev server hard-codes `http://localhost:5180` as its proxy target
+The Vite dev server hard-codes `http://localhost:5280` as its proxy target
 (`src/frontend/app_js/vite.config.js`), so while developing against Vite keep
-the backend on `5180` (or update `vite.config.js`); without the dev frontend
+the backend on `5280` (or update `vite.config.js`); without the dev frontend
 server (the normal backend-served bundle), any port works equally well.
 
 ### Dev backend tooling
@@ -269,10 +269,10 @@ server (the normal backend-served bundle), any port works equally well.
 To control that backend deterministically (check / start / stop / restart /
 health / logs) use the cross-platform, stdlib-only script `dev_backend.py` at
 the repo root — see the `backend` skill and
-`.clinerules/30-dev-backend-tooling.md`. It pins the port to 5180
-(`--config-webserver-port 5180`), starts headlessly (`--browser no-op`),
+`.clinerules/30-dev-backend-tooling.md`. It pins the port to 5280
+(`--config-webserver-port 5280`), starts headlessly (`--browser no-op`),
 records the spawned PID in a gitignored
-`.dev_backend.pid`, and health-checks `http://localhost:5180/`.
+`.dev_backend.pid`, and health-checks `http://localhost:5280/`.
 `start`/`stop`/`restart` are idempotent; a backend started outside the script
 (e.g. by the VS Code debugger, which writes no pid file) is handled by an
 OS-branched port→PID fallback (`netstat` on Windows, `lsof` elsewhere). Backend

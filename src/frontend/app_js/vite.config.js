@@ -13,35 +13,35 @@ export default defineConfig({
   server: {
     proxy: {
       '/health': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/qc': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/command': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/textconv': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/functionality': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/assets': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/files': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
       '/browse': {
-        target: 'http://localhost:5180',
+        target: 'http://localhost:5280',
         changeOrigin: true
       },
     }

@@ -69,13 +69,13 @@ longer reported as "already in use".
 
 ### What & why
 
-The backend port was always `5180` then auto-incremented (`find_free_port`), so
-it silently drifted off the Vite proxy port when 5180 was taken. The new
+The backend port was always `5280` then auto-incremented (`find_free_port`), so
+it silently drifted off the Vite proxy port when 5280 was taken. The new
 `--config-webserver-port` flag selects between: a **fixed** port (fail if
 occupied), an **auto-incrementing** port (`<port>+`), and the **default**
-auto-increment-from-5180. `dev_backend.py` passes the fixed `5180` form so the
-backend never drifts off Vite's hard-coded `localhost:5180`. The Vite note is
-recorded in code comments and `--help` (dev server hard-codes 5180; without it
+auto-increment-from-5280. `dev_backend.py` passes the fixed `5280` form so the
+backend never drifts off Vite's hard-coded `localhost:5280`. The Vite note is
+recorded in code comments and `--help` (dev server hard-codes 5280; without it
 any port works equally well).
 
 ### Repeat
@@ -85,13 +85,13 @@ any port works equally well).
 2. Reuse the existing `find_free_port` for auto-increment; add an explicit
    free-port probe for the fixed case that raises a readable error.
 3. Document the three flag forms in the module docstring, `--help`, and the
-   architecture guide, including the Vite `localhost:5180` note.
+   architecture guide, including the Vite `localhost:5280` note.
 
 ---
 
 ## Dev backend tooling: a cross-platform `dev_backend.py` + a `--browser` launch mode
 
-- **Requested:** 2026-11-13 (agent- and human-manageable backend restarts on localhost:5180)
+- **Requested:** 2026-11-13 (agent- and human-manageable backend restarts on localhost:5280)
 - **Implemented:** 2026-11-13
 - **Where:** repo root (`dev_backend.py`), `src/browser_launcher.py` +
   `src/main_ui_program.py` (new `--browser` flag), `.clinerules/skills/backend/`,
@@ -101,9 +101,9 @@ any port works equally well).
 ### Problem
 
 The desktop app is a Python backend + browser UI. The backend starts on
-`localhost`, default port 5180, but `find_free_port` **silently increments** the
-port when 5180 is taken (`src/main_ui_program.py` → `find_free_port.py`), while
-the Vite dev server hard-codes `http://localhost:5180` as its proxy target.
+`localhost`, default port 5280, but `find_free_port` **silently increments** the
+port when 5280 is taken (`src/main_ui_program.py` → `find_free_port.py`), while
+the Vite dev server hard-codes `http://localhost:5280` as its proxy target.
 There was no idempotent way to check/start/stop/restart the backend, no health
 check, and no record of which process to kill — so an agent (or a human)
 resorted to platform-specific `lsof`/`sudo`/`kill` guessing, sometimes killed

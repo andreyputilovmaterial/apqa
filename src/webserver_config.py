@@ -6,12 +6,12 @@ The desktop app's backend listens on ``localhost``. The port is chosen with the
 * ``<port>``  — a fixed port: start there and fail if it is occupied.
 * ``<port>+`` — start at ``<port>`` and auto-increment by one until a free port
   is found.
-* (omitted)   — the default: auto-increment starting at 5180 (same as ``5180+``).
+* (omitted)   — the default: auto-increment starting at 5280 (same as ``5280+``).
 
-NOTE for developers: the Vite frontend dev server has port 5180 pre-configured
+NOTE for developers: the Vite frontend dev server has port 5280 pre-configured
 and hard-coded (``src/frontend/app_js/vite.config.js`` proxies every API call to
-``http://localhost:5180``), so while developing against Vite the backend must
-land on 5180. Without the dev frontend server (i.e. the normal backend-served
+``http://localhost:5280``), so while developing against Vite the backend must
+land on 5280. Without the dev frontend server (i.e. the normal backend-served
 bundle) any port works equally well.
 """
 
@@ -21,13 +21,13 @@ import socket
 from .webserver_engine.webserve.src.find_free_port import find_free_port
 
 
-DEFAULT_PORT = 5180
+DEFAULT_PORT = 5280
 
 
 def parse_webserver_port(value):
     """Parse a ``--config-webserver-port`` value into ``(port, auto_increment)``.
 
-    ``None`` means the default (auto-increment from 5180). A trailing ``+``
+    ``None`` means the default (auto-increment from 5280). A trailing ``+``
     requests auto-increment; otherwise the port is fixed (fail if occupied).
     """
     if value is None:

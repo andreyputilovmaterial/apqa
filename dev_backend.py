@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Cross-platform developer tooling for the APQA dev backend (localhost:5180).
+"""Cross-platform developer tooling for the APQA dev backend (localhost:5280).
 
 The desktop app is a Python web server + browser UI. While developing against
-the Vite dev server (which hard-codes ``http://localhost:5180`` as its proxy
-target) the backend must stay on port 5180. This script is the single source of
+the Vite dev server (which hard-codes ``http://localhost:5280`` as its proxy
+target) the backend must stay on port 5280. This script is the single source of
 truth for checking, starting, stopping, restarting and health-checking that
 backend — for humans and agents alike — using **only the Python stdlib** (Python
 is already a hard requirement of the app), so it behaves identically on
@@ -29,7 +29,7 @@ Design:
   OS-specific code (netstat on Windows, lsof elsewhere).
 - ``start`` is idempotent (already running -> no-op) and starts the backend
   headlessly (``--browser no-op``), so it never pops open a browser tab.
-- ``start`` pins the port with ``--config-webserver-port 5180`` (fixed: fail if
+- ``start`` pins the port with ``--config-webserver-port 5280`` (fixed: fail if
   occupied) so the backend never silently drifts off the Vite proxy port.
 - Backend output goes to ``.dev_backend.log`` (gitignored); ``logs`` tails it.
 - Success messages print green and the key failure message prints red on an
@@ -49,7 +49,7 @@ import time
 from http.client import HTTPConnection
 from pathlib import Path
 
-DEFAULT_PORT = 5180
+DEFAULT_PORT = 5280
 DEFAULT_DB_FILE = "tests-real-sensitive-data/projects.sqlite3"
 PID_FILE_NAME = ".dev_backend.pid"
 LOG_FILE_NAME = ".dev_backend.log"
@@ -328,9 +328,9 @@ def start_backend(
     command = [
         python, "-m", "src.launcher", "--program", "ui",
         "--db-file", db_file, "--browser", "no-op",
-        # Pin the port: a fixed `5180` (no "+") means "fail if occupied", which
-        # keeps Vite's hard-coded localhost:5180 proxy target honest instead of
-        # silently drifting to 5181+.
+        # Pin the port: a fixed `5280` (no "+") means "fail if occupied", which
+        # keeps Vite's hard-coded localhost:5280 proxy target honest instead of
+        # silently drifting to 5281+.
         "--config-webserver-port", str(DEFAULT_PORT),
     ]
     process = _spawn(command, root)

@@ -28,7 +28,7 @@ def make_config():
         'script_name': 'apqa ui script',
         'credentials:year': '2026',
         'db_file': '/tmp/projects.sqlite3',
-        'http_address': 'http://localhost:5180',
+        'http_address': 'http://localhost:5280',
         'app_config': {'is_webserver_multithreaded': True},
         'iface': {
             'WebResponse': WebResponse,

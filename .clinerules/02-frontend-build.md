@@ -18,8 +18,8 @@
 - The bundle needs **only Python** (plus its requirements) — no Node, Vite, or
   backend JS. The Vite dev server additionally needs **Node** and a **running
   backend**: Vite serves only the frontend and proxies every API call to
-  `http://localhost:5180` (hard-coded in `src/frontend/app_js/vite.config.js`),
-  so keep the backend on 5180 (or edit `vite.config.js`). If no backend change
+  `http://localhost:5280` (hard-coded in `src/frontend/app_js/vite.config.js`),
+  so keep the backend on 5280 (or edit `vite.config.js`). If no backend change
   is needed, rely on Vite's hot reload alone.
 - **While iterating on frontend-only changes, verify with the Vite dev server
   and do not re-run `py_js_bundler`/`build.sh` on every change.** The dev server
