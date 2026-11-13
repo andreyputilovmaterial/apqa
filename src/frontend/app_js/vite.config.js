@@ -12,6 +12,10 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      '/health': {
+        target: 'http://localhost:5180',
+        changeOrigin: true
+      },
       '/qc': {
         target: 'http://localhost:5180',
         changeOrigin: true

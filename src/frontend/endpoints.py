@@ -24,3 +24,6 @@ from .endpoints_rule_run import (
 from .endpoints_project import (
     handle_project_crud,
 )
+from .endpoints_health import (
+    handle_health,
+)

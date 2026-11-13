@@ -13,6 +13,7 @@ from .frontend.endpoints import (
     handle_functionality,
     handle_rule_run,
     handle_project_crud,
+    handle_health,
 )
 
 
@@ -27,6 +28,7 @@ endpoints = {
     re.compile(r'^/qc/rules(?=$|/)'): handle_rule_crud,
     re.compile(r'^/qc/groups(?=$|/)'): handle_group_crud,
     re.compile(r'^/qc/project(?=$|/)'): handle_project_crud,
+    '/health': handle_health,
     re.compile(r'^/functionality(?=$|/)'): handle_functionality,
     re.compile(r'^/functionality/run-rule$'): handle_rule_run,
 

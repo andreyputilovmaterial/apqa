@@ -1,0 +1,67 @@
+
+
+/* Full-screen overlay shown when the backend is offline or is no longer serving
+   the same project file. Mirrors the look of gitgui's background_onlineindicator:
+   a semi-transparent grey backdrop with a centered panel; the panel text is
+   large grey for "offline" and red for "project file changed". */
+
+.apqa-online-monitor {
+  display: block;
+  position: fixed;
+  z-index: 999999;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(192, 192, 192, 0.6);
+}
+
+.apqa-online-monitor.online {
+  display: none;
+}
+
+.apqa-online-monitor .description {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  padding: 28px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 600ms ease;
+  text-align: center;
+  transform: translateX(-50%) translateY(-50%);
+  color: #999;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.apqa-online-monitor .config-paths-mismatch-failure {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  padding: 28px 28px 97px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 600ms ease;
+  text-align: left;
+  transform: translateX(-50%) translateY(-50%);
+  color: #aa0000;
+  font-weight: 500;
+  font-size: 16px;
+  width: 92vw;
+}
+
+.apqa-online-monitor .config-paths-mismatch-failure.error {
+  color: #990000;
+}
+
+.apqa-online-monitor .config-paths-mismatch-failure code {
+  color: #770000;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.apqa-online-monitor .apqa-online-monitor-reload {
+  color: #990000;
+  font-weight: 600;
+}

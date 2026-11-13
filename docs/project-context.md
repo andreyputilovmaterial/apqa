@@ -4,6 +4,23 @@
 
 ## Last state
 
+- **Added a `/health` liveness endpoint + a full-screen "backend offline / project changed" overlay.**
+  New `src/frontend/endpoints_health.py` (`handle_health`: `GET`/`HEAD` → 200,
+  else 405) registered as `'/health'` in `src/endpoints.py`; the webserver engine
+  already suppresses the body for `HEAD`, so one renderer serves both. Project
+  identity is **not** a second endpoint — it reuses `GET /qc/project`'s existing
+  `path` field (no top-level namespace pollution). Frontend: new
+  `src/frontend/app_js/src/app/background_onlineindicator/` component (mounted in
+  `app.js`) polls `HEAD /health` (offline → grey full-screen panel, mirroring
+  gitgui's `background_onlineindicator` look) and `GET /qc/project` (path differs
+  from the load-time path → red panel + reload link). The load-time path is read
+  from `.apqaui-html-page-project-path` (server-rendered in the bundle), falling
+  back to the first `/qc/project` response in the Vite dev server. `/health`
+  added to the Vite proxy. Tests `tests/test_endpoints_health.py` +
+  `background_onlineindicator/index.spec.js`. Validated: 866 Python tests + 178
+  vitest tests pass, `build.sh` OK, and the live Vite page shows/hides the
+  overlay when the backend is stopped/started.
+
 - **Renamed the dev-backend runtime files to `.dev_backend.{pid,log}` and added
   `docs/cheatsheet.md` (follow-up to "dev: add backend control tooling…").**
   `dev_backend.py`'s pid/log constants, the `.gitignore` entries, the `backend`
