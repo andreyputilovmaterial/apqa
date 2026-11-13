@@ -4,6 +4,17 @@
 
 ## Last state
 
+- **Adopted the `2x-` clinerules from `gitgui`.** Renamed
+  `.clinerules/08-commit-messages.md` →
+  `.clinerules/20-git-commit-messages-wording.md` and
+  `.clinerules/11-submodules-commits.md` →
+  `.clinerules/21-git-submodules-commits-order.md` (both content-updated to
+  match gitgui's versions, which add an intro line/paragraph and a fuller
+  title), and added `.clinerules/22-when-making-commits.md` and
+  `.clinerules/29-github-issues.md` verbatim from gitgui. All four files are now
+  byte-identical to `/Users/andrej/work/gitgui/.clinerules/`. Rules/docs only;
+  no code change.
+
 - **Documented the two ways to run the frontend (bundle vs Vite dev).** Added a
   "Dual run mode (npm dev vs bundle)" section to
   `.clinerules/02-frontend-build.md` and matching "Dual run mode (npm dev vs
