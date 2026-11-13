@@ -4,6 +4,20 @@
 
 ## Last state
 
+- **Fixed the `tagSuggestions` Vue render warning (roadmap item #11).**
+  `QcRulesList` (`src/frontend/app_js/src/app/qcrules_list/index.js`) computed
+  `tagSuggestions` and referenced it from the scoped-slot template
+  (`:tag-suggestions="tagSuggestions"` on `rules-tree`) but never returned it
+  from `setup()`, so Vue logged `Property "tagSuggestions" was accessed during
+  render but is not defined on instance` whenever rules were rendered (the
+  slot content is rendered inside `component-records-filter`, which is why the
+  warning pointed at `ComponentRecordsFilter`). Added `tagSuggestions` to the
+  returned object. Added `index.spec.js` — the first spec for the
+  `QcRulesList` page component — which stubs `fetch` for `/qc/rules` +
+  `/qc/groups` and asserts the distinct tags are passed to `RulesTree`; it
+  fails (returns `[]`) without the fix and passes with it. Validated: frontend
+  Vitest 168 passed / 23 files (one new test).
+
 - **Reset the create-form technical id to auto-updating when cleared (roadmap
   item #9).** In `rule_form.js` `onIdInput`, emptying the id field (empty or
   whitespace-only) now sets `idTouched` back to `false` and immediately

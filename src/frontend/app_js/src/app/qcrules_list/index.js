@@ -419,6 +419,7 @@ const QcRulesList = {
       editingId,
       cmdlets,
       ops,
+      tagSuggestions,
       load,
       createRule,
       createGroup,
