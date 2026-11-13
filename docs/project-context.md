@@ -4,6 +4,14 @@
 
 ## Last state
 
+- **Renamed the dev-backend runtime files to `.dev_backend.{pid,log}` and added
+  `docs/cheatsheet.md` (follow-up to "dev: add backend control tooling…").**
+  `dev_backend.py`'s pid/log constants, the `.gitignore` entries, the `backend`
+  skill, and `docs/development.md` / `docs/maintenance-log.md` now reference
+  `.dev_backend.pid` / `.dev_backend.log`. `docs/cheatsheet.md` is a new
+  quick-reference for build / run / dev-backend / dev-test / frontend commands.
+
+
 - **Removed the dead `vue` importmap from `src/frontend/app_js/index.html`.**
   `index.html` is Vite's entry point only — the backend-served app never loads
   it (it serves its own HTML via `make_html.py`), and in Vite dev mode `vue`

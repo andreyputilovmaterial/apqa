@@ -21,7 +21,7 @@ Exit codes: 0 = success / healthy / running, 1 = error / not running, so callers
 and agents can chain with ``&&`` / ``||``.
 
 Design:
-- A pid file (``.apqa-dev-backend.pid``, gitignored) is the authoritative record
+- A pid file (``.dev_backend.pid``, gitignored) is the authoritative record
   of the process *this tool* started, so ``stop``/``restart`` kill exactly that
   process — fully portable, no ``lsof`` guessing.
 - Only as a *fallback* (a backend started outside this tool, e.g. the VS Code
@@ -31,7 +31,7 @@ Design:
   headlessly (``--browser no-op``), so it never pops open a browser tab.
 - ``start`` pins the port with ``--config-webserver-port 5180`` (fixed: fail if
   occupied) so the backend never silently drifts off the Vite proxy port.
-- Backend output goes to ``.apqa-dev-backend.log`` (gitignored); ``logs`` tails it.
+- Backend output goes to ``.dev_backend.log`` (gitignored); ``logs`` tails it.
 """
 
 from __future__ import annotations
@@ -49,8 +49,8 @@ from pathlib import Path
 
 DEFAULT_PORT = 5180
 DEFAULT_DB_FILE = "tests-real-sensitive-data/projects.sqlite3"
-PID_FILE_NAME = ".apqa-dev-backend.pid"
-LOG_FILE_NAME = ".apqa-dev-backend.log"
+PID_FILE_NAME = ".dev_backend.pid"
+LOG_FILE_NAME = ".dev_backend.log"
 HEALTH_PATH = "/"
 HEALTH_TIMEOUT_SECONDS = 2.0
 START_WAIT_SECONDS = 15.0

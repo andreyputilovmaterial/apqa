@@ -28,8 +28,8 @@ __pycache__/
 .env
 
 # --- Dev backend tooling (dev_backend.py) ---
-.apqa-dev-backend.pid
-.apqa-dev-backend.log
+.dev_backend.pid
+.dev_backend.log
 
 # --- Editor files ---
 # .vscode/*

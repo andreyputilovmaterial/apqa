@@ -22,7 +22,7 @@ The backend is the Python web server that serves the app UI and its `/qc`,
 - `stop`    — stop it (idempotent)
 - `restart` — stop + start + wait for health
 - `health`  — HTTP probe of `http://localhost:5180/` (exit 0 = HTTP 200)
-- `logs`    — tail the backend log `.apqa-dev-backend.log`
+- `logs`    — tail the backend log `.dev_backend.log`
 
 ## Example
 

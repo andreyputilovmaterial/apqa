@@ -115,8 +115,8 @@ server without popping a browser.
    server starts); call `launch_browser_for_mode` instead of `launch_browser`.
 3. `dev_backend.py` — the subcommands above; pid file + port→PID fallback;
    HTTP 200 health probe; headless start (`--browser no-op`); output to
-   `.apqa-dev-backend.log`.
-4. `.gitignore` — ignore `.apqa-dev-backend.pid` and `.apqa-dev-backend.log`.
+   `.dev_backend.log`.
+4. `.gitignore` — ignore `.dev_backend.pid` and `.dev_backend.log`.
 5. `.clinerules/skills/backend/SKILL.md` + `.clinerules/30-dev-backend-tooling.md`
    — tell the agent to use `dev_backend.py` and never `lsof`/`kill`/`sudo`.
 

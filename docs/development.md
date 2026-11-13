@@ -272,11 +272,11 @@ the repo root — see the `backend` skill and
 `.clinerules/30-dev-backend-tooling.md`. It pins the port to 5180
 (`--config-webserver-port 5180`), starts headlessly (`--browser no-op`),
 records the spawned PID in a gitignored
-`.apqa-dev-backend.pid`, and health-checks `http://localhost:5180/`.
+`.dev_backend.pid`, and health-checks `http://localhost:5180/`.
 `start`/`stop`/`restart` are idempotent; a backend started outside the script
 (e.g. by the VS Code debugger, which writes no pid file) is handled by an
 OS-branched port→PID fallback (`netstat` on Windows, `lsof` elsewhere). Backend
-output is captured in `.apqa-dev-backend.log` (`dev_backend.py logs`).
+output is captured in `.dev_backend.log` (`dev_backend.py logs`).
 
 The UI program also gained a `--browser` flag (see `src/browser_launcher.py`,
 used by the `main_ui_program` entry point): `launch-system-default-browser`
