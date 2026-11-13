@@ -4,6 +4,36 @@
 
 ## Last state
 
+- **Implemented the field-access + shape-changing cmdlet set (roadmap item #10).**
+  New middle processors: `select-field` (block → field value; array → flat list
+  of that field per iteration, the JS `obj.field` / `items.map(x => x.field)`
+  mental model), `select-item` (array element by zero-based `index`, negatives
+  allowed), `select-range` (array sub-range `start` inclusive / `stop` exclusive,
+  no step), `map` (ForEach-Object: `args.transform` is a cmdlet chain run per
+  iteration with the iteration as its piped value), and `where` (filter:
+  `args.predicate` is a cmdlet chain, an iteration is kept when its result is
+  truthy via `bool()`). Registered in `src/cmdlets/__init__.py`; modules under
+  `src/cmdlets/{select_field,select_item,select_range,map_,where}/`. Missing
+  field / out-of-range / bad type all fail early with readable errors. `where`
+  predicates stay limited to existing predicate/validation cmdlets until
+  comparison-as-cmdlet lands (roadmap idea).
+
+- **Added the `cmdlet-chain` arg type (a single cmdlet chain) and its editor.**
+  `map`/`where` declare `transform`/`predicate` as type `cmdlet-chain` (distinct
+  from the plural `cmdlet-chains` used by `and`/`or`/`bit-*` operands).
+  `input_cmdlet` renders it as one `input_cmdlet_chain`; `input_cmdlet_chain`
+  gained a `firstKinds` prop (default `['source']`) so callbacks pass
+  `['processor','terminal']` (a callback's first cmdlet receives the iteration,
+  so it must not be a source reader). Docs updated: `docs/cmdlet-data-formats.md`
+  (naming + shape-changing sections, arg types, remaining-to-implement),
+  `docs/development.md` (middle-processor list, `map`/`where` shapes, arg types);
+  roadmap item #10 marked Done plus three new ideas (try-catch/error value,
+  comparison-as-cmdlet, `select-item` by name). Naming note: `select-field` (and
+  `map`/`where` vs `filter`/`foreach-object`) is provisional per the docs.
+  Validated: backend `pytest tests/` 385 passed / 3 skipped (incl. new
+  `tests/test_shape_cmdlets.py`, 34 tests); frontend Vitest 166 passed / 22 files
+  (incl. new `cmdlet-chain`/`firstKinds` specs).
+
 - **Adopted the `2x-` clinerules from `gitgui`.** Renamed
   `.clinerules/08-commit-messages.md` →
   `.clinerules/20-git-commit-messages-wording.md` and

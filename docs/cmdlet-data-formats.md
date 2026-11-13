@@ -117,7 +117,7 @@ Three compound types, which may nest (a field may itself be scalar or compound):
 - Each row is a **block** whose fields are the sheet's columns (column names from
   row 1, made unique).
 - `record.field["Title Details"]` reads the sheet by name; reading a column from
-  that sheet (e.g. `select-property "B"`) has no ambiguity from multiple "B"
+  that sheet (e.g. `select-field "B"`) has no ambiguity from multiple "B"
   columns because the field names were made unique.
 
 ## Cmdlet naming
@@ -127,12 +127,18 @@ array is a workbook, a sheet, a table, or a query result:
 
 | PowerShell | Meaning | Cmdlet |
 | --- | --- | --- |
-| `Select-Object -ExpandProperty Name` | extract one field from every iteration → flat list | `select-property` |
-| `Select-Object -Property A, B` | keep a subset of fields (narrower blocks) | `select-properties` |
-| `Select-Object -First/-Last/-Skip/-Index` | pick specific iterations (by position or by name) | `select-item` |
+| `obj.field` (JS-style) / `Select-Object -ExpandProperty Name` | extract one field from a block, or one field from every iteration → flat list | `select-field` |
+| `Select-Object -First/-Last/-Skip/-Index` | pick one element by index, or a sub-range | `select-item`, `select-range` |
 | `Where-Object { … }` | filter iterations by a condition | `where` |
 | `ForEach-Object { … }` | map/transform each iteration | `map` |
 | `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
+
+> **Naming note (unsettled).** `select-field` is a deliberately provisional name
+> for "read one field" — the verb (`select-` vs `get-`/`read-`) and the noun
+> (`field` vs `property`) are still being felt out and may change. Likewise
+> `map`/`where` are the spec names for ForEach-Object/Where-Object;
+> `foreach-object` and `filter` are equally valid alternatives. Treat these as
+> placeholders, not a final API.
 
 ## Validation cmdlets
 
@@ -218,14 +224,21 @@ markup/formatting. The common prefix is `transform-` (see
 
 ## Shape-changing operations
 
-On an **array**:
+On a **block** (object) or an **array** (collection):
 
-- `where` (filter iterations) → an array again, same field shape.
-- `select-item` (pick one iteration, by name or by position) → a **block** (one
-  field per column).
-- `select-properties` (filter fields) → an array again, smaller field shape.
-- `select-property` (extract one field) → a flat list of that field's values
-  (this is what `… | select-property "B" | count` uses).
+- `select-field` (read one field) — on a block → the field's value; on an array →
+  a flat list of that field's value per iteration (like `items.map(x => x.field)`).
+  A missing field raises; nesting is by chaining (`select-field "a" | select-field "b"`).
+- `select-item` (pick one element of an array) — `args.index` (0-based; negative
+  counts from the end) → that element. Selecting by name is deferred until source
+  readers implement record/row naming.
+- `select-range` (sub-range of an array) — `args.start` (inclusive) /
+  `args.stop` (exclusive), both optional, Python-slice semantics, no step.
+- `where` (filter iterations) — `args.predicate` is a **cmdlet chain** run once
+  per iteration (the iteration is its piped value); an iteration is kept when the
+  chain's result is truthy. Returns an array again, same field shape.
+- `map` (transform iterations) — `args.transform` is a **cmdlet chain** run once
+  per iteration; returns an array of the transformed values (any shape).
 - `sort` (reorder iterations) → an array again, same field shape. `args.by`
   (optional) sorts blocks by a field; without it an array of scalars sorts
   naturally. `args.descending: true` reverses the order.
@@ -381,7 +394,9 @@ served to the frontend by `GET /functionality/cmdlet-metadata` (see
   plus optional `default` and `options`.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
-`json`, and `cmdlet-chains` (a list of cmdlet chains).
+`json`, `cmdlet-chains` (a list of cmdlet chains, e.g. `and`/`or`/`bit-*`
+`operands`), and `cmdlet-chain` (a single cmdlet chain, e.g. `map`'s `transform`
+or `where`'s `predicate`).
 
 ## Folder aliases
 
@@ -400,6 +415,8 @@ value a cmdlet can return — rather than a plain path.
   annotations; until the runtime wrappers are added, the plain-Python rules above
   apply.
 - Source readers beyond `get-content-excel` and `get-content-mdd` (CSV, SPSS, DB,
-  …) and the full middle/terminal cmdlet set (`select-property`,
-  `select-properties`, `select-item`, `where`, `map`, `to-string`, …).
+  …) and the rest of the middle/terminal cmdlet set (`select-properties`,
+  `to-string`, comparison-as-cmdlet `eq`/`ne`/…, …).
+- Record/row naming in source readers (per "Row & column names") — required for
+  name-based `select-item` on arrays.
 

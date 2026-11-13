@@ -25,12 +25,17 @@ from . import get_content_network_fetch  # noqa: F401 - import registers the cmd
 from . import is_sysmissing  # noqa: F401 - import registers the cmdlet
 from . import length  # noqa: F401 - import registers the cmdlet
 from . import literal  # noqa: F401 - import registers the cmdlet
+from . import map_  # noqa: F401 - import registers the cmdlet
 from . import matches  # noqa: F401 - import registers the cmdlet
 from . import not_  # noqa: F401 - import registers the cmdlet
 from . import or_  # noqa: F401 - import registers the cmdlet
+from . import select_field  # noqa: F401 - import registers the cmdlet
+from . import select_item  # noqa: F401 - import registers the cmdlet
+from . import select_range  # noqa: F401 - import registers the cmdlet
 from . import sort  # noqa: F401 - import registers the cmdlet
 from . import transform_strip_html  # noqa: F401 - import registers the optional-dep cmdlet
 from . import transform_text_regex  # noqa: F401 - import registers the cmdlet
 from . import validate_network_request_result  # noqa: F401 - import registers the cmdlet
 from . import validate_xml_compatible  # noqa: F401 - import registers the optional-dep cmdlet
+from . import where  # noqa: F401 - import registers the cmdlet
 from .comparison_ops import ComparisonRegistry, comparisons

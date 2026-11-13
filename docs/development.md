@@ -332,7 +332,7 @@ replaced or migrated away if a concrete reason appears.
 A QC rule has three essential parts: **left side**, **comparison op**, **right side**.
 
 - Left and right sides are **chains of cmdlets** (PowerShell-like pipes), e.g.:
-  `get-content Specs.xlsx | select-item "Title Details" | select-property "B" | count`.
+  `get-content Specs.xlsx | select-field "Title Details" | select-field "B" | count`.
 - Stored shape of a cmdlet: `{ cmdlet: <name>, args: { <param>: <value>, ... } }`.
   `args` is always a named mapping (flags like `-Recurse` become `{ recurse: true }`)
   and may be omitted when empty. `args` values are **not restricted to strings**:
@@ -353,8 +353,8 @@ A QC rule has three essential parts: **left side**, **comparison op**, **right s
 Three cmdlet types:
 
 1. **Source readers** — read source data (Excel, SPSS, CSV, text, databases, …).
-2. **Middle processors** — `select-property`, `select-properties`,
-   `select-item`, `where`, `map`, `sort`, `count`, `to-string`, …
+2. **Middle processors** — `select-field`, `select-item`, `select-range`,
+   `where`, `map`, `sort`, `count`, `to-string`, …
 3. **Terminal** — produce a value for comparison.
 
 Cmdlets are defined through a **global registry** (plugin-like) and are
@@ -368,14 +368,18 @@ single-punch categorical, multi-punch categorical. Compound types: **block**
 `cmdlet-data-formats.md`), and **array** (a block repeated per iteration).
 
 **`map` (ForEach-Object).** `map` transforms each iteration of an array. Its
-argument is a **chain of cmdlets** (or a single cmdlet) run once per iteration,
-with the iteration threaded through as the piped value. A chain is a list of
-`{ cmdlet, args }` mappings, so it is JSON-serializable and stores in the DB
-without special handling. Proposed shape:
+argument is a **cmdlet chain** (`args.transform`, arg type `cmdlet-chain`) run
+once per iteration, with the iteration threaded through as the piped value:
 
-    { "cmdlet": "map", "args": { "transform": [ { "cmdlet": "...", "args": {} }, … ] } }
+    { "cmdlet": "map", "args": { "transform": [ { "cmdlet": "select-field", "args": { "field": "B" } } ] } }
 
-`args["transform"]` may also be a single cmdlet mapping (not wrapped in a list).
+**`where` (Where-Object / filter).** `where` keeps the iterations of an array for
+which a **cmdlet chain** (`args.predicate`, arg type `cmdlet-chain`) returns a
+truthy value; the iteration is threaded through as the piped value and the result
+is coerced with `bool()`. For now the predicate is limited to the existing
+predicate/validation cmdlets (`is-sysmissing`, `not`, `and`, `or`, `validate-*`,
+or truthiness of a field); comparison-as-cmdlet (`eq`/`ne`/…) is tracked in
+`docs/roadmap.md`.
 
 **`sort`.** `sort` reorders an array: `args.by` (optional) sorts blocks by a
 field, without it an array of scalars sorts naturally, and
@@ -484,8 +488,9 @@ An **arg schema** is `{ name, type, required, description }` plus optional
 
 - `text` (default), `number`, `boolean`, `path`, `options` (single-select from
   `options`), `list` (comma-separated text → array), `json` (e.g.
-  `literal.value`), and `cmdlet-chains` (a list of cmdlet chains, e.g.
-  `and`/`or`/`bit-*` `operands`).
+  `literal.value`), `cmdlet-chains` (a list of cmdlet chains, e.g.
+  `and`/`or`/`bit-*` `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g.
+  `map`'s `transform` / `where`'s `predicate`).
 
 `src/cmdlets/meta.py` snapshots both registries into `{ cmdlets, ops }`, exposed
 as `get_cmdlet_metadata` on `config['iface']` and served by

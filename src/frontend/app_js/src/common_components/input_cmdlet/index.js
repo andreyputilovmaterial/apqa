@@ -17,6 +17,8 @@ function defaultArgValue(arg) {
       return [];
     case 'cmdlet-chains':
       return [];
+    case 'cmdlet-chain':
+      return [];
     case 'json':
       return null;
     default:
@@ -92,6 +94,9 @@ const InputCmdlet = {
           <button type="button" class="apqa-input-cmdlet-chain-item-remove" @click="removeChain(arg, ci)">×</button>
         </div>
         <button type="button" class="apqa-input-cmdlet-add-chain" @click="addChain(arg)">Add chain</button>
+      </div>
+      <div v-else-if="arg.type === 'cmdlet-chain'" class="apqa-input-cmdlet-arg-chain">
+        <component-input-cmdlet-chain :model-value="chainsValue(arg)" :cmdlets="cmdlets" :first-kinds="['processor', 'terminal']" @update:model-value="setChainValue(arg, $event)" />
       </div>
       <input v-else :type="inputType(arg)" class="apqa-input-cmdlet-arg-input" :name="arg.name" :value="args[arg.name]" @input="setArg(arg, $event.target.value)" />
 
@@ -230,6 +235,11 @@ const InputCmdlet = {
       emitValue();
     }
 
+    function setChainValue(arg, value) {
+      args[arg.name] = Array.isArray(value) ? value : [];
+      emitValue();
+    }
+
     function inputType(arg) {
       return arg.type === 'number' ? 'number' : 'text';
     }
@@ -252,6 +262,7 @@ const InputCmdlet = {
       addChain,
       removeChain,
       setChain,
+      setChainValue,
       inputType,
     };
   },

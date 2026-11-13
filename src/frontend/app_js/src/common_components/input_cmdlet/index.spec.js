@@ -6,6 +6,7 @@ const CMDLETS = [
   { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'json', required: true }] },
   { name: 'count', kind: 'processor', args: [{ name: 'fail_on_sysmissing', type: 'boolean', default: false }] },
   { name: 'matches', kind: 'processor', args: [{ name: 'pattern', type: 'text', required: true }] },
+  { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
 ];
 
 // `input_cmdlet` references the chain component by its global name for the
@@ -72,5 +73,11 @@ describe('InputCmdlet', () => {
     expect(wrapper.emitted('update:modelValue').at(-1)).toEqual([
       { cmdlet: 'matches', args: { pattern: 'abc' } },
     ]);
+  });
+
+  it('renders a single chain for a cmdlet-chain arg', () => {
+    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'map', args: {} } });
+    expect(wrapper.find('.apqa-input-cmdlet-arg-chain').exists()).toBe(true);
+    expect(wrapper.find('.apqa-input-cmdlet-arg-chain .chain-stub').exists()).toBe(true);
   });
 });

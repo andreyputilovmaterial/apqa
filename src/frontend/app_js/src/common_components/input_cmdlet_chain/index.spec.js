@@ -64,4 +64,13 @@ describe('InputCmdletChain', () => {
     const options = wrapper.findAll('.apqa-input-search-select-option');
     expect(options.map((o) => o.text())).toEqual(['count']);
   });
+
+  it('offers processors/terminals first when firstKinds is given', async () => {
+    const wrapper = mountChain({ firstKinds: ['processor', 'terminal'] });
+    const trigger = wrapper.find('.apqa-input-search-select-trigger');
+    expect(trigger.text()).toContain('Select cmdlet');
+    await trigger.trigger('click');
+    const options = wrapper.findAll('.apqa-input-search-select-option');
+    expect(options.map((o) => o.text())).toEqual(['count']);
+  });
 });

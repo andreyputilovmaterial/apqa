@@ -18,6 +18,7 @@ const InputCmdletChain = {
   props: {
     modelValue: { type: Array, default: () => [] },
     cmdlets: { type: Array, default: () => [] },
+    firstKinds: { type: Array, default: null },
   },
 
   emits: ['update:modelValue', 'change', 'input'],
@@ -42,7 +43,7 @@ const InputCmdletChain = {
       :model-value="null"
       :cmdlets="cmdlets"
       :kinds="kindsFor(entries.length)"
-      :placeholder="entries.length === 0 ? 'Select source…' : 'Select next cmdlet…'"
+      :placeholder="emptyPlaceholder"
       @update:model-value="onAppend($event)"
     />
   </div>
@@ -53,8 +54,14 @@ const InputCmdletChain = {
     const entries = computed(() => (props.modelValue || []).filter((c) => c != null));
 
     function kindsFor(index) {
-      return index === 0 ? ['source'] : ['processor', 'terminal'];
+      if (index === 0) return props.firstKinds?.length ? props.firstKinds : ['source'];
+      return ['processor', 'terminal'];
     }
+
+    const emptyPlaceholder = computed(() => {
+      if (entries.value.length !== 0) return 'Select next cmdlet…';
+      return props.firstKinds?.length ? 'Select cmdlet…' : 'Select source…';
+    });
 
     function normalizeChain() {
       return (props.modelValue || []).filter((c) => c != null);
@@ -80,7 +87,7 @@ const InputCmdletChain = {
       emitChain(next);
     }
 
-    return { entries, kindsFor, onUpdateAt, onAppend };
+    return { entries, kindsFor, emptyPlaceholder, onUpdateAt, onAppend };
   },
 };
 

@@ -3,7 +3,7 @@
 
 The URL is taken from the **piped value** (a text value), so this cmdlet is a
 *processor*: it follows a source that produces a URL (for example ``literal``
-with a URL value, or — once the ``select-property`` middle cmdlet exists — a URL
+with a URL value, or — once the ``select-field`` middle cmdlet exists — a URL
 read from an Excel/CSV column).
 
 Args (stored named mapping):

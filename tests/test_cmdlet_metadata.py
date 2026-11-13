@@ -72,6 +72,29 @@ def test_network_cmdlet_kinds():
     assert kinds['validate-network-request-result'] == 'terminal'
 
 
+def test_shape_cmdlet_kinds_and_args():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    for name in ('select-field', 'select-item', 'select-range', 'map', 'where'):
+        assert meta[name]['kind'] == 'processor'
+
+    select_field_args = {a['name']: a for a in meta['select-field']['args']}
+    assert select_field_args['field']['type'] == 'text'
+    assert select_field_args['field']['required'] is True
+
+    select_item_args = {a['name']: a for a in meta['select-item']['args']}
+    assert select_item_args['index']['type'] == 'number'
+
+    select_range_args = {a['name']: a for a in meta['select-range']['args']}
+    assert select_range_args['start']['type'] == 'number'
+    assert select_range_args['stop']['type'] == 'number'
+
+    map_args = {a['name']: a for a in meta['map']['args']}
+    assert map_args['transform']['type'] == 'cmdlet-chain'
+
+    where_args = {a['name']: a for a in meta['where']['args']}
+    assert where_args['predicate']['type'] == 'cmdlet-chain'
+
+
 def test_comparison_ops_and_op_args():
     ops = {o['name']: o for o in get_cmdlet_metadata()['ops']}
     for name in ('eq', 'ne', 'eq-unordered', 'lt', 'le', 'gt', 'ge', 'contains'):
