@@ -93,6 +93,7 @@ h1 {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-items: flex-start;
   width: 100%;
 }
 .apqaui-html-page-header .apqaui-html-pagename {
@@ -102,6 +103,46 @@ h1 {
   font-size: 20px;
   padding-top: 20px;
   padding-bottom: 12px;
+}
+.apqaui-html-page-header .apqaui-html-page-brand {
+  display: flex;
+  flex-direction: column;
+  margin-right: auto;
+  min-width: 0;
+}
+.apqaui-html-page-header .apqaui-html-page-brand .apqaui-html-pagename {
+  margin-right: 0;
+}
+.apqaui-html-page-header .apqaui-html-page-project {
+  display: flex;
+  flex-direction: column;
+  color: #8f8f8f;
+  font-size: 14px;
+  font-weight: 500;
+}
+.apqaui-html-page-header .apqaui-html-page-project-line {
+  margin: 0;
+  padding: 0;
+  min-height: 1.2em;
+  line-height: 1.2;
+}
+/* The brand rows are plain text: no glow/shadow, transparency, underline or
+   outline — only the requested #c5c5c5 / #8f8f8f color and 500 weight. */
+.apqaui-html-page-header .apqaui-html-page-brand .apqaui-html-pagename,
+.apqaui-html-page-header .apqaui-html-page-project-line {
+  text-shadow: none;
+  text-decoration: none;
+  outline: none;
+  opacity: 1;
+  background: none;
+  border: none;
+  box-shadow: none;
+  filter: none;
+}
+.apqaui-html-page-header .apqaui-html-page-navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 .apqaui-html-page-header .apqaui-html-page-navigation > ul {
   display: flex;
@@ -113,6 +154,23 @@ h1 {
 }
 .apqaui-html-page-header .apqaui-html-page-navigation > ul > li {
   padding: .5em;
+}
+.apqaui-html-page-header .apqaui-html-page-navigation .apqaui-html-page-project-settings {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 0.5em;
+}
+.apqaui-html-page-header .apqaui-html-page-navigation .apqaui-html-page-project-settings a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  text-decoration: none;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.apqaui-html-page-header .apqaui-html-page-navigation .apqaui-html-page-project-settings a:hover {
+  color: #333;
 }
 .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:hover, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:visited, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:link, .apqaui-html-page-header .apqaui-html-page-navigation > ul > li a:active {
   color: #385;
@@ -146,13 +204,11 @@ h1 {
   margin-bottom: 0;
 }
 .apqaui-page-header-narrow .header .apqaui-html-pagename {
-  padding: .5em;
-  padding-left: 0;
+  padding: .5em 0 0 0;
   margin: 0;
   font-size: 14px;
-  margin-right: auto;
   font-weight: 500;
-  color: rgba(66,66,66,.1)
+  color: #c5c5c5
 }
 .apqaui-page-header-narrow .apqaui-html-page-header .apqaui-html-page-navigation > ul {
   margin-right: -0.5em;

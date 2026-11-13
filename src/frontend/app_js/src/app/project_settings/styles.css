@@ -1,0 +1,76 @@
+/* Project settings is a normal content modal: the shared shell scrolls the whole
+   content when it is taller than the viewport (no sticky header). */
+.apqa-project-settings-form {
+  gap: 12px;
+}
+
+.apqa-project-settings-form-header {
+  flex: 0 0 auto;
+}
+
+.apqa-project-settings-form-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.apqa-project-settings-form-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.apqa-project-settings-form-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.apqa-project-settings-form-error {
+  color: #cc0000;
+}
+
+.apqa-project-settings-form-loading {
+  color: #777;
+}
+
+.apqa-project-settings-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.apqa-project-settings-form-field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.apqa-project-settings-form-input {
+  font: inherit;
+  padding: 5px 7px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+}
+
+.apqa-project-settings-form-textarea {
+  resize: vertical;
+  min-height: 3em;
+}
+
+.apqa-project-settings-form .apqa-button-primary {
+  background: #385;
+  border-color: #385;
+  color: #fff;
+}
+
+.apqa-project-settings-form .apqa-button-primary:hover {
+  background: #217346;
+  border-color: #217346;
+}

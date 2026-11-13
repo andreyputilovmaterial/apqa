@@ -4,6 +4,29 @@
 
 ## Last state
 
+- **Project name/path/description now live in the page header (roadmap item).**
+  The header (`.apqaui-html-page-header`) gained a left brand column with the
+  "apqaui app" wordmark (`#dfdfdf`) and, directly under it with no vertical
+  gaps, three `#666` lines: database file path, project name, project
+  description. All four rows share one size (14px) and weight (500), and are
+  styled as plain text — no text-shadow/box-shadow/glow, transparency, underline
+  or outline (explicit `text-shadow:none`, `opacity:1`, etc. on the brand
+  rows). A gear icon (`ri-settings-3-line`) sits in the right column below
+  the nav links and opens a new `project_settings` modal (name + description +
+  Save), stored via `PUT /qc/project`. The page title is now
+  `QC rules for <project name>` (fallback `QC rules`). Two rendering paths keep
+  dev and bundle consistent: the backend server-renders the values in
+  `endpoints_html_paths.py`, and a tiny `ProjectHeaderPopulator` (mounted in
+  `app.js`) re-applies `GET /qc/project` client-side so the static Vite
+  `index.html` header also fills in; the modal updates header + title in place
+  (no full reload). `GET /qc/project` now also returns the `path` (from
+  `db_file.resource_path`). New files under
+  `src/frontend/app_js/src/app/project_settings/` (`index.js`, `styles.css`,
+  `project_header.js`, `populator.js`, `index.spec.js`). Validated: backend
+  837 passed, frontend 174 passed; full `build.sh` OK (bundle + `app.js` contain
+  the new modal/populator). Note: the `<h1>` ("Manage QC rule list") was left
+  unchanged — heading wording is the separate roadmap item #27.
+
 - **Added project-level metadata to the rules database file (roadmap item).**
   The DB file now carries a single **project record** — `name`, `comment`, and
   an extensible `meta` bag — alongside `rules` and `groups`, in **both**

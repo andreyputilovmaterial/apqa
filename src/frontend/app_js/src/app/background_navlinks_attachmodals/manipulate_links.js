@@ -6,6 +6,7 @@ import safetyUrlCheck from './safetycheck';
 import logError from '@/common_components/_log_error_proxy';
 import { createModal } from '@/common_components/modals/modals';
 import TestPageModal from '@/app/testpage/index';
+import ProjectSettingsModal from '@/app/project_settings/index';
 
 
 const LinksSiteComponent = {
@@ -55,6 +56,7 @@ const LinksSiteComponent = {
 
       const VUE_MODALS = {
         testpage: TestPageModal,
+        project: ProjectSettingsModal,
       };
 
       const createVueModalHandler = ( name ) => function( event ) {

@@ -51,7 +51,10 @@ def call(config, method, path, body=None):
 def test_get_project_empty(config):
     status, data = call(config, 'GET', '/qc/project')
     assert status == 200
-    assert data == {'project': {'name': '', 'comment': '', 'meta': {}}}
+    assert data == {
+        'project': {'name': '', 'comment': '', 'meta': {}},
+        'path': str(config['iface']['db_file'].resource_path),
+    }
 
 
 def test_update_and_get_project(config):

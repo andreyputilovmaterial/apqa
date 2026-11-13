@@ -37,6 +37,7 @@ import ManipulateNavLinksDummyWrapper from './app/background_navlinks_attachmoda
 // app-specific views and features
 import ErrorView from './app/apppane_errorview/index';
 import QcRulesList from './app/qcrules_list/index';
+import ProjectHeaderPopulator from './app/project_settings/populator';
 import useErrorReporting from './common_app_exposed_defs/error_reporting/index';
 
 
@@ -60,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <component-qcrules-list></component-qcrules-list>
   </div>
   <background-navlinks-attachmodals></background-navlinks-attachmodals>
+  <project-header-populator></project-header-populator>
   <modals-site></modals-site>
 </div>
 `,
@@ -67,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
       'errorbanner': ErrorView,
       'component-qcrules-list': QcRulesList,
       'background-navlinks-attachmodals': ManipulateNavLinksDummyWrapper,
+      'project-header-populator': ProjectHeaderPopulator,
       'modals-site': ModalsSite,
     },
     setup() {

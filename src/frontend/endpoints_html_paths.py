@@ -18,8 +18,15 @@ def render_block_banner_config(config):
 '''
 
 
-def render_block_header_nav():
-    return '''
+def render_block_header_nav(include_project_settings=False):
+    settings = '''
+    <div class="apqaui-html-page-project-settings">
+        <a href="#project-settings" data-open-vue-modal="project" navigation-role="project-settings" aria-label="Edit project name and description" title="Edit project name and description">
+            <i class="ri-settings-3-line" aria-hidden="true"></i>
+        </a>
+    </div>
+''' if include_project_settings else ''
+    return f'''
 <div class="apqaui-html-page-navigation">
     <ul>
         <li navigation-role="home"><a href="/" target="_blank">Home</a></li>
@@ -28,6 +35,19 @@ def render_block_header_nav():
         <li navigation-role="help"><a href="/help" target="_blank">Help</a></li>
         <li navigation-role="testpage"><a href="#testpage" data-open-vue-modal="testpage">Test page</a></li>
     </ul>
+    {settings}
+</div>
+'''
+
+
+def render_block_header_project(project, db_path):
+    name = project.name or '' if project else ''
+    comment = project.comment or '' if project else ''
+    return f'''
+<div class="apqaui-html-page-project">
+    <div class="apqaui-html-page-project-line apqaui-html-page-project-path">{html.escape(db_path or '')}</div>
+    <div class="apqaui-html-page-project-line apqaui-html-page-project-name">Project name: {html.escape(name)}</div>
+    <div class="apqaui-html-page-project-line apqaui-html-page-project-comment">Description: {html.escape(comment)}</div>
 </div>
 '''
 
@@ -39,6 +59,24 @@ def render_block_html_page_navigatation_block(pagename,config):
 <div class="apqaui-html-page-header-outer">
     <div class="apqaui-html-page-header">
         <div class="apqaui-html-pagename">{pagename}</div>
+        {nav}
+    </div>
+    {banner_apqauiapp_folders_config}
+</div>
+'''
+
+
+def render_block_html_page_home_navigatation_block(config, project, db_path):
+    banner_apqauiapp_folders_config = render_block_banner_config(config)
+    nav = render_block_header_nav(include_project_settings=True)
+    project_block = render_block_header_project(project, db_path)
+    return f'''
+<div class="apqaui-html-page-header-outer">
+    <div class="apqaui-html-page-header">
+        <div class="apqaui-html-page-brand">
+            <div class="apqaui-html-pagename">apqaui app</div>
+            {project_block}
+        </div>
         {nav}
     </div>
     {banner_apqauiapp_folders_config}
@@ -81,12 +119,23 @@ def render_page_home(net_request_handler, config: dict,added_data=None):
     WebResponse = config.get('iface').get('WebResponse')
     year = config.get("credentials:year")
 
-    title = f'Manage QC rules'
+    db_file = config.get('iface', {}).get('db_file')
+    project = None
+    if db_file is not None:
+        try:
+            project = db_file.get_project()
+        except Exception:
+            project = None
+
+    project_name = (project.name or '').strip() if project else ''
+    title = f'QC rules for {project_name}' if project_name else 'QC rules'
     page_h1 = f'Manage QC rule list'
+
+    db_path = config.get('db_file') or (getattr(db_file, 'resource_path', '') if db_file is not None else '')
 
     page_body = make_html(
         title = title,
-        header_block = render_block_html_page_navigatation_block(pagename='apqaui app', config=config),
+        header_block = render_block_html_page_home_navigatation_block(config, project, db_path),
         footer_block = f'@AP 2026-{html.escape(year)}',
         h1 = page_h1,
         assets = [] + \

@@ -36,7 +36,10 @@ def handle_project_crud(net_request_handler, config: dict, added_data=None):
     # ---- handlers -----------------------------------------------------------
 
     def handle_get_project():
-        return json_response(200, {'project': db_file.get_project().to_dict()})
+        return json_response(200, {
+            'project': db_file.get_project().to_dict(),
+            'path': db_file.resource_path,
+        })
 
     def handle_update_project():
         payload = read_json_body()
