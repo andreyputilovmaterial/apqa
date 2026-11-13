@@ -177,16 +177,27 @@
   max-width: 600px;
   background: #fff;
   padding: 6px;
+  border: 1px solid #d0d0d0;
   border-radius: 7px;
-  border-color: #ddd;
   margin: 0;
   font-size: 15px;
   font-weight: 300;
   color: #555;
   transition: 600ms all ease;
 }
-.apqa-modal-form .apqa-button-close:hover{
-  /* background: #e0e0e0; */
-  /* border-color: #000; */
-  color: #000;
+.apqa-modal-form .apqa-button-close:hover {
+  border-color: #000;
+}
+.apqa-modal-form .apqa-button-close.apqa-button-primary {
+  background: #385;
+  border-color: #2c7d51;
+  color: #fff;
+  /* The green→white reversal is a big change, so it snaps faster than the
+     secondary button's gentle 600ms fade. */
+  transition: 150ms all ease;
+}
+.apqa-modal-form .apqa-button-close.apqa-button-primary:hover {
+  background: #fff;
+  border-color: #385;
+  color: #217346;
 }

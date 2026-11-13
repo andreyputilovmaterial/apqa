@@ -61,14 +61,3 @@
   resize: vertical;
   min-height: 3em;
 }
-
-.apqa-project-settings-form .apqa-button-primary {
-  background: #385;
-  border-color: #385;
-  color: #fff;
-}
-
-.apqa-project-settings-form .apqa-button-primary:hover {
-  background: #217346;
-  border-color: #217346;
-}

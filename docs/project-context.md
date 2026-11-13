@@ -4,6 +4,18 @@
 
 ## Last state
 
+- **Flattened modal footer button borders and reworked primary/secondary
+  colors.** The footer buttons (`.apqa-button-close`) only set `border-color`,
+  so the browser's default `outset` bevel rendered light left/top and dark
+  right/bottom edges. Changed to `border: 1px solid #d0d0d0` with hover
+  `border-color: #000` (secondary/cancel), and moved the primary style into
+  `modals/styles.css` as `.apqa-button-close.apqa-button-primary`:
+  `background: #385; border-color: #2c7d51; color: #fff`, reversing on hover to
+  white background / `#385` border / `#217346` text with a faster `150ms all
+  ease` transition (vs the secondary button's `600ms`). Removed the
+  now-redundant project-settings-local `.apqa-button-primary` rules. 178 vitest
+  tests pass.
+
 - **Standardized modal footer actions: primary-left / cancel-right, responsive
   stack.** The shared `.apqa-modal-actions` footer (project settings, test page,
   iframe navbar modal) is now mobile-first: `display: flex; flex-direction:
@@ -15,7 +27,7 @@
   settings (Save→Cancel), rule form (Create rule→Cancel), delete confirm
   (Delete→Cancel, now `justify-content: flex-start`). Updated the
   `project_settings` and `rule_delete_confirm` specs that assumed Cancel was the
-  first button. 178 vitest tests pass. **Not committed yet — awaiting review.**
+  first button. 178 vitest tests pass.
 
 - **Removed the extra vertical spacing above modal headings and under their
   description line.** Modal windows (project settings, test page, …) render
