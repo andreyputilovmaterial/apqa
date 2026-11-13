@@ -176,8 +176,11 @@ def main(*argcs,**kwargs):
 
     if args.db_file:
         db_file = f'{args.db_file}' # make sure it's text
-        config['db_file'] = db_file
-        config['iface']['db_file'] = DBFile(db_file)
+        db_file_instance = DBFile(db_file)
+        # Store the resolved path so every consumer (the page header and
+        # GET /qc/project) serves the same string as db_file.resource_path.
+        config['db_file'] = str(db_file_instance.resource_path)
+        config['iface']['db_file'] = db_file_instance
     else:
         raise Exception('db_file not specified')
 

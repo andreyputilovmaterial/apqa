@@ -4,6 +4,26 @@
 
 ## Last state
 
+- **Fixed the projects-file path mismatch that made the online monitor show a
+  false "project file changed" overlay everywhere except the Vite dev server.**
+  Root cause: `config['db_file']` kept the raw CLI path (often relative) while
+  `GET /qc/project` serves the resolved `db_file.resource_path`
+  (`Path(...).resolve()`), so the header path and the API path never matched in
+  the bundle. Fix is backend-only: `main_ui_program.py` stores the resolved
+  path (`config['db_file'] = str(db_file.resource_path)`) and the home page
+  header renders that same resolved `resource_path`, so header and API always
+  serve the same string and the monitor's plain equality never false-positives.
+  Path normalization happens once, at load time, inside the physical-file
+  processors (`DBFileYaml`/`DBFileSqlite.__init__` — the only place that knows
+  the resource is a file); `DBFile.__new__` was fixed to allocate the concrete
+  processor via `object.__new__(DBFileCls)` so `__init__` (and hence path
+  resolution) runs exactly once instead of twice. No JS path normalization: a
+  resource path is an opaque string to the browser (could be a db id / network
+  address), so the monitor compares exact backend strings. New rule
+  `.clinerules/07-resource-paths.md`; tests in `tests/test_detect_type.py`
+  (relative→resolved, single-init, `oledb://` not resolved) and the
+  `background_onlineindicator` spec.
+
 - **Simplified the project-settings modal heading.** Renamed the modal title
   "Project" → "Project settings" and shortened the subtitle to "Project name and
   description" (dropping the "shown in the page header" clause) in

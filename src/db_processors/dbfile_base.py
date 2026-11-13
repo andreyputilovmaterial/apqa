@@ -18,7 +18,10 @@ class DBFile:
                 raise NotImplementedError(f'db file: resource type not supported: {resource_type or "unrecognized"}')
         if cls is DBFile:
             DBFileCls = detect_dbfile_cls(cls._registry,resource_path)
-            return DBFileCls(resource_path)
+            # Allocate the concrete processor without invoking its __init__ here;
+            # type.__call__ will then run DBFileCls.__init__ exactly once (that is
+            # where a physical-file processor resolves its resource path).
+            return object.__new__(DBFileCls)
         return super().__new__(cls)
 
     _registry = {}

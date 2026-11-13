@@ -131,7 +131,14 @@ def render_page_home(net_request_handler, config: dict,added_data=None):
     title = f'QC rules for {project_name}' if project_name else 'QC rules'
     page_h1 = f'Manage QC rule list'
 
-    db_path = config.get('db_file') or (getattr(db_file, 'resource_path', '') if db_file is not None else '')
+    # Prefer the DBFile instance's resolved path (the single source of truth,
+    # also served by GET /qc/project) and only fall back to the raw config
+    # value, so the header never shows a different path form than the API.
+    db_path = ''
+    if db_file is not None:
+        db_path = f'{getattr(db_file, "resource_path", "")}'
+    if not db_path:
+        db_path = config.get('db_file') or ''
 
     page_body = make_html(
         title = title,
