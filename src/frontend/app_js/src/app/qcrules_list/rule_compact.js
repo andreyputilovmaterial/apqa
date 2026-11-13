@@ -34,7 +34,7 @@ const RuleCompact = {
     @click="$emit('toggle')"
     @keydown.enter.prevent="$emit('toggle')"
   >
-    <span class="apqa-rule-compact-name">{{ record.name }}</span>
+    <span class="apqa-rule-compact-name"><i class="ri-arrow-down-double-fill apqa-rule-expand-icon" aria-hidden="true"></i>{{ record.name }}</span>
     <span v-if="record.comment" class="apqa-rule-compact-comment">{{ record.comment }}</span>
     <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
   </div>

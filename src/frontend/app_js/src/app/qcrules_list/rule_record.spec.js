@@ -38,6 +38,16 @@ describe('RuleRecord', () => {
     expect(actions.map((a) => a.text())).toEqual(['Edit', 'Run', 'Delete']);
   });
 
+  it('shows a down arrow when compact and an up arrow when expanded', async () => {
+    const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
+    expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(true);
+    expect(wrapper.find('.apqa-qcrules-list-item-name .ri-arrow-up-double-fill').exists()).toBe(false);
+
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+    expect(wrapper.find('.apqa-qcrules-list-item-name .ri-arrow-up-double-fill').exists()).toBe(true);
+    expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(false);
+  });
+
   it('collapses back to compact view on a second header click', async () => {
     const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
     await wrapper.find('.apqa-rule-compact-description').trigger('click');

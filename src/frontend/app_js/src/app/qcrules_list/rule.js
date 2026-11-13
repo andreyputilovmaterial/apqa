@@ -27,7 +27,7 @@ const Rule = {
     @click="$emit('toggle')"
     @keydown.enter.prevent="$emit('toggle')"
   >
-    <span class="apqa-qcrules-list-item-name">{{ record.name }}</span>
+    <span class="apqa-qcrules-list-item-name"><i class="ri-arrow-up-double-fill apqa-rule-expand-icon" aria-hidden="true"></i>{{ record.name }}</span>
     <span v-if="record.comment" class="apqa-qcrules-list-item-comment">{{ record.comment }}</span>
     <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
   </div>

@@ -26,6 +26,11 @@ describe('RuleCompact', () => {
     expect(text).toContain('count');
   });
 
+  it('shows a down-double arrow on the name hinting it expands', () => {
+    const wrapper = mount(RuleCompact, { props: { record: makeRecord() } });
+    expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(true);
+  });
+
   it('renders the comment only when present', () => {
     const withComment = mount(RuleCompact, {
       props: { record: makeRecord({ comment: 'check the count' }) },

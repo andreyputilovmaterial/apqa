@@ -4,6 +4,40 @@
 
 ## Last state
 
+- **Removed the 2px vertical gap in the expanded rule head (verified, not
+  blind).** `.apqa-qcrules-list-item-head` had `gap: 2px`, which the compact
+  header (`.apqa-rule-compact-description`) does not — its unfinished note is
+  forced onto its own line via `flex-basis: 100%` and sits flush under the name.
+  Measured in the live page: expanded `name→note` gap was 2px while compact was
+  0px; after removing the gap both are 0px, so the first line below the title no
+  longer jumps down when a rule is expanded.
+
+
+- **Aligned the expanded rule view's padding with the compact view (no jump on
+  expand).** The full/expanded rule card (`.apqa-qcrules-list-item`, `rule.js`)
+  was overriding the shared `.apqa-qcrules-entry` padding with `10px`, while the
+  compact view used `6px 8px` — so toggling a rule expanded shifted the title,
+  comment and definition right by 2px and down by 4px. `.apqa-qcrules-list-item`
+  now uses `padding: 6px 8px`, so the bolded title and the comment line directly
+  below it keep the same left indent as the collapsed state.
+
+
+- **Added expand/collapse arrow icons to the rule name (roadmap item #8).** The
+  compact/collapsed rule header (`rule_compact.js`, `.apqa-rule-compact-name`)
+  now leads with a `ri-arrow-down-double-fill` (down-double) icon and the full/
+  expanded header (`rule.js`, `.apqa-qcrules-list-item-name`) leads with a
+  `ri-arrow-up-double-fill` (up-double) icon, so the click-to-toggle affordance
+  on the rule title is visible instead of discoverable only by accident. Both
+  `<i>` glyphs carry a shared `.apqa-rule-expand-icon` class (styles.css: grey
+  `#999`, `font-weight: normal`, `font-size: 0.9em`, 6px right margin) and
+  `aria-hidden="true"`, matching the folder `[+]/[-]` toggle in `rules_tree.js`.
+  Uses the already-vendored Remix Icon font (linked in `app_js/index.html`). No
+  state needed to be passed down: `RuleCompact` renders only when collapsed and
+  `Rule` only when expanded. Added specs (`rule_compact.spec.js`,
+  `rule_record.spec.js`). Validated: frontend Vitest 170 passed / 23 files (two
+  new tests).
+
+
 - **Added Remix Icon v4.9.0 as a vendored webfont asset** (mirrors the gitgui
   project). Downloaded `remixicon.css` + `.eot`/`.ttf`/`.woff`/`.woff2`/`.svg`
   plus `LICENSE.txt` and `README.md` into

@@ -96,14 +96,17 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px;
+  /* Match the shared `.apqa-qcrules-entry` padding so the title and comment
+     stay at the same indent as the compact view and don't jump on expand. */
+  padding: 6px 8px;
 }
 
 .apqa-qcrules-list-item-head {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  /* No gap: the compact header also puts its note flush under the name, so a
+     gap here would make the title's first line jump down on expand. */
   cursor: pointer;
 }
 
@@ -228,6 +231,15 @@
 .apqa-rule-compact-name {
   font-weight: 600;
   color: #333;
+}
+
+/* Arrow glyph next to the rule name in both the compact and the full view.
+   Down = collapsed (click to expand), up = expanded (click to collapse). */
+.apqa-rule-expand-icon {
+  margin-right: 6px;
+  color: #999;
+  font-weight: normal;
+  font-size: 0.9em;
 }
 
 .apqa-rule-compact-comment {
