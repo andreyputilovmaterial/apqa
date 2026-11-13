@@ -4,6 +4,28 @@
 
 ## Last state
 
+- **Added Remix Icon v4.9.0 as a vendored webfont asset** (mirrors the gitgui
+  project). Downloaded `remixicon.css` + `.eot`/`.ttf`/`.woff`/`.woff2`/`.svg`
+  plus `LICENSE.txt` and `README.md` into
+  `src/frontend/assets_vendor_libs/fonts/remixicon/`; `build_templates.py`
+  `build_vendorlibs` scans that folder exactly like the ibm-plex fonts and
+  emits `_ASSETS_VENDORLIBS_FONTS_REMIXICON`.
+  `src/frontend/endpoints_assets_delivery_path.py` serves it under
+  `/assets/vendorlibs/fonts/remixicon/` (the CSS is linked in the HTML head via
+  `make_default_assets_list` + `app_js/index.html`; the font files are loaded
+  recursively from the CSS). Also extended `detect_content_type` to return
+  proper font/SVG MIME types (`font/woff2`, `font/woff`, `font/ttf`,
+  `font/otf`, `application/vnd.ms-fontobject`, `image/svg+xml`) — this also
+  fixes the previously-`text/plain` content type for the ibm-plex fonts.
+  License: Remix Icon License v1.0 (permissive; attribution optional).
+   Gotcha: `build.sh` also has an explicit `cat ..._ASSETS_BUNDLED_PY.py >>
+   src/frontend/GENERATED/ASSETS.py` list, so a new `_ASSETS_VENDORLIBS_FONTS_*`
+   bundle must be appended there too — the first build after this change failed
+   with `ImportError: cannot import name '_ASSETS_VENDORLIBS_FONTS_REMIXICON'`
+   until the remixicon `cat` line was added to `build.sh`.
+
+
+
 - **Fixed the `tagSuggestions` Vue render warning (roadmap item #11).**
   `QcRulesList` (`src/frontend/app_js/src/app/qcrules_list/index.js`) computed
   `tagSuggestions` and referenced it from the scoped-slot template
