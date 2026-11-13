@@ -221,6 +221,59 @@ run scripts.
   classes `apqa-qcrules-list*`). Reserve the word "project" for an actual
   project list, not for the QC-rule list.
 
+### Dual run mode (npm dev vs bundle)
+
+The frontend runs two ways, and **both must keep working**:
+
+- **Backend-served bundle (the normal/final app)** — `build.sh` bundles `app_js`
+  with `py_js_bundler` into `src/frontend/GENERATED/app.js`, which the backend
+  serves at `/assets/app.js` (with `vue` mapped through an importmap to
+  `/assets/vendorlibs/vue.js`). Needs **only Python** plus its requirements — no
+  Node, no Vite, no backend JS. Start it with
+  `python -m src.launcher --program ui --db-file <path>`.
+- **Vite dev server (development only)** — `npm install` + `npm run dev` inside
+  `src/frontend/app_js`. Needs **Node** (see `engines` in `package.json`) **and**
+  the Python backend running, because Vite serves only the frontend and proxies
+  every API call to the backend. `vue` resolves from `node_modules` (the `vue`
+  alias in `vite.config.js`); `vite.config.js` proxies the backend paths (e.g.
+  `/qc`, `/functionality`, `/assets`) to `http://localhost:5180`. This is the
+  fast hot-reload path (and the one that enables Vitest/lint); use it while
+  iterating on UI code.
+
+Both modes need the backend running; the backend needs the `GENERATED/`
+artifacts that `build.sh` produces (run it once after a fresh clone). Mode 2
+additionally needs Node; mode 1 additionally needs a `build.sh` run whenever JS
+changes. Every JS change must work under **both** modes: JS that npm/Vite
+accepts must also pass `py_js_bundler` — when valid JS is accepted by npm but
+rejected by `py_js_bundler`, update `py_js_bundler` rather than bending the JS.
+
+### Ports
+
+The backend listens on `localhost`, default port `5180` (`PORT_START_WITH` in
+`src/main_ui_program.py`); `find_free_port` starts there and increments by one
+if it is taken. Whatever port it lands on is fine for the launched browser, but
+it **can** break the Vite dev server: `src/frontend/app_js/vite.config.js`
+hard-codes `http://localhost:5180` as the proxy target. While developing
+against Vite, keep the backend on `5180` (or update `vite.config.js`).
+
+### HTTP methods and the Vite dev server
+
+The backend webserver is method-agnostic: it dispatches on the raw request
+method (`self.command`) and calls the matched path handler for **any** method
+name (`GET`, `POST`, `HEAD`, `PATCH`, `DELETE`, `PUT`, `FOO`, …). The app is
+fully capable of using non-standard HTTP methods end to end.
+
+The **Vite/npm dev server is not.** Vite is built on Node's `http` server, and
+Node's `llhttp` parser rejects method names outside its fixed allow-list with
+`400 Bad Request` *before* Vite's proxy middleware ever sees them. This is not a
+blocker for the live app (started from the bundle — no Node involved), but it
+does make frontend development harder and can surface as failures in test
+environments.
+
+Consequence for frontend code: **express operations with standard methods so the
+Vite dev server can proxy them**; keep any non-standard method names for
+direct/backend use.
+
 ## Testing
 
 There are two distinct uses of pytest — do not conflate them:

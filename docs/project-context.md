@@ -4,6 +4,38 @@
 
 ## Last state
 
+- **Documented the two ways to run the frontend (bundle vs Vite dev).** Added a
+  "Dual run mode (npm dev vs bundle)" section to
+  `.clinerules/02-frontend-build.md` and matching "Dual run mode (npm dev vs
+  bundle)" + "Ports" subsections to `docs/development.md`, porting the principle
+  from `gitgui` (its `.clinerules/02-frontend-build.md` and
+  `docs/dev-docs.md`). Key points captured: the backend-served `py_js_bundler`
+  bundle (`build.sh` → `src/frontend/GENERATED/app.js`, served at
+  `/assets/app.js`) needs only Python; the Vite dev server (`npm install` +
+  `npm run dev` in `src/frontend/app_js`) additionally needs Node and a running
+  backend, and hard-codes `http://localhost:5180` in `vite.config.js`; every JS
+  change must work under both modes. Also documented that the backend webserver
+  accepts any HTTP method name while the npm/Vite dev server (Node `http` +
+  `llhttp`) rejects non-standard method names with `400 Bad Request` — not a
+  blocker for the bundle (no Node), but it can complicate development/tests.
+  Docs/rules only; no code change.
+
+- **Fixed broken `npm run dev` in `src/frontend/app_js`.** `node_modules/.bin/*`
+  had been populated with *regular file copies* of each package's bin script
+  instead of the symlinks npm creates (`-rwxr-xr-x` instead of
+  `lrwxr-xr-x`). A copied `.bin/vite` resolves its relative
+  `import('../dist/node/cli.js')` against `node_modules/dist/` (missing) rather
+  than `node_modules/vite/dist/`, so `npm run dev` died with
+  `ERR_MODULE_NOT_FOUND ... node_modules/dist/node/cli.js`. Reinstalled with
+  `npm ci` in `src/frontend/app_js`, which recreated the symlinks
+  (`.bin/vite -> ../vite/bin/vite.js` etc.); `npm run dev` now boots Vite
+  v8.2.1 on `http://localhost:5173/`. This also fixes the previously-noted
+  broken `node_modules/.bin/vitest` shim (now a symlink, so `npm run test:unit`
+  should work directly again). **Gotcha:** if this repo's `node_modules` is ever
+  restored from an archive/zip/checkpoint that dereferences symlinks, the bin
+  shims break again — rerun `npm ci` (or re-`npm install`) in
+  `src/frontend/app_js` to regenerate them.
+
 - **Restricted the `input_gallery` textarea to vertical-only resize.** Added a
   `resize: vertical` rule for `.apqa-input-gallery textarea` in
   `input_gallery/styles.css`, so the test-page textarea can still be dragged
@@ -41,8 +73,6 @@
   class. New specs: `input_regex_text/index.spec.js` (5), plus regex cases in
   `records_filter/matchers.spec.js` and `records_filter/index.spec.js`.
   Validated: full JS suite 163 passed / 22 files, and `vite build` 96 modules.
-  (Note: `node_modules/.bin/vitest` shim is broken — run vitest via
-  `node node_modules/vitest/vitest.mjs run`.)
 
 - **Added `transform-text-regex`; settled the text-transform family prefix as `transform-`.**
   New processor cmdlet at `src/cmdlets/transform_text_regex/` registered as
@@ -193,10 +223,7 @@
   plain files, not a gitlink; its stray `myers-diff/.git` gitfile (a leftover from its
   submodule past in `gitgui`) pointed at a non-existent `.git/modules/...` path and was
   removed with the directory. Full frontend suite is now **146 passed across 19 files**,
-  no myers-diff. Gotcha: in this checkout `node_modules/.bin/vitest` is a flattened
-  regular file (not a symlink), so `npm run test:unit` fails before running any tests
-  (`Cannot find module '.../node_modules/.bin/dist/cli.js'`); I ran
-  `node node_modules/vitest/vitest.mjs run` instead — fix with `npm ci`/`npm install`.
+  no myers-diff.
 - **Implemented in-place "Edit rule" (roadmap item).** Clicking Edit now swaps the
   expanded rule's display for an inline form (`rule_edit_form.js`) inside the same
   rule container, pre-filled from the stored record (`name`, read-only `id`,
@@ -899,9 +926,6 @@
   self-written bundler *does* resolve the `@` alias (app root, from `jsconfig.json`
   `compilerOptions.paths`), so use `@/...` instead of deep `../../..` when reaching
   up to an outer level.
-- `node_modules/.bin/{vite,vitest}` shims are broken in this checkout (they do
-  `import './dist/cli.js'`); invoke directly: `node node_modules/vitest/vitest.mjs`
-  and `node node_modules/vite/bin/vite.js`.
 - RecordsFilter currently avoids `date`/`datetime` columns (the QC rules list uses
   `text` for `created_at`/`modified_at`). The canonical date type is now `Date`
   objects (see `.clinerules/06-dates-and-time.md`); the range inputs emit `Date`
