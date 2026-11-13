@@ -100,7 +100,7 @@ describe('RuleForm', () => {
     expect(wrapper.find('.apqa-rule-form-error').text()).toContain('already used');
   });
 
-  it('generates a unique id when the id field is cleared', async () => {
+  it('re-derives a deduplicated id when the id field is cleared', async () => {
     const resolve = vi.fn();
     const wrapper = mountForm({ resolve, existingIds: ['wave-69'] });
 
@@ -110,5 +110,28 @@ describe('RuleForm', () => {
 
     expect(resolve).toHaveBeenCalledTimes(1);
     expect(resolve.mock.calls[0][0].id).toBe('wave-69-2');
+  });
+
+  it('resumes auto-fill when the technical id is cleared', async () => {
+    const wrapper = mountForm();
+
+    await wrapper.find('input[name="name"]').setValue('Wave 69');
+    expect(wrapper.find('input[name="id"]').element.value).toBe('wave-69');
+
+    // Manually editing the id stops auto-fill…
+    await wrapper.find('input[name="id"]').setValue('my-custom-id');
+    expect(wrapper.find('input[name="id"]').element.value).toBe('my-custom-id');
+
+    // …so a subsequent name change no longer touches the id.
+    await wrapper.find('input[name="name"]').setValue('Wave 70');
+    expect(wrapper.find('input[name="id"]').element.value).toBe('my-custom-id');
+
+    // Clearing the id resumes auto-fill with the current name.
+    await wrapper.find('input[name="id"]').setValue('');
+    expect(wrapper.find('input[name="id"]').element.value).toBe('wave-70');
+
+    // And it keeps tracking the name again afterwards.
+    await wrapper.find('input[name="name"]').setValue('Wave 71');
+    expect(wrapper.find('input[name="id"]').element.value).toBe('wave-71');
   });
 });

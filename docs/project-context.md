@@ -4,6 +4,16 @@
 
 ## Last state
 
+- **Reset the create-form technical id to auto-updating when cleared (roadmap
+  item #9).** In `rule_form.js` `onIdInput`, emptying the id field (empty or
+  whitespace-only) now sets `idTouched` back to `false` and immediately
+  re-derives the id from the current display name via `makeUniqueSlug`,
+  mirroring the existing `watch(name, …)` auto-fill. Previously a user who
+  cleared the id stayed in manual mode and only got a re-derived id at submit
+  time. Added a spec (`resumes auto-fill when the technical id is cleared`) and
+  renamed the cleared-id test to `re-derives a deduplicated id when the id field
+  is cleared`. Validated: frontend Vitest 167 passed / 22 files (one new test).
+
 - **Implemented the field-access + shape-changing cmdlet set (roadmap item #10).**
   New middle processors: `select-field` (block → field value; array → flat list
   of that field per iteration, the JS `obj.field` / `items.map(x => x.field)`

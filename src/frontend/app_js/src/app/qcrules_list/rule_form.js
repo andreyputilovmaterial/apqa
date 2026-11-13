@@ -127,8 +127,16 @@ const RuleForm = {
     });
 
     function onIdInput(event) {
-      idTouched.value = true;
-      id.value = event.target.value;
+      const value = event.target.value;
+      if (value.trim() === '') {
+        // Clearing the field resumes auto-fill from the display name (and the
+        // watcher keeps tracking it going forward), instead of leaving it empty.
+        idTouched.value = false;
+        id.value = makeUniqueSlug(name.value, props.existingIds || []);
+      } else {
+        idTouched.value = true;
+        id.value = value;
+      }
     }
 
     function submit() {
