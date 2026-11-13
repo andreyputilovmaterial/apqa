@@ -13,9 +13,9 @@ const RuleDeleteConfirm = {
     Delete rule <span class="apqa-rule-delete-confirm-name">{{ record.name }}</span>?
     This cannot be undone.
   </p>
-  <div class="apqa-rule-delete-confirm-actions">
-    <button type="button" class="apqa-rule-delete-confirm-button apqa-rule-delete-confirm-button-danger" @click="confirm">Delete</button>
-    <button type="button" class="apqa-rule-delete-confirm-button" @click="cancel">Cancel</button>
+  <div class="apqa-modal-actions">
+    <button type="button" class="apqa-button-close apqa-button-danger" @click="confirm">Delete</button>
+    <button type="button" class="apqa-button-close" @click="cancel">Cancel</button>
   </div>
 </div>
 `,

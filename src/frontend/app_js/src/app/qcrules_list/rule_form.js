@@ -100,9 +100,9 @@ const RuleForm = {
       </label>
     </div>
 
-    <div class="apqa-rule-form-actions">
-      <button type="submit" class="apqa-rule-form-button apqa-rule-form-button-primary">Create rule</button>
-      <button type="button" class="apqa-rule-form-button" @click="cancel">Cancel</button>
+    <div class="apqa-modal-actions">
+      <button type="submit" class="apqa-button-close apqa-button-primary">Create rule</button>
+      <button type="button" class="apqa-button-close" @click="cancel">Cancel</button>
     </div>
   </form>
 </div>

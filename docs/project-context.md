@@ -4,6 +4,28 @@
 
 ## Last state
 
+- **Standardized button hover animation to 500ms across the app.** Added
+  `transition: 500ms all ease` to the remaining action-button base classes that
+  had no transition (`.apqa-qcrules-page-button`, `.apqa-rule-form-button`,
+  `.apqa-input-button`) and changed the two `600ms` buttons
+  (`.mdm-git-ui-page-dismiss` and `.apqa-button-page-close`) to `500ms`. The
+  modal `.apqa-button-close` was already 500ms, so all standard action buttons
+  now animate uniformly. (Left the global-skin `.mdm-btn`/`.mdm-link-btn` link
+  fade at 350ms — those are generic skin/link classes, not the app's action
+  buttons.) 178 vitest tests pass. **Not committed yet — awaiting review.**
+
+- **Unified modal footer buttons across all modals.** Took size/alignment from
+  the project-settings footer (`min-width: 200px` + the shared
+  `.apqa-modal-actions` responsive stack→row), the color scheme from the
+  create-rule window (primary `#385` → hover `#1c6b3e`, staying green instead of
+  reversing to white; secondary `#333` text / `#d0d0d0` border / hover `#999`),
+  and a uniform `500ms all ease` animation. Switched the create-rule and
+  delete-confirm modals onto the shared `.apqa-modal-actions` +
+  `.apqa-button-close` classes (added `.apqa-button-danger` for the destructive
+  confirm action, keeping its neutral→red hover), removed the now-unused
+  delete-confirm button rules, and updated the delete-confirm spec selectors.
+  178 vitest tests pass. **Not committed yet — awaiting review.**
+
 - **Flattened modal footer button borders and reworked primary/secondary
   colors.** The footer buttons (`.apqa-button-close`) only set `border-color`,
   so the browser's default `outset` bevel rendered light left/top and dark

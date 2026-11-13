@@ -23,14 +23,14 @@ describe('RuleDeleteConfirm', () => {
   it('resolves true when Delete is clicked', async () => {
     const resolve = vi.fn();
     const wrapper = mountConfirm({ resolve });
-    await wrapper.find('.apqa-rule-delete-confirm-button-danger').trigger('click');
+    await wrapper.find('.apqa-button-close.apqa-button-danger').trigger('click');
     expect(resolve).toHaveBeenCalledWith(true);
   });
 
   it('rejects when Cancel is clicked', async () => {
     const reject = vi.fn();
     const wrapper = mountConfirm({ reject });
-    await wrapper.find('.apqa-rule-delete-confirm-button:not(.apqa-rule-delete-confirm-button-danger)').trigger('click');
+    await wrapper.find('.apqa-button-close:not(.apqa-button-danger)').trigger('click');
     expect(reject).toHaveBeenCalled();
   });
 });

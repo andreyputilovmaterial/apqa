@@ -182,22 +182,23 @@
   margin: 0;
   font-size: 15px;
   font-weight: 300;
-  color: #555;
-  transition: 600ms all ease;
+  color: #333;
+  transition: 500ms all ease;
 }
 .apqa-modal-form .apqa-button-close:hover {
-  border-color: #000;
+  border-color: #999;
 }
 .apqa-modal-form .apqa-button-close.apqa-button-primary {
   background: #385;
-  border-color: #2c7d51;
+  border-color: #385;
   color: #fff;
-  /* The green→white reversal is a big change, so it snaps faster than the
-     secondary button's gentle 600ms fade. */
-  transition: 150ms all ease;
 }
 .apqa-modal-form .apqa-button-close.apqa-button-primary:hover {
-  background: #fff;
-  border-color: #385;
-  color: #217346;
+  background: #1c6b3e;
+  border-color: #1c6b3e;
+}
+/* Destructive confirm action: neutral by default, red border/text on hover. */
+.apqa-modal-form .apqa-button-close.apqa-button-danger:hover {
+  border-color: #990000;
+  color: #990000;
 }
