@@ -24,6 +24,13 @@ The backend is the Python web server that serves the app UI and its `/qc`,
 - `health`  — HTTP probe of `http://localhost:5180/` (exit 0 = HTTP 200)
 - `logs`    — tail the backend log `.dev_backend.log`
 
+## Output
+
+- Success messages (backend started/stopped/healthy/running) print **green**; the
+  key failure message prints **red**. Colors appear only on an interactive
+  terminal (stdout is a TTY) and are suppressed when output is piped or `NO_COLOR`
+  is set.
+
 ## Example
 
     python dev_backend.py restart --db-file tests-real-sensitive-data/projects.sqlite3

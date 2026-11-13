@@ -129,3 +129,37 @@ def test_main_health_unhealthy_returns_1(capsys):
 
 def test_main_status_not_running_returns_1(capsys):
     assert dev_backend.main(["status", "--port", str(_unused_port())]) == 1
+
+
+class _FakeStdout:
+    def __init__(self, is_tty):
+        self._is_tty = is_tty
+
+    def isatty(self):
+        return self._is_tty
+
+    def write(self, *_):
+        pass
+
+    def flush(self):
+        pass
+
+
+def test_colors_plain_when_not_a_tty(monkeypatch):
+    monkeypatch.setattr(dev_backend.sys, "stdout", _FakeStdout(False))
+    assert dev_backend._success("ok") == "ok"
+    assert dev_backend._error("bad") == "bad"
+
+
+def test_colors_plain_when_no_color_env(monkeypatch):
+    monkeypatch.setattr(dev_backend.sys, "stdout", _FakeStdout(True))
+    monkeypatch.setenv("NO_COLOR", "1")
+    assert dev_backend._success("ok") == "ok"
+    assert dev_backend._error("bad") == "bad"
+
+
+def test_colors_paint_on_a_tty(monkeypatch):
+    monkeypatch.setattr(dev_backend.sys, "stdout", _FakeStdout(True))
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    assert dev_backend._success("ok") == f"{dev_backend.GREEN}ok{dev_backend.RESET}"
+    assert dev_backend._error("bad") == f"{dev_backend.RED}bad{dev_backend.RESET}"

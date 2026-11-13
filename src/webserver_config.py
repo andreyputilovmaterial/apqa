@@ -15,6 +15,7 @@ land on 5180. Without the dev frontend server (i.e. the normal backend-served
 bundle) any port works equally well.
 """
 
+import os
 import socket
 
 from .webserver_engine.webserve.src.find_free_port import find_free_port
@@ -51,6 +52,13 @@ def parse_webserver_port(value):
 
 def _port_is_free(host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        if os.name != "nt":
+            # The real listener (HTTPServer) sets SO_REUSEADDR; mirror that here
+            # so a port held only by a TIME_WAIT socket from a just-stopped
+            # server is not reported as "already in use". Skipped on Windows,
+            # where SO_REUSEADDR has different (permissive) semantics that would
+            # weaken the fixed-port "fail if occupied" guarantee.
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind((host, port))
             return True

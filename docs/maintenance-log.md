@@ -35,6 +35,31 @@ Two concepts are easy to conflate, so they are spelled out separately:
 
 ---
 
+## dev_backend.py: color-coded success/failure output (+ TIME_WAIT-safe port check)
+
+- **Requested:** 2026-11-13
+- **Implemented:** 2026-11-13
+- **Where:** `dev_backend.py`, `src/webserver_config.py`,
+  `.clinerules/skills/backend/SKILL.md`.
+
+### What & why
+
+`dev_backend.py` prints success messages in **green** and the key failure message
+in **red**, following the existing CLI output-coloring convention. Colors are
+emitted only when stdout is an interactive terminal and `NO_COLOR` is unset (VT
+processing is enabled on Windows 10+), so piped/agent output stays clean. The
+`src/webserver_config.py` free-port pre-check now sets `SO_REUSEADDR` (POSIX
+only) so a port held by a `TIME_WAIT` socket from a just-stopped listener is no
+longer reported as "already in use".
+
+### Repeat
+
+1. Gate ANSI colors on `sys.stdout.isatty()` + `NO_COLOR` so piped output stays clean.
+2. Keep success/error coloring in one small `_success`/`_error` helper pair.
+3. Mirror the real listener's socket options (`SO_REUSEADDR`) in any "is the port free" probe.
+
+---
+
 ## UI: `--config-webserver-port` — fixed / auto-increment / default port
 
 - **Requested:** 2026-11-13

@@ -4,6 +4,19 @@
 
 ## Last state
 
+- **`dev_backend.py` color-codes success/failure output; the webserver's fixed-port
+  pre-check no longer false-fails on `TIME_WAIT`.**
+  `dev_backend.py` now prints its human-readable outcome lines in green (success)
+  / red (failure), emitted only when stdout is an interactive terminal and
+  `NO_COLOR` is unset (VT enabled on Windows 10+): `start`/`restart`/`health`/
+  `status` color by outcome, `stop` colors the "stopped…" lines green, and
+  `logs`'s "no log file" is red. `src/webserver_config.py` `_port_is_free` now
+  sets `SO_REUSEADDR` on POSIX (the real `HTTPServer` already sets
+  `allow_reuse_address`), fixing the intermittent `dev_backend.py restart`
+  "port already in use" failure from the roadmap. Updated the roadmap item
+  (done), `docs/maintenance-log.md`, the `backend` skill, and added color tests.
+
+
 - **Added a `/health` liveness endpoint + a full-screen "backend offline / project changed" overlay.**
   New `src/frontend/endpoints_health.py` (`handle_health`: `GET`/`HEAD` → 200,
   else 405) registered as `'/health'` in `src/endpoints.py`; the webserver engine
