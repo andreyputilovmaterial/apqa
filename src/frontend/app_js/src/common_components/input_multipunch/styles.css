@@ -11,7 +11,7 @@
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   font: inherit;
   font-size: 0.9rem;
   background: #fff;
@@ -59,7 +59,7 @@
   overflow: auto;
   padding: 2px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   box-sizing: border-box;

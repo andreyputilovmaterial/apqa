@@ -4,6 +4,30 @@
 
 ## Last state
 
+- **Aligned hardcoded component border-radius values with the new 7px button
+  convention.** Replaced `border-radius: 4px` → `7px` across the QC-rule list
+  buttons/inputs and entry boxes, rule form, project-settings input, records
+  filter, and the shared input components (`input_cmdlet`, `input_comparison_op`,
+  `input_gallery`, `input_multipunch`, `input_search_select`, `input_regex_text`,
+  `input_qcrule_tags`, `pages`), plus the legacy pagination `6px` in
+  `filter_records_form` → `7px`. Left intentionally round/special elements
+  unchanged (badges/tags/pills/switches, dashed group boxes at 6px, 3px
+  menu-option highlights, tabbed/rollable containers, modals/popups/panels).
+  Components keep literal `7px` (not the `--mdm-border-radius` var) to stay
+  self-contained/liftable. 178 vitest tests pass.
+
+- **Added a reusable `mdm-link-btn` class to `common.css`** — a link styled as a
+  bordered inline button (plain 1px `currentColor` border, transparent
+  background, uniform padding, no underline/glow/outline, pointer cursor) that
+  fades (350 ms ease) to `--mdm-color-primary` on hover/focus/active. Applied it
+  to the `background_onlineindicator` "reload the page" link (replacing the old
+  `apqa-online-monitor-reload` class and its styling) and overrode its
+  hover/focus/active color to black in the component's `styles.css`. Updated
+  `index.spec.js` to expect the new class and logged the change in
+  `common.css.changelog.md`. Also increased `--mdm-border-radius` globally from
+  4px to 7px and made `mdm-link-btn` use it (so the reload link now uses the
+  standard button border radius).
+
 - **Changed the default dev port from `5180` to `5280`** (a global find-and-replace
   across the tracked source/docs/tests): `src/webserver_config.py` `DEFAULT_PORT`,
   `dev_backend.py` `DEFAULT_PORT` + the `--config-webserver-port 5280` pin,

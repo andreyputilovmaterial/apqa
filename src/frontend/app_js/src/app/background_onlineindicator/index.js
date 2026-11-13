@@ -42,7 +42,7 @@ const OnlineMonitor = {
     <br />
     <br />
     <span class="suggest-line">
-      Please <a href="" @click.prevent="reloadPage" class="apqa-online-monitor-reload">reload the page</a>
+      Please <a href="" @click.prevent="reloadPage" class="mdm-link-btn">reload the page</a>
     </span>
   </div>
 </div>

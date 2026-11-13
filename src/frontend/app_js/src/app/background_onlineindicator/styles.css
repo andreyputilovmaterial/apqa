@@ -61,7 +61,11 @@
   word-break: break-all;
 }
 
-.apqa-online-monitor .apqa-online-monitor-reload {
-  color: #990000;
-  font-weight: 600;
+/* The reload link uses the shared .mdm-link-btn (bordered inline button) from
+   common.css; on this page only its hover/focus/active color is overridden so
+   it fades to black instead of the default primary color. */
+.apqa-online-monitor .mdm-link-btn:hover,
+.apqa-online-monitor .mdm-link-btn:focus,
+.apqa-online-monitor .mdm-link-btn:active {
+  color: #000;
 }

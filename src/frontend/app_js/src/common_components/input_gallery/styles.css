@@ -57,7 +57,7 @@
   font-size: 0.9rem;
   padding: 5px 7px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   color: #333;
   box-sizing: border-box;
@@ -147,7 +147,7 @@
 .apqa-input-button {
   padding: 6px 14px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   color: #333;
   cursor: pointer;

@@ -37,7 +37,7 @@
 
     --mdm-border-color: #d0d0d0;
     --mdm-border-color-dark: #444;
-    --mdm-border-radius: 4px;
+    --mdm-border-radius: 7px;
     --mdm-transition: 350ms ease;
 
     --mdm-color-primary: #385;
@@ -354,6 +354,39 @@ ol > li {
 }
 .mdm-link-inline-btn:hover {
     color: #111;
+}
+
+/* a link styled as a bordered inline button: a plain 1px border in the same
+   color as the surrounding text (currentColor), no background, and uniform
+   padding so the text keeps an equal distance to the border on every side.
+   No underline/decoration, no glow/shadow, no focus/active outline; pointer
+   cursor. On hover/focus/active the text and border fade (350 ms ease) to the
+   primary color while the background stays transparent. */
+.mdm-link-btn,
+.mdm-link-btn:link,
+.mdm-link-btn:visited {
+    display: inline-block;
+    vertical-align: baseline;
+    padding: 0.35em;
+    border: 1px solid currentColor;
+    border-radius: var(--mdm-border-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    text-decoration: none;
+    box-shadow: none;
+    outline: none;
+    cursor: pointer;
+    transition: color var(--mdm-transition);
+}
+.mdm-link-btn:hover,
+.mdm-link-btn:focus,
+.mdm-link-btn:active {
+    color: var(--mdm-color-primary);
+    background: transparent;
+    box-shadow: none;
+    outline: none;
 }
 
 /* Form controls */

@@ -64,7 +64,7 @@ describe('OnlineMonitor', () => {
     expect(failure.exists()).toBe(true);
     expect(failure.text()).toContain('/tmp/old.yaml');
     expect(failure.text()).toContain('/tmp/new.yaml');
-    expect(failure.find('.apqa-online-monitor-reload').exists()).toBe(true);
+    expect(failure.find('.mdm-link-btn').exists()).toBe(true);
     expect(wrapper.find('.description').exists()).toBe(false);
   });
 

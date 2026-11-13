@@ -11,7 +11,7 @@
   gap: 6px;
   padding: 4px 6px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
 }
 
@@ -27,7 +27,7 @@
 .apqa-input-cmdlet-toggle-help {
   appearance: none;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   color: #666;
   cursor: pointer;
@@ -50,7 +50,7 @@
 .apqa-input-cmdlet-chain-item-remove {
   appearance: none;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   color: #666;
   cursor: pointer;
@@ -94,7 +94,7 @@
   font: inherit;
   padding: 4px 6px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   color: #333;
 }
@@ -134,7 +134,7 @@
   align-self: flex-start;
   appearance: none;
   border: 1px dashed #c0c0c0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: #fff;
   color: #555;
   cursor: pointer;
