@@ -21,3 +21,6 @@ from .endpoints_functionality import (
 from .endpoints_rule_run import (
     handle_rule_run,
 )
+from .endpoints_project import (
+    handle_project_crud,
+)

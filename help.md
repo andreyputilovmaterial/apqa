@@ -54,6 +54,10 @@ Rules are stored in the project's **database file**, in one of two formats:
 The format is chosen by the file extension. To start a new project, create an
 empty file with the extension you want (for example, `project.sqlite3`).
 
+The database file also stores the **project's metadata**: a project name, a
+comment, and any other project-level notes. In a YAML file this is the top-level
+`project:` mapping; in SQLite it is a one-row `project` table.
+
 ## Folder aliases
 
 You can define **aliases** inside a folder (group) to give a short name to a

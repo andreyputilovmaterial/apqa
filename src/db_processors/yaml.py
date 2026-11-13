@@ -6,6 +6,7 @@ import yaml
 from .dbfile_base import DBFile as DBFileBase
 from .group_base import Group
 from .ids import ensure_unique
+from .project_base import Project
 from .rule_base import Rule
 
 
@@ -46,6 +47,7 @@ class DBFileYaml(DBFileBase):
             raise FileNotFoundError(f'db file: file not found: {self.resource_path}')
         self._rules = {}
         self._groups = {}
+        self._project = Project()
         self._read()
 
     @classmethod
@@ -54,7 +56,15 @@ class DBFileYaml(DBFileBase):
         if path.exists():
             raise FileExistsError(f'db file: already exists: {path}')
         with open(path, 'w', encoding='utf-8') as f:
-            yaml.safe_dump({'groups': [], 'rules': []}, f, sort_keys=False)
+            yaml.safe_dump(
+                {
+                    'project': {'name': '', 'comment': '', 'meta': {}},
+                    'groups': [],
+                    'rules': [],
+                },
+                f,
+                sort_keys=False,
+            )
         return path
 
     def _read(self):
@@ -75,6 +85,7 @@ class DBFileYaml(DBFileBase):
 
         self._rules.clear()
         self._groups.clear()
+        self._project = Project.from_dict(data.get('project'))
         for item in groups:
             group = Group.from_dict(item)
             if group.id in self._groups:
@@ -95,6 +106,7 @@ class DBFileYaml(DBFileBase):
         with open(self.resource_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(
                 {
+                    'project': self._project.to_dict(),
                     'groups': [ group.to_dict() for group in self.list_groups() ],
                     'rules': [ rule.to_dict() for rule in self.list_rules() ],
                 },
@@ -189,6 +201,15 @@ class DBFileYaml(DBFileBase):
             raise ValueError(f'group is not empty (it has rules): {group_id}')
         del self._groups[group_id]
         return group
+
+    # ---- project CRUD ----------------------------------------------------------
+
+    def get_project(self):
+        return self._project
+
+    def update_project(self, **changes):
+        self._project.update(**changes)
+        return self._project
 
     # ---- backward-compatible accessors --------------------------------------
     # (the generic `.rules` accessor lives on the base class)

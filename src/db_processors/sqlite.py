@@ -8,6 +8,7 @@ from pathlib import Path
 from .dbfile_base import DBFile as DBFileBase
 from .group_base import Group
 from .ids import ensure_unique, unique_slug
+from .project_base import Project
 from .rule_base import Rule
 
 
@@ -55,6 +56,31 @@ CREATE TABLE IF NOT EXISTS groups (
     aliases TEXT NOT NULL DEFAULT '[]',
     meta    TEXT NOT NULL DEFAULT '{}'
 )
+'''
+
+# Project-level metadata: a single row (id = 1) describing the project that the
+# rules in this file belong to. ``meta`` is JSON; ``name``/``comment`` are text.
+_CREATE_PROJECT_SQL = '''
+CREATE TABLE IF NOT EXISTS project (
+    id      INTEGER PRIMARY KEY,
+    name    TEXT NOT NULL DEFAULT '',
+    comment TEXT NOT NULL DEFAULT '',
+    meta    TEXT NOT NULL DEFAULT '{}'
+)
+'''
+
+_INSERT_PROJECT_ROW_SQL = '''
+INSERT INTO project (id, name, comment, meta)
+SELECT 1, '', '', '{}'
+WHERE NOT EXISTS (SELECT 1 FROM project WHERE id = 1)
+'''
+
+_UPSERT_PROJECT_SQL = '''
+INSERT INTO project (id, name, comment, meta) VALUES (1, ?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET
+    name = excluded.name,
+    comment = excluded.comment,
+    meta = excluded.meta
 '''
 
 
@@ -110,6 +136,8 @@ class DBFileSqlite(DBFileBase):
             # Create the tables in their current (id/name) shape when the file is new.
             self._conn.execute(_CREATE_RULES_SQL)
             self._conn.execute(_CREATE_GROUPS_SQL)
+            self._conn.execute(_CREATE_PROJECT_SQL)
+            self._conn.execute(_INSERT_PROJECT_ROW_SQL)
             # Bring databases created before the id/name split up to date. Groups
             # go first so the rules migration can remap old `group` references.
             self._migrate_groups_to_id()
@@ -128,6 +156,8 @@ class DBFileSqlite(DBFileBase):
         try:
             conn.execute(_CREATE_RULES_SQL)
             conn.execute(_CREATE_GROUPS_SQL)
+            conn.execute(_CREATE_PROJECT_SQL)
+            conn.execute(_INSERT_PROJECT_ROW_SQL)
             conn.commit()
         finally:
             conn.close()
@@ -390,6 +420,32 @@ class DBFileSqlite(DBFileBase):
             self._conn.execute('DELETE FROM groups WHERE id = ?', (group_id,))
             self._conn.commit()
         return group
+
+    # ---- project CRUD ----------------------------------------------------------
+
+    def get_project(self):
+        with self._lock:
+            row = self._conn.execute(
+                'SELECT name, comment, meta FROM project WHERE id = 1'
+            ).fetchone()
+        if row is None:
+            return Project()
+        return Project.from_dict({
+            'name': row['name'],
+            'comment': row['comment'],
+            'meta': _loads(row['meta'], {}),
+        })
+
+    def update_project(self, **changes):
+        project = self.get_project()
+        project.update(**changes)
+        with self._lock:
+            self._conn.execute(
+                _UPSERT_PROJECT_SQL,
+                (project.name, project.comment, _dumps(project.meta)),
+            )
+            self._conn.commit()
+        return project
 
     # ---- helpers ----------------------------------------------------------
 

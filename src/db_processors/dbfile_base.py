@@ -174,6 +174,17 @@ class DBFile:
             cursor = self.get_group(cursor).parent
         return parent_id
 
+    # ---- project contract -------------------------------------------------
+    # A database file describes one project. Project-level metadata (name,
+    # comment, and an extensible meta bag) is stored alongside the rules and
+    # groups and returned as a :class:`~.project_base.Project`.
+
+    def get_project(self):
+        raise NotImplementedError
+
+    def update_project(self, **changes):
+        raise NotImplementedError
+
     # ---- pythonic helpers -------------------------------------------------
 
     def __len__(self):
@@ -194,6 +205,10 @@ class DBFile:
     @property
     def groups(self):
         return self.list_groups()
+
+    @property
+    def project(self):
+        return self.get_project()
 
 
 

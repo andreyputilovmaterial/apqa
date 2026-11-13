@@ -4,6 +4,21 @@
 
 ## Last state
 
+- **Added project-level metadata to the rules database file (roadmap item).**
+  The DB file now carries a single **project record** — `name`, `comment`, and
+  an extensible `meta` bag — alongside `rules` and `groups`, in **both**
+  supported formats. New `src/db_processors/project_base.py` defines the
+  `Project` dataclass (`from_dict`/`to_dict`/`update`, all fields default
+  empty). YAML stores it as the top-level `project:` mapping (absent in old
+  files → defaults to an empty `Project`); SQLite stores it as a one-row
+  `project` table (`id=1`, `name`/`comment` text, `meta` JSON), created and
+  seeded in `_ensure_schema`/`_init_storage`. The base `DBFile` contract gained
+  `get_project()`/`update_project()` plus a `.project` accessor. Exposed via a
+  new `GET`/`PUT /qc/project` endpoint (`src/frontend/endpoints_project.py`,
+  registered under `^/qc/project(?=$|/)`). Tests in
+  `tests/test_db_processors_project.py` + `tests/test_endpoints_project.py`.
+  Full suite: 408 passed / 3 skipped.
+
 - **Removed the 2px vertical gap in the expanded rule head (verified, not
   blind).** `.apqa-qcrules-list-item-head` had `gap: 2px`, which the compact
   header (`.apqa-rule-compact-description`) does not — its unfinished note is

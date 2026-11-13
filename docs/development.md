@@ -433,9 +433,11 @@ The rules database is a format-agnostic interface
   `left` and `right` are stored as JSON text, `id`/`name`/`op`/`group` as plain
   text (`id` is the primary key). Rule groups/folders live in a `groups` table
   (`id`, `name`, `parent`, `meta`, and an `aliases` JSON column for folder-local
-  aliases).
+  aliases). A one-row `project` table (`name`, `comment`, `meta` JSON) stores
+  the project-level metadata.
 - **YAML** (`.yaml`/`.yml`) — a mapping with two optional lists, `groups` and
-  `rules`; each group may carry an `aliases` list. A legacy top-level list of
+  `rules`, plus an optional `project` mapping (`name`, `comment`, `meta`); each
+  group may carry an `aliases` list. A legacy top-level list of
   rules is still accepted (read as rules only).
 
 Rules and groups have an **id/name split**: `id` is the stable technical
@@ -454,8 +456,10 @@ the old `name` and old `name`-based references are remapped to the new ids.
 
 Both backends implement the same CRUD contract for rules (`list_rules`,
 `get_rule`, `has_rule`, `add_rule`, `update_rule`, `rename_rule`,
-`delete_rule`, `save`) and a group contract (`list_groups`, `get_group`,
-`has_group`, `add_group`, `update_group`, `rename_group`, `delete_group`).
+`delete_rule`, `save`), a group contract (`list_groups`, `get_group`,
+`has_group`, `add_group`, `update_group`, `rename_group`, `delete_group`),
+and a project contract (`get_project`, `update_project`) returning a
+`Project` object (`name`, `comment`, `meta`).
 Lookups take the **id**; `rename_rule`/`rename_group` change the display name
 only (the id stays fixed, so nothing cascades). Rules return `Rule` objects;
 groups return `Group` objects (`id`, `name`, `parent`, `aliases`, `meta`).
