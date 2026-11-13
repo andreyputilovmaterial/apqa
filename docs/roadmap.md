@@ -28,3 +28,6 @@ This sections is to capture everything that comes to mind that should ideally be
   the middle, re-measuring on resize; (b) extract the `nowrap + ellipsis` style into
   a shared utility class once a second consumer appears.
 
+## Random thougds and things to compare
+
+- safe yaml

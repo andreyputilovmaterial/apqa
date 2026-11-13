@@ -4,6 +4,26 @@
 
 ## Last state
 
+- **Restricted the `input_gallery` textarea to vertical-only resize.** Added a
+  `resize: vertical` rule for `.apqa-input-gallery textarea` in
+  `input_gallery/styles.css`, so the test-page textarea can still be dragged
+  taller/shorter from the bottom but its width stays fixed. Pure CSS; no
+  template or spec change.
+
+- **Clarified `docs/cmdlet-data-formats.md` around "Missing & duplicate names".**
+  The title was ambiguous — "names" could be read as cmdlet names (there is a
+  separate "Cmdlet naming" section) when the section actually specifies how
+  source readers name **rows/columns** (fields/records) when reading tabular
+  input (e.g. Excel) that may lack or repeat names. Retitled it to
+  "Row & column names (missing or duplicate)", added a lead-in tying it to
+  source readers, and updated the cross-reference in "Worked example: an Excel
+  workbook". Also added a short "How to read this document" section after "Goal"
+  splitting the doc into two groups — data formats (what cmdlets operate
+  on/return) vs cmdlet behaviour (what individual cmdlets and the editor do) —
+  so the two kinds of sections are explicit. Docs only; no code change (the
+  section is a spec ahead of the current `get-content-excel` implementation,
+  which only deduplicates headers and does no row naming yet).
+
 - **Ported the regex-capable text input from gitgui and made it the default text
   filter in `RecordsFilter`.** New reusable component
   `common_components/input_regex_text` (registered in `app.js` as
