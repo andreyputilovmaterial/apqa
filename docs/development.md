@@ -227,18 +227,21 @@ The frontend runs two ways, and **both must keep working**:
 
 - **Backend-served bundle (the normal/final app)** — `build.sh` bundles `app_js`
   with `py_js_bundler` into `src/frontend/GENERATED/app.js`, which the backend
-  serves at `/assets/app.js` (with `vue` mapped through an importmap to
-  `/assets/vendorlibs/vue.js`). Needs **only Python** plus its requirements — no
-  Node, no Vite, no backend JS. Start it with
-  `python -m src.launcher --program ui --db-file <path>`.
+  serves at `/assets/app.js`. The bundle keeps `vue` as an external
+  `import ... from 'vue'`, which the backend HTML resolves via an importmap
+  (injected in `endpoints_html_paths.py`) to `/assets/vendorlibs/vue.js`. Needs
+  **only Python** plus its requirements — no Node, no Vite, no backend JS.
+  Start it with `python -m src.launcher --program ui --db-file <path>`.
 - **Vite dev server (development only)** — `npm install` + `npm run dev` inside
   `src/frontend/app_js`. Needs **Node** (see `engines` in `package.json`) **and**
   the Python backend running, because Vite serves only the frontend and proxies
-  every API call to the backend. `vue` resolves from `node_modules` (the `vue`
-  alias in `vite.config.js`); `vite.config.js` proxies the backend paths (e.g.
-  `/qc`, `/functionality`, `/assets`) to `http://localhost:5180`. This is the
-  fast hot-reload path (and the one that enables Vitest/lint); use it while
-  iterating on UI code.
+  every API call to the backend. `src/frontend/app_js/index.html` is Vite's
+  entry point only (the backend never serves it); `vue` resolves from
+  `node_modules` (the `vue` alias in `vite.config.js`), so `index.html` needs no
+  importmap. `vite.config.js` proxies the backend paths (e.g. `/qc`,
+  `/functionality`, `/assets`) to `http://localhost:5180`. This is the fast
+  hot-reload path (and the one that enables Vitest/lint); use it while iterating
+  on UI code.
 
 Both modes need the backend running; the backend needs the `GENERATED/`
 artifacts that `build.sh` produces (run it once after a fresh clone). Mode 2

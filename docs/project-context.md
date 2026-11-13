@@ -4,6 +4,16 @@
 
 ## Last state
 
+- **Removed the dead `vue` importmap from `src/frontend/app_js/index.html`.**
+  `index.html` is Vite's entry point only — the backend-served app never loads
+  it (it serves its own HTML via `make_html.py`), and in Vite dev mode `vue`
+  resolves from `node_modules` via the `vite.config.js` alias. So the importmap
+  in `index.html` was never used and was removed. The backend keeps its own,
+  still-needed importmap in `endpoints_html_paths.py` (injected into the served
+  HTML) that resolves the bundle's external `import ... from 'vue'` to
+  `/assets/vendorlibs/vue.js` — that one stays. Updated `docs/development.md`
+  (Dual run mode) to document this split.
+
 - **Added `--config-webserver-port` (fixed / auto-increment / default 5180).**
   New `src/webserver_config.py` (`parse_webserver_port` + `select_webserver_port`)
   drives the port for the new `--config-webserver-port` flag on
