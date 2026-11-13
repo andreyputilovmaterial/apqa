@@ -18,7 +18,7 @@ const ProjectSettingsModal = {
 <div class="apqa-modal-form apqa-project-settings-form">
   <div class="apqa-project-settings-form-header">
     <h2 class="apqa-project-settings-form-title">Project</h2>
-    <p class="apqa-project-settings-form-subtitle">Project name and description shown in the page header.</p>
+    <p class="apqa-modal-form-subtitle apqa-project-settings-form-subtitle">Project name and description shown in the page header.</p>
   </div>
 
   <form class="apqa-project-settings-form-inner" @submit.prevent="save">
@@ -38,8 +38,8 @@ const ProjectSettingsModal = {
     </template>
 
     <div class="apqa-modal-actions">
-      <button type="button" class="apqa-button-close" @click="close" :disabled="saving">Cancel</button>
       <button type="submit" class="apqa-button-close apqa-button-primary" :disabled="saving || loading">{{ saving ? 'Saving…' : 'Save' }}</button>
+      <button type="button" class="apqa-button-close" @click="close" :disabled="saving">Cancel</button>
     </div>
   </form>
 </div>

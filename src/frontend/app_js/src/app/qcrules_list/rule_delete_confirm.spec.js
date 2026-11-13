@@ -30,8 +30,7 @@ describe('RuleDeleteConfirm', () => {
   it('rejects when Cancel is clicked', async () => {
     const reject = vi.fn();
     const wrapper = mountConfirm({ reject });
-    const buttons = wrapper.findAll('.apqa-rule-delete-confirm-button');
-    await buttons[0].trigger('click'); // Cancel is the first button
+    await wrapper.find('.apqa-rule-delete-confirm-button:not(.apqa-rule-delete-confirm-button-danger)').trigger('click');
     expect(reject).toHaveBeenCalled();
   });
 });

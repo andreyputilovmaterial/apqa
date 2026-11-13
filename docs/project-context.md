@@ -4,6 +4,33 @@
 
 ## Last state
 
+- **Standardized modal footer actions: primary-left / cancel-right, responsive
+  stack.** The shared `.apqa-modal-actions` footer (project settings, test page,
+  iframe navbar modal) is now mobile-first: `display: flex; flex-direction:
+  column; gap: 8px`, switching to a single `row` at `@container (min-width:
+  420px)`; `.apqa-button-close` dropped its `margin: 14px auto 0 0` (now `0`).
+  Made `.mdm-git-ui-modal-wrapper` a size container (`container-type:
+  inline-size`) so the footer responds to the modal's own width. Reordered the
+  buttons so the primary action is first/left and cancel is right: project
+  settings (Save→Cancel), rule form (Create rule→Cancel), delete confirm
+  (Delete→Cancel, now `justify-content: flex-start`). Updated the
+  `project_settings` and `rule_delete_confirm` specs that assumed Cancel was the
+  first button. 178 vitest tests pass. **Not committed yet — awaiting review.**
+
+- **Removed the extra vertical spacing above modal headings and under their
+  description line.** Modal windows (project settings, test page, …) render
+  their `h2` title through the global skin, which gives `h2` vertical padding —
+  pushing the title 15px below the modal's own padding and adding a gap before
+  the description. Centralized `.apqa-modal-form h2 { margin: 0; padding: 0 }`
+  in `common_components/modals/styles.css`, and added a shared
+  `.apqa-modal-form-subtitle { margin: 0; padding: 0 }` class for the first `p`
+  below a modal heading (instead of blanket-overriding all `p`s). Applied
+  `apqa-modal-form-subtitle` to the description paragraphs in
+  `project_settings/index.js` and `testpage/index.js` (alongside their existing
+  per-component typography classes), and removed the now-redundant
+  `margin: 0` / `margin: 4px 0 0` from the per-component title/subtitle styles.
+  178 vitest tests pass.
+
 - **Aligned hardcoded component border-radius values with the new 7px button
   convention.** Replaced `border-radius: 4px` → `7px` across the QC-rule list
   buttons/inputs and entry boxes, rule form, project-settings input, records

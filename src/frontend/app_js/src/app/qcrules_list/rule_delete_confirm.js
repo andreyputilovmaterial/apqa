@@ -14,8 +14,8 @@ const RuleDeleteConfirm = {
     This cannot be undone.
   </p>
   <div class="apqa-rule-delete-confirm-actions">
-    <button type="button" class="apqa-rule-delete-confirm-button" @click="cancel">Cancel</button>
     <button type="button" class="apqa-rule-delete-confirm-button apqa-rule-delete-confirm-button-danger" @click="confirm">Delete</button>
+    <button type="button" class="apqa-rule-delete-confirm-button" @click="cancel">Cancel</button>
   </div>
 </div>
 `,

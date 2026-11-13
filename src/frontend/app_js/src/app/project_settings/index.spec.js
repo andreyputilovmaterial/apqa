@@ -117,7 +117,7 @@ describe('ProjectSettingsModal', () => {
     const wrapper = mount(ProjectSettingsModal, { props: { resolve, reject } });
     await flushPromises();
 
-    await wrapper.findAll('button').at(0).trigger('click');
+    await wrapper.find('button[type="button"]').trigger('click');
     expect(reject).toHaveBeenCalledTimes(1);
     expect(resolve).not.toHaveBeenCalled();
   });

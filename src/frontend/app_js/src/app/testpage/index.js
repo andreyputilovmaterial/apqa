@@ -15,7 +15,7 @@ const TestPageModal = {
 <div class="apqa-modal-form apqa-testpage-form">
   <div class="apqa-testpage-form-header">
     <h2 class="apqa-testpage-form-title">Test page</h2>
-    <p class="apqa-testpage-form-subtitle">All form controls and their combinations, for visual verification.</p>
+    <p class="apqa-modal-form-subtitle apqa-testpage-form-subtitle">All form controls and their combinations, for visual verification.</p>
   </div>
   <div class="apqa-testpage-form-body">
     <input-gallery></input-gallery>

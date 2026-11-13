@@ -42,6 +42,10 @@
   transform: translateX(-50%);
   padding: 15px;
   box-sizing: border-box;
+  /* The modal box is the size container for its content, so the footer buttons
+     can switch between a vertical stack and a single row based on the modal's
+     own width (not the viewport). */
+  container-type: inline-size;
 }
 .mdm-ui-modals-site .mdm-git-ui-modal-wrapper .mdm-git-ui-modal-inner {
   flex: 1 1 auto;
@@ -101,6 +105,24 @@
   flex-direction: column;
 }
 
+/* Modal headings sit flush with the modal's own padding: the global typography
+   skin adds vertical padding to `h2`, which pushed the title away from the top
+   edge and separated it from the description below it. One shared rule for every
+   `.apqa-modal-form` keeps the title aligned to the same left/top inset with no
+   extra space above it. */
+.apqa-modal-form h2 {
+  margin: 0;
+  padding: 0;
+}
+
+/* Description line shown under a modal heading. Use this one shared class on
+   the first `p` below an `h2` so it sits directly under the title with no extra
+   margin/padding; spacing can be tuned here for all modals at once. */
+.apqa-modal-form-subtitle {
+  margin: 0;
+  padding: 0;
+}
+
 /* iframe-based navbar modal: it needs a definite full height so the iframe fills
    and scrolls internally. This is the one modal that is not shrink-to-content. */
 .mdm-ui-modals-site .mdm-git-ui-modal-wrapper:has(.apqa-ajax-pageview-form) {
@@ -134,9 +156,20 @@
   border: none;
   margin: 0;
 }
+/* Modal footer actions: mobile-first vertical stack (each button on its own
+   line), then one row once the modal is wide enough for both buttons. In the
+   row, the primary action is first/left and the cancel action is to its right. */
 .apqa-modal-form .apqa-modal-actions {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding-top: 10px;
+}
+@container (min-width: 420px) {
+  .apqa-modal-form .apqa-modal-actions {
+    flex-direction: row;
+  }
 }
 .apqa-modal-form .apqa-button-close {
   display: block;
@@ -146,7 +179,7 @@
   padding: 6px;
   border-radius: 7px;
   border-color: #ddd;
-  margin: 14px auto 0 0;
+  margin: 0;
   font-size: 15px;
   font-weight: 300;
   color: #555;
