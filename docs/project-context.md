@@ -4,6 +4,12 @@
 
 ## Last state
 
+- **Simplified the project-settings modal heading.** Renamed the modal title
+  "Project" → "Project settings" and shortened the subtitle to "Project name and
+  description" (dropping the "shown in the page header" clause) in
+  `src/frontend/app_js/src/app/project_settings/index.js`. No spec asserted on
+  those strings, so no test change. Committed & pushed (`9af29f7`).
+
 - **Standardized button hover animation to 500ms across the app.** Added
   `transition: 500ms all ease` to the remaining action-button base classes that
   had no transition (`.apqa-qcrules-page-button`, `.apqa-rule-form-button`,

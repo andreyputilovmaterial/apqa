@@ -17,8 +17,8 @@ const ProjectSettingsModal = {
   template: `
 <div class="apqa-modal-form apqa-project-settings-form">
   <div class="apqa-project-settings-form-header">
-    <h2 class="apqa-project-settings-form-title">Project</h2>
-    <p class="apqa-modal-form-subtitle apqa-project-settings-form-subtitle">Project name and description shown in the page header.</p>
+    <h2 class="apqa-project-settings-form-title">Project settings</h2>
+    <p class="apqa-modal-form-subtitle apqa-project-settings-form-subtitle">Project name and description</p>
   </div>
 
   <form class="apqa-project-settings-form-inner" @submit.prevent="save">
