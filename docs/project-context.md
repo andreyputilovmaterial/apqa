@@ -4,6 +4,8 @@
 
 ## Last state
 
+- **Escaped an HTML-like angle-bracket placeholder in the docs.** `docs/roadmap.md` had `the page title becomes "QC rules for <project name>"` written as plain prose, so `<project name>` could be misparsed as an HTML tag; it now reads `&lt;project name&gt;`. Reviewed every repo markdown doc (`docs/`, `README.md`, `help.md`, `.clinerules/`): all other `<...>` occurrences are already inside backticks (code spans) or fenced code blocks, so they render as literal text and are safe.
+
 - **Cmdlets and the comparison op are now bordered "chips" (qcrules_list).**
   `.apqa-cmdlet` was a plain inline `<span>`, so vertical `padding`/`border`
   painted over neighbouring lines and vertical `margin` was ignored — the
