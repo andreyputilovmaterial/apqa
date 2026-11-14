@@ -4,6 +4,26 @@
 
 ## Last state
 
+- **Cmdlets and the comparison op are now bordered "chips" (qcrules_list).**
+  `.apqa-cmdlet` was a plain inline `<span>`, so vertical `padding`/`border`
+  painted over neighbouring lines and vertical `margin` was ignored — the
+  source of the glyph clipping and the uneven row spacing the author hit while
+  experimenting with `line-height`. It is now `display: inline-block` with
+  `padding: 3px 8px`, `border: 1px solid #999`, `border-radius: 7px`,
+  `box-decoration-break: slice` (stated explicitly though it's the default),
+  `vertical-align: top` + `margin-bottom: 3px` — `top` (not `middle`/`baseline`)
+  makes the gap between wrapped chips an exact, height-independent 3px (verified
+  in-browser). The pipe separator got `vertical-align: middle` so it centers
+  against the chip boxes. `max-width: 100%` on the chip (plus the existing
+  `.apqa-cmdlet-part` ellipsis) keeps an overlong part (e.g. a long `path=`)
+  ellipsized instead of overflowing. The comparison op now renders
+  `class="apqa-cmdlet apqa-comparison"` so it shares the base chip box while
+  `.apqa-comparison` stays the separate hook (weight, monospace font,
+  alignment). Nested-cmdlet args (whole chains as argument values, e.g.
+  `and`/`or`/`bit-*` `operands`) still render as one non-breakable JSON blob and
+  ellipsize rather than wrap — recorded as a UI follow-up in docs/roadmap.md.
+  Follow-up: `.apqa-rule-compact-definition` now uses `align-items: flex-start` (was `baseline`, which floated the cmp-op chip ~4px above the left chain) and `row-gap: 0` + `column-gap: 8px` (was `gap: 8px`), so the cmp op sits on the same visual line as the left-chain cmdlets and wrapped rows are spaced by the chips' own 3px margin (was 8px gap + 3px margin = 11px). Verified in-browser: cmp-op top == left-chip top (diff 0), inter-row gap 3px. 185 vitest tests pass.
+
 - **Broadened "unfinished" detection to "any missing piece" and made it
   frontend-only.** A rule is now marked unfinished when any essential piece is
   `sysmissing` (`null`): an empty left chain, an unset comparison op, an empty

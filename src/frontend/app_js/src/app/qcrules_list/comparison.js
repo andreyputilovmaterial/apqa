@@ -17,7 +17,7 @@ export function comparisonSymbol(op) {
 
 const Comparison = {
   props: ['op'],
-  template: `<span class="apqa-comparison" :title="op || ''">{{ symbol }}</span>`,
+  template: `<span class="apqa-cmdlet apqa-comparison" :title="op || ''">{{ symbol }}</span>`,
   setup(props) {
     const symbol = computed(() => comparisonSymbol(props.op));
     return { symbol };

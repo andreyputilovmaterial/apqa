@@ -137,6 +137,30 @@
   min-width: 0;
 }
 
+/* A single cmdlet (and the comparison op, which shares this base class) is
+   drawn as an inline-block "chip": border + padding + radius. inline-block
+   (rather than the default inline) is what makes the box behave properly — an
+   inline element paints its vertical padding/border over the neighbouring
+   lines and ignores vertical margins, which is what caused the earlier glyph
+   clipping and the uneven vertical spacing between rows. `box-decoration-
+   break: slice` keeps the box open (not cloned) where a chip breaks across
+   lines; it is the default but is stated explicitly so browsers render it the
+   same. `max-width: 100%` caps the chip at the available width so an overlong
+   part is clipped/ellipsized instead of forcing the chain to overflow. */
+.apqa-cmdlet {
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid #999;
+  border-radius: 7px;
+  margin-bottom: 3px;
+  box-decoration-break: slice;
+  /* `top` (not `middle`/`baseline`) keeps the gap between wrapped chips an
+     exact, height-independent 3px: each chip starts at the top of its line box
+     and the 3px bottom margin is the only spacing to the next line. */
+  vertical-align: top;
+}
+
 /* Each cmdlet part (name or one argument) is a no-wrap unit. The chain wraps
    between parts, never in the middle of a word; a part that is longer than the
    available width (e.g. a long path param) is cut with an ellipsis on the
@@ -153,6 +177,9 @@
 .apqa-cmdlet-chain-pipe {
   padding: 0 4px;
   color: #999;
+  /* Center the pipe vertically against the chip boxes (which are top-aligned
+     inline-blocks), instead of leaving it glued to the text baseline. */
+  vertical-align: middle;
 }
 
 .apqa-cmdlet-chain-empty {
@@ -161,9 +188,14 @@
   font-family: 'IBM Plex Sans'; /* switch from monospace - to address slight misalignment in the left indent - the size of "(" and "[" characters in monospace font is bigger than the char itself, causing couple pixes of whitespace and the feel of misalignment */
 }
 
+/* The comparison op reuses the `.apqa-cmdlet` base chip so it reads as the same
+   kind of unit as the cmdlets in the left/right chains; this class stays as the
+   separate hook for op-specific styling (weight, monospace font, alignment). */
 .apqa-comparison {
   align-self: flex-start;
   font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
 }
 
 /* Short mark badges shown on rules and folders (marks_badges.js). */
@@ -257,13 +289,15 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
+  /* Top-align the chip boxes (left chain, cmp op, right chain) so the cmp op
+     chip sits on the same visual line as the cmdlet chips — `baseline` left the
+     cmp op floating a few px above the cmdlet boxes. Row gap is 0: the chips'
+     own 3px bottom margin is the only vertical spacing between wrapped rows, so
+     it matches the 3px gap between chips that wrap inside a chain. */
+  align-items: flex-start;
+  row-gap: 0;
+  column-gap: 8px;
   min-width: 0;
-}
-
-.apqa-rule-compact-definition .apqa-comparison {
-  align-self: baseline;
 }
 
 /* Folder aliases (alias_record.js) — plain "name: chain" rows shown inside an
