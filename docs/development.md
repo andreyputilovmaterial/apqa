@@ -424,8 +424,13 @@ through the pipe. Rules may carry pytest modifiers in `meta.markers`: `skip`
 In the QC-rules list UI each rule entry (`<li class="apqa-rules-tree-item">` with
 the `.apqa-rule-record` kind marker) carries short CSS classes for its marks: one
 per `meta.markers` value (`skip`, `xfail`, …) plus a derived `unfinished` mark
-when any of the three essential parts (left chain, comparison op, right chain) is
-missing — i.e. the rule was saved mid-edit and cannot run. The marks are also
+when any essential piece of the rule is `sysmissing` (`null`): an empty left
+chain, an unset comparison op, an empty right chain, or a required argument —
+recursively into nested `cmdlet-chain`/`cmdlet-chains` args — that is missing.
+This detection is frontend-only (in `grouping.js`, driven by the
+`/functionality/cmdlet-metadata` arg schemas); a piece that is present but
+unrecognized (e.g. a cmdlet name unknown to this environment) is *not* missing.
+The marks are also
 rendered as physical badges (a short line at the bottom of every rule, and inside
 each folder heading prefixed with "includes rules marked"); the `unfinished`
 badge carries a `title` tooltip and an unfinished rule gets a grey helper note
@@ -438,9 +443,11 @@ into the global CSS namespace. Colors are light with a colored left accent.
 > `xfail`, by cascade order in
 `src/frontend/app_js/src/app/qcrules_list/styles.css`).
 
-At run time an unfinished rule is skipped: `tstsuite.pytest_param_for` treats it
-as `pytest.mark.skip(reason="rule is unfinished")` before considering
-`meta.markers`, so "cannot run" is enforced, not just displayed.
+The backend deliberately does **not** skip unfinished rules: `tstsuite.py` used
+to add `pytest.mark.skip(reason="rule is unfinished")` for an empty left/op/right
+but that heuristic was removed (a comment in `pytest_param_for` marks where it
+was). A rule that cannot run now fails at run time with a normal exception;
+"unfinished" is a purely presentational, frontend-only state.
 
 **Planned (not implemented): conditional markers.** Some rules rely on cmdlets
 whose tools exist only on some platforms (e.g. `pywin32` on Windows). The idea is

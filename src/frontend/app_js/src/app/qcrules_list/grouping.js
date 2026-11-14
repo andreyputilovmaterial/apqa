@@ -7,10 +7,13 @@ const orderOf = (value) => Number(value) || 0;
 
 // ---- mark helpers -------------------------------------------------------------
 // A rule carries stored markers (`skip`, `xfail`, …) and, on top of those, a
-// derived `unfinished` mark when any of its three essential parts — left chain,
-// comparison op, or right chain — is missing; such a rule is saved but cannot
-// run. Mark *names* are shown as badges; their short CSS-class form drives the
-// entry highlighting. Combined-mark color precedence is provisional (see
+// derived `unfinished` mark when any essential piece of the rule is `sysmissing`
+// (`null`/`undefined`): an empty left chain, an unset comparison op, an empty
+// right chain, or a required argument (recursively into nested chains) that is
+// missing. A piece that is present but unrecognized (e.g. a cmdlet name unknown
+// to this environment) is NOT missing — it fails at run time instead. Mark
+// *names* are shown as badges; their short CSS-class form drives the entry
+// highlighting. Combined-mark color precedence is provisional (see
 // docs/development.md "Markers").
 
 // Turn a free-form marker name into a safe, short CSS class token.
@@ -28,40 +31,110 @@ export function markerClass(marker) {
   return slug;
 }
 
-// A rule is "unfinished" when the left side, comparison op, or right side is
-// missing (saved mid-edit, therefore not runnable).
-export function isUnfinished(record) {
+// A rule is "unfinished" when any essential piece is `sysmissing` — a
+// "disconnect" in the rule's logic. A piece is missing when its value is
+// `null`/`undefined` (or, for a chain-typed argument, an empty chain): an empty
+// left chain, an unset comparison op, an empty right chain, or a required
+// argument whose value is `sysmissing` (recursively into nested
+// `cmdlet-chain`/`cmdlet-chains` args). A piece that is present but not
+// *recognized* (e.g. a cmdlet name unknown to this environment) is NOT missing
+// — it is a value, and it fails at run time instead.
+export function isMissing(value, type) {
+  if (value === null || value === undefined) return true;
+  if (type === 'cmdlet-chain' || type === 'cmdlet-chains') {
+    return !Array.isArray(value) || value.length === 0;
+  }
+  return false;
+}
+
+// Problems in one chain of cmdlets. Unknown cmdlet names are skipped (they are
+// not "missing" — they fail at run time).
+function chainProblems(chain, cmdlets) {
+  const problems = [];
+  for (const step of chain || []) {
+    if (!step || typeof step !== 'object') continue;
+    const meta = (cmdlets || []).find((c) => c.name === step.cmdlet);
+    if (!meta) continue;
+    for (const arg of meta.args || []) {
+      if (!arg.required) continue;
+      const value =
+        step.args && typeof step.args === 'object' ? step.args[arg.name] : undefined;
+      if (isMissing(value, arg.type)) {
+        problems.push(`${step.cmdlet}: missing required arg '${arg.name}'`);
+        continue;
+      }
+      if (arg.type === 'cmdlet-chain') {
+        problems.push(...chainProblems(value, cmdlets));
+      } else if (arg.type === 'cmdlet-chains') {
+        for (const nested of value) problems.push(...chainProblems(nested, cmdlets));
+      }
+    }
+  }
+  return problems;
+}
+
+// All missing pieces of a rule: an empty left chain, an unset comparison op, an
+// empty right chain, or any required argument (recursively, including required
+// op_args) whose value is `sysmissing`.
+export function ruleProblems(record, cmdlets = [], ops = []) {
+  const problems = [];
   const left = Array.isArray(record.left) ? record.left : [];
   const right = Array.isArray(record.right) ? record.right : [];
-  return left.length === 0 || !record.op || right.length === 0;
+
+  if (left.length === 0) problems.push('left side is missing');
+  else problems.push(...chainProblems(left, cmdlets));
+
+  if (!record.op) problems.push('comparison op is missing');
+  else {
+    const opMeta = (ops || []).find((o) => o.name === record.op);
+    for (const arg of (opMeta && opMeta.op_args) || []) {
+      if (!arg.required) continue;
+      const value =
+        record.op_args && typeof record.op_args === 'object'
+          ? record.op_args[arg.name]
+          : undefined;
+      if (isMissing(value, arg.type)) {
+        problems.push(`op '${record.op}': missing required arg '${arg.name}'`);
+      }
+    }
+  }
+
+  if (right.length === 0) problems.push('right side is missing');
+  else problems.push(...chainProblems(right, cmdlets));
+
+  return problems;
+}
+
+export function isUnfinished(record, cmdlets = [], ops = []) {
+  return ruleProblems(record, cmdlets, ops).length > 0;
 }
 
 // Display mark names for a rule: its stored markers plus the derived
 // `unfinished` mark. Deduplicated, stored order first, `unfinished` last.
-export function markNamesForRecord(record) {
+export function markNamesForRecord(record, cmdlets, ops) {
   const marks = [];
   const markers = Array.isArray(record.markers) ? record.markers : [];
   for (const marker of markers) {
     const name = String(marker == null ? '' : marker).trim();
     if (name && !marks.includes(name)) marks.push(name);
   }
-  if (isUnfinished(record) && !marks.includes('unfinished')) {
+  if (isUnfinished(record, cmdlets, ops) && !marks.includes('unfinished')) {
     marks.push('unfinished');
   }
   return marks;
 }
 
 // Short CSS classes for a rule's marks (used for entry highlighting).
-export function markClassesForRecord(record) {
+export function markClassesForRecord(record, cmdlets, ops) {
   const classes = [];
-  for (const mark of markNamesForRecord(record)) {
+  for (const mark of markNamesForRecord(record, cmdlets, ops)) {
     const cls = markerClass(mark);
     if (cls && !classes.includes(cls)) classes.push(cls);
   }
   return classes;
 }
 
-export function buildGroupNodes(groups, records) {
+export function buildGroupNodes(groups, records, cmdlets = [], ops = []) {
   const byId = new Map();
   groups.forEach((group) => {
     byId.set(group.id, {
@@ -107,7 +180,7 @@ export function buildGroupNodes(groups, records) {
 
     const classes = new Set();
     for (const rule of node.rules) {
-      for (const cls of markClassesForRecord(rule)) classes.add(cls);
+      for (const cls of markClassesForRecord(rule, cmdlets, ops)) classes.add(cls);
     }
     for (const child of node.children) {
       for (const cls of groupMarkClasses(child, seen)) classes.add(cls);
@@ -127,7 +200,7 @@ export function buildGroupNodes(groups, records) {
 
     const marks = new Set();
     for (const rule of node.rules) {
-      for (const mark of markNamesForRecord(rule)) marks.add(mark);
+      for (const mark of markNamesForRecord(rule, cmdlets, ops)) marks.add(mark);
     }
     for (const child of node.children) {
       for (const mark of groupMarks(child, seen)) marks.add(mark);
@@ -145,8 +218,8 @@ export function buildGroupNodes(groups, records) {
       record: rule,
       depth,
       parents,
-      marks: markNamesForRecord(rule),
-      markClasses: markClassesForRecord(rule),
+      marks: markNamesForRecord(rule, cmdlets, ops),
+      markClasses: markClassesForRecord(rule, cmdlets, ops),
     });
   }
 

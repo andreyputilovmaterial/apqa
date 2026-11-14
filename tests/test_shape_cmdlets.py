@@ -59,6 +59,12 @@ def test_select_field_requires_field_arg():
         cmdlets.get('select-field')({'a': 1}, {})
 
 
+def test_select_field_accepts_empty_field_name():
+    # An empty string is a valid field name (Python `d[''] = 3` works); only a
+    # missing (None) field name is rejected.
+    assert cmdlets.get('select-field')({'': 3}, {'field': ''}) == 3
+
+
 def test_select_field_rejects_scalar_and_sysmissing():
     with pytest.raises(TypeError):
         cmdlets.get('select-field')(5, {'field': 'a'})

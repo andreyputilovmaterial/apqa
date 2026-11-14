@@ -58,7 +58,7 @@ const RuleRecord = {
       return [
         'apqa-rules-tree-item',
         'apqa-rule-record',
-        ...markClassesForRecord(props.record),
+        ...markClassesForRecord(props.record, props.cmdlets, props.ops),
         ...filterClasses,
       ];
     });

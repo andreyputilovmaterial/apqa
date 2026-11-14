@@ -11,7 +11,6 @@ import pytest
 
 from src.db_processors.rule_base import Rule
 from src.tstsuite import (
-    is_unfinished,
     load_case_params,
     markers_for,
     pytest_param_for,
@@ -63,21 +62,13 @@ def test_no_markers_produce_no_marks():
     assert list(param.marks) == []
 
 
-def test_is_unfinished():
-    assert is_unfinished(_rule([])) is True
-    assert is_unfinished(_rule(['skip'])) is True
-    assert is_unfinished(_complete_rule([])) is False
-
-
-def test_unfinished_rule_becomes_skip_mark():
-    param = pytest_param_for(_rule([]))
-    assert any(m.name == 'skip' for m in param.marks)
-
-
-def test_unfinished_takes_precedence_over_xfail():
+def test_broken_rule_is_not_special_cased():
+    # The backend is intentionally heuristic-free: it no longer skips a rule
+    # with an empty left/op/right as "unfinished". Such a rule simply gets its
+    # markers and would fail at run time if executed.
     param = pytest_param_for(_rule(['xfail']))
-    assert any(m.name == 'skip' for m in param.marks)
-    assert not any(m.name == 'xfail' for m in param.marks)
+    assert any(m.name == 'xfail' for m in param.marks)
+    assert not any(m.name == 'skip' for m in param.marks)
 
 
 def _lit(value):

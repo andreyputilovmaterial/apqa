@@ -15,6 +15,10 @@ function defaultArgValue(arg) {
       return false;
     case 'list':
       return [];
+    case 'number':
+    case 'path':
+      // A blank number/path is not a value — store it as `sysmissing` (null).
+      return null;
     case 'cmdlet-chains':
       return [];
     case 'cmdlet-chain':
@@ -179,6 +183,9 @@ const InputCmdlet = {
         }
       } else if (arg.type === 'boolean') {
         args[arg.name] = !!value;
+      } else if (arg.type === 'path') {
+        // An empty path is not a value — capture it as `sysmissing` (null).
+        args[arg.name] = value === '' || value == null ? null : value;
       } else {
         args[arg.name] = value;
       }

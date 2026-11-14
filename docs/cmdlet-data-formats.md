@@ -398,6 +398,32 @@ Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
 `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g. `map`'s `transform`
 or `where`'s `predicate`).
 
+### Arg values: `sysmissing` vs value
+
+An argument is either a value of its declared type, or `sysmissing` (`null` in
+the stored JSON/YAML). The editor stores a blank input as `sysmissing` for types
+whose empty form is not a valid value — `path`, `number`, `options`, and the
+chain types (`cmdlet-chain`, `cmdlet-chains`) — and as a real empty value for
+types whose empty form is meaningful: `text` → `""` and `list` → `[]`; for
+these, `sysmissing` is an explicit opt-out (a separate "unset" control), because
+an empty string / empty list is a legitimate value. For `json`, `null` *is*
+`sysmissing` — there is no way to store a JSON `null` value. A blank
+`path`/`number` therefore never becomes a sentinel like `""` or `0`; it is
+stored as `sysmissing`. Likewise a date is always either a real date or
+`sysmissing` — never a placeholder like `1970-01-01`.
+
+`boolean` args are strictly two-valued (`true`/`false`): they have no
+`sysmissing` state and render as a plain checkbox. Three-valued logic
+(true/false/unknown) is deliberately **not** folded into `boolean` — it is a
+separate future cmdlet family with its own naming prefix (see
+`docs/roadmap.md`).
+
+Consequence for "unfinished": a *required* arg is considered missing when its
+value is `sysmissing`, never when it is an empty-but-valid value. For example,
+`select-field` with an empty field name is a complete rule — an empty string is
+a valid `text` field name (Python `d[''] = 3` works) — and only an unset
+(sysmissing) field name is missing.
+
 ## Folder aliases
 
 A folder (group) may define aliases: `{ name, chain }` entries where `chain` is a

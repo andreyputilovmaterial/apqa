@@ -163,12 +163,21 @@ const QcRulesList = {
       loading.value = true;
       loadError.value = '';
       try {
-        const [rulesData, groupsData] = await Promise.all([
+        const [rulesData, groupsData, metadata] = await Promise.all([
           requestJson('/qc/rules'),
           requestJson('/qc/groups'),
+          // Metadata is needed to detect "unfinished" rules (missing required
+          // args). It is not critical for listing rules, so a failure here only
+          // degrades the unfinished detection to the structural check (empty
+          // left/op/right) and is retried when the editor is opened.
+          requestJson('/functionality/cmdlet-metadata').catch((e) => {
+            logError(`Failed to load cmdlet metadata: ${e}`);
+            return null;
+          }),
         ]);
         records.value = (rulesData.rules || []).map(toRecord);
         groups.value = (groupsData.groups || []).map(toGroupRecord);
+        if (metadata) cmdletMetadata.value = metadata;
       } catch (e) {
         loadError.value = `Failed to load QC rules: ${e}`;
         logError(loadError.value);

@@ -107,7 +107,7 @@ const RulesTree = {
       { immediate: true },
     );
 
-    const nodes = computed(() => buildGroupNodes(props.groups, props.records));
+    const nodes = computed(() => buildGroupNodes(props.groups, props.records, props.cmdlets, props.ops));
     const visibleNodes = computed(() =>
       nodes.value.filter((node) => !node.parents.some((parent) => collapsed[parent])),
     );

@@ -4,6 +4,22 @@
 
 ## Last state
 
+- **Broadened "unfinished" detection to "any missing piece" and made it
+  frontend-only.** A rule is now marked unfinished when any essential piece is
+  `sysmissing` (`null`): an empty left chain, an unset comparison op, an empty
+  right chain, or a required argument — recursively into nested
+  `cmdlet-chain`/`cmdlet-chains` args — that is missing (driven by
+  `/functionality/cmdlet-metadata`). A piece that is present but unrecognized
+  (unknown cmdlet name) is *not* missing. The backend skip heuristic was removed
+  (`tstsuite.pytest_param_for` no longer skips "unfinished" rules; a broken rule
+  fails at run time with a normal exception — a comment marks where the check
+  used to be). `select-field` now accepts an empty field name (`if field is
+  None` guard instead of `if not field`), and arg inputs store a blank
+  `path`/`number` as `null` (sysmissing). The arg-value contract (sysmissing vs
+  value; booleans strictly true/false) is documented in
+  docs/cmdlet-data-formats.md "Editor metadata", and tri-state logic is deferred
+  to a separate cmdlet family (docs/roadmap.md).
+
 - **Fixed the projects-file path mismatch that made the online monitor show a
   false "project file changed" overlay everywhere except the Vite dev server.**
   Root cause: `config['db_file']` kept the raw CLI path (often relative) while

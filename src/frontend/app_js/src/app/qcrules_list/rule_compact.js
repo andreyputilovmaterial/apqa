@@ -15,7 +15,7 @@ import { isUnfinished, markNamesForRecord } from './grouping';
 // under the name explains the derived `unfinished` mark, and a final line lists
 // short mark badges.
 const RuleCompact = {
-  props: ['record'],
+  props: ['record', 'cmdlets', 'ops'],
 
   emits: ['toggle'],
 
@@ -48,8 +48,8 @@ const RuleCompact = {
 `,
 
   setup(props) {
-    const unfinished = computed(() => isUnfinished(props.record));
-    const marks = computed(() => markNamesForRecord(props.record));
+    const unfinished = computed(() => isUnfinished(props.record, props.cmdlets, props.ops));
+    const marks = computed(() => markNamesForRecord(props.record, props.cmdlets, props.ops));
     return { UNFINISHED_MESSAGE, unfinished, marks };
   },
 };

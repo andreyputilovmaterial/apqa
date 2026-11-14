@@ -66,26 +66,21 @@ def markers_for(rule):
     return [f'{marker}' for marker in markers]
 
 
-def is_unfinished(rule):
-    """A rule is unfinished when any essential part is missing, so it cannot run.
-
-    Mirrors the frontend's ``isUnfinished`` (see
-    ``src/frontend/app_js/src/app/qcrules_list/grouping.js``).
-    """
-    return not rule.left or not rule.op or not rule.right
-
-
 def pytest_param_for(rule):
     import pytest
     markers = markers_for(rule)
     marks = []
-    if is_unfinished(rule):
-        marks.append(pytest.mark.skip(reason="rule is unfinished"))
-    else:
-        if 'skip' in markers:
-            marks.append(pytest.mark.skip(reason="rule marked 'skip'"))
-        if 'xfail' in markers:
-            marks.append(pytest.mark.xfail(reason="rule marked 'xfail'", strict=False))
+    # NOTE: there used to be an ``is_unfinished(rule)`` check here that skipped a
+    # rule with an empty left/op/right as "rule is unfinished". Removed on
+    # purpose: the backend is intentionally heuristic-free, so a rule that
+    # cannot run (a missing piece, a broken chain, an unrecognized cmdlet, …)
+    # is left to fail at run time with a normal exception. The "unfinished"
+    # state is computed and highlighted only in the frontend (see
+    # ``src/frontend/app_js/src/app/qcrules_list/grouping.js`` ``isUnfinished``).
+    if 'skip' in markers:
+        marks.append(pytest.mark.skip(reason="rule marked 'skip'"))
+    if 'xfail' in markers:
+        marks.append(pytest.mark.xfail(reason="rule marked 'xfail'", strict=False))
     return pytest.param(rule, id=rule.id, marks=marks)
 
 

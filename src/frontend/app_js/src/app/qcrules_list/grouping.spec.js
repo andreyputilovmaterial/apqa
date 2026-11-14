@@ -6,6 +6,7 @@ import {
   markClassesForRecord,
   markNamesForRecord,
   markerClass,
+  ruleProblems,
 } from './grouping.js';
 
 function rule(name, group = '', order = 0, extra = {}) {
@@ -179,6 +180,72 @@ describe('marks', () => {
     expect(r1.marks).toEqual(['skip']);
     expect(metadata.marks).toEqual(['unfinished']);
     expect(data.marks).toEqual(['skip', 'unfinished']);
+  });
+});
+
+describe('unfinished detection (deep)', () => {
+  const CMDLETS = [
+    { name: 'get-content-excel', kind: 'source', args: [{ name: 'path', type: 'path', required: true }] },
+    { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'json', required: true }] },
+    { name: 'count', kind: 'processor', args: [{ name: 'fail_on_sysmissing', type: 'boolean', required: false, default: false }] },
+    { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
+    { name: 'and', kind: 'source', args: [{ name: 'operands', type: 'cmdlet-chains', required: true }] },
+  ];
+  const OPS = [{ name: 'eq', op_args: [] }];
+
+  function deepRule(overrides = {}) {
+    return rule('r', '', 0, {
+      left: [{ cmdlet: 'get-content-excel', args: { path: 'a.xlsx' } }],
+      op: 'eq',
+      right: [{ cmdlet: 'literal', args: { value: 1 } }],
+      ...overrides,
+    });
+  }
+
+  it('flags a rule whose required path is missing', () => {
+    const record = deepRule({ left: [{ cmdlet: 'get-content-excel', args: {} }] });
+    expect(isUnfinished(record, CMDLETS, OPS)).toBe(true);
+    expect(ruleProblems(record, CMDLETS, OPS)).toContain(
+      "get-content-excel: missing required arg 'path'",
+    );
+  });
+
+  it('flags a rule whose required path is sysmissing (null)', () => {
+    const record = deepRule({ left: [{ cmdlet: 'get-content-excel', args: { path: null } }] });
+    expect(isUnfinished(record, CMDLETS, OPS)).toBe(true);
+  });
+
+  it('does not flag an empty/zero/false value as missing', () => {
+    expect(
+      isUnfinished(deepRule({ right: [{ cmdlet: 'literal', args: { value: 0 } }] }), CMDLETS, OPS),
+    ).toBe(false);
+  });
+
+  it('flags an empty nested required chain', () => {
+    const record = deepRule({ left: [{ cmdlet: 'map', args: { transform: [] } }] });
+    expect(isUnfinished(record, CMDLETS, OPS)).toBe(true);
+  });
+
+  it('flags an empty cmdlet-chains arg and recurses into non-empty ones', () => {
+    expect(
+      isUnfinished(deepRule({ left: [{ cmdlet: 'and', args: { operands: [] } }] }), CMDLETS, OPS),
+    ).toBe(true);
+    const nested = deepRule({
+      left: [{ cmdlet: 'and', args: { operands: [[{ cmdlet: 'get-content-excel', args: {} }]] } }],
+    });
+    expect(isUnfinished(nested, CMDLETS, OPS)).toBe(true);
+  });
+
+  it('does not flag an unknown cmdlet name (present but unrecognized)', () => {
+    const record = deepRule({ left: [{ cmdlet: 'no-such-cmdlet', args: {} }] });
+    expect(isUnfinished(record, CMDLETS, OPS)).toBe(false);
+    expect(ruleProblems(record, CMDLETS, OPS)).toEqual([]);
+  });
+
+  it('derives the unfinished mark class and badge with metadata', () => {
+    const record = deepRule({ left: [{ cmdlet: 'get-content-excel', args: {} }] });
+    expect(markClassesForRecord(record, CMDLETS, OPS)).toContain('unfinished');
+    expect(markNamesForRecord(record, CMDLETS, OPS)).toContain('unfinished');
   });
 });
 

@@ -36,8 +36,8 @@ const RuleBody = {
     @cancel="$emit('cancel', record)"
   />
   <template v-else>
-    <rule-compact v-if="!expanded" :record="record" @toggle="$emit('toggle')" />
-    <rule v-else :record="record" @toggle="$emit('toggle')" />
+    <rule-compact v-if="!expanded" :record="record" :cmdlets="cmdlets" :ops="ops" @toggle="$emit('toggle')" />
+    <rule v-else :record="record" :cmdlets="cmdlets" :ops="ops" @toggle="$emit('toggle')" />
 
     <div v-if="expanded" class="apqa-rule-body-actions">
       <button type="button" class="apqa-rule-body-action apqa-rule-body-action-edit" @click="$emit('edit', record)">Edit</button>

@@ -7,7 +7,7 @@ import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges';
 import { isUnfinished, markNamesForRecord } from './grouping';
 
 const Rule = {
-  props: ['record'],
+  props: ['record', 'cmdlets', 'ops'],
 
   emits: ['toggle'],
 
@@ -45,8 +45,8 @@ const Rule = {
 `,
 
   setup(props) {
-    const unfinished = computed(() => isUnfinished(props.record));
-    const marks = computed(() => markNamesForRecord(props.record));
+    const unfinished = computed(() => isUnfinished(props.record, props.cmdlets, props.ops));
+    const marks = computed(() => markNamesForRecord(props.record, props.cmdlets, props.ops));
     return { UNFINISHED_MESSAGE, unfinished, marks };
   },
 };

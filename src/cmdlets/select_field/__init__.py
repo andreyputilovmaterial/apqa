@@ -27,7 +27,7 @@ from ..value_types import PipeValue
 def select_field(value: PipeValue, args: dict) -> PipeValue:
     """Return ``block[field]`` for a block, or ``[item[field] …]`` for an array."""
     field = args.get('field')
-    if not field:
+    if field is None:
         raise ValueError("select-field: missing required arg 'field'")
 
     if isinstance(value, dict):
