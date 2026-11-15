@@ -353,10 +353,12 @@ read their input from ``args``). Currently implemented:
   result, kept so the familiar ``get-content`` name works for plain text files.
 
 - **`get-content-mdd`** — reads an MDD metadata document into a hierarchical
-  block. Args: ``path`` (required), ``method`` (``"open"`` or ``"join"``),
-  ``contexts`` (label/property contexts, default ``["Question", "Analysis"]``),
-  ``step_into`` (expand shared-list references; default ``true``). Optional
-  dependency: ``pywin32`` (Windows only; reads via the ``MDM.Document`` COM API).
+  block. Args: ``path`` (required), ``open_method`` (``"open"`` or ``"join"``),
+  ``context`` (label context name, a single string, default ``"Analysis"``;
+  properties are always read across every context and combined),
+  ``categories_step_into`` (expand shared-list references; default ``true``).
+  Optional dependency: ``pywin32`` (Windows only; reads via the
+  ``MDM.Document`` COM API).
 
   Top-level fields: ``source_file``, ``languages`` (array of ``{name, label}``),
   ``shared_lists`` (block keyed by name), ``fields`` (block keyed by name),
@@ -406,16 +408,16 @@ it, separately for the collapsed (`compact`) and expanded (`full`) views. A
 
 - a plain string — a literal text token;
 - `{ text, role }` — a literal token with an optional **role** (a semantic label
-  the frontend maps to a CSS class, e.g. `logo`, `separator`, `symbol`);
+  the frontend maps to a CSS class, e.g. `logo`, `symbol`);
 - `{ arg: <name> }` — the value of that cmdlet arg, rendered by the arg's
   declared type (an optional `role` overrides the default `arg` role).
 
 `None` means "no override" (the frontend falls back to the default rendering:
 `name args` for a cmdlet, the raw name for an op); a single string is a
 one-literal-part shorthand. For example `get-content-excel` declares
-`compact: [{ text: '[xlsx]', role: 'logo' }, { text: ': ', role: 'separator' },
-{ arg: 'path' }]` so it reads `[xlsx]: /path/to/map.xlsx` instead of
-`get-content-excel path=/path/to/map.xlsx`, and `cmp-eq` declares
+`compact: [{ text: '[xlsx]', role: 'logo' }, { arg: 'path' }]` so it reads
+`[xlsx] /path/to/map.xlsx` (the logo's right margin provides the small gap)
+instead of `get-content-excel path=/path/to/map.xlsx`, and `cmp-eq` declares
 `compact: [{ text: '=', role: 'symbol' }]`. The frontend never emits HTML from a
 spec — it only maps roles to CSS classes (`.apqa-cmdlet-role-<role>`).
 

@@ -109,7 +109,6 @@ def test_cmdlet_display_specs():
     # (the full form is the default "name args" rendering).
     assert meta['get-content-excel']['compact'] == [
         {'text': '[xlsx]', 'role': 'logo'},
-        {'text': ': ', 'role': 'separator'},
         {'arg': 'path'},
     ]
     assert 'full' not in meta['get-content-excel']

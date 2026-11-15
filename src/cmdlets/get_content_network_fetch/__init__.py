@@ -67,6 +67,9 @@ _ALLOWED_SCHEMES = ('http', 'https')
             'description': 'Request timeout in seconds.',
         },
     ],
+    compact=[
+        {'text': '[network]', 'role': 'logo'},
+    ],
 )
 def get_content_network_fetch(value: PipeValue, args: dict) -> Block:
     """Fetch ``value`` (a URL) and return a ``{status, body, headers}`` block."""

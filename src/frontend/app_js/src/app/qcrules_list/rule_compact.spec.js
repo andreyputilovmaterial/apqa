@@ -51,7 +51,6 @@ describe('RuleCompact', () => {
         args: [{ name: 'path', type: 'path', required: true }],
         compact: [
           { text: '[xlsx]', role: 'logo' },
-          { text: ': ', role: 'separator' },
           { arg: 'path' },
         ],
       },

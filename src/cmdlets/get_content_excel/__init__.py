@@ -35,7 +35,6 @@ else:
     ],
     compact=[
         {'text': '[xlsx]', 'role': 'logo'},
-        {'text': ': ', 'role': 'separator'},
         {'arg': 'path'},
     ],
 )

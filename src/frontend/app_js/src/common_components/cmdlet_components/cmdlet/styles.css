@@ -41,8 +41,8 @@
 .apqa-cmdlet-role-logo {
   font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
-}
-
-.apqa-cmdlet-role-separator {
-  opacity: 0.65;
+  /* Small gap after the logo (e.g. between `[xlsx]` and the path) so the next
+     part is not glued to it: roughly the width of the `:` that previously
+     separated them, a little less than a capital `S`. */
+  margin-right: 0.3em;
 }

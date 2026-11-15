@@ -41,6 +41,10 @@ ARGS = [
     kind='source',
     help='Read a text file into a single text value.',
     args=ARGS,
+    compact=[
+        {'text': '[file]', 'role': 'logo'},
+        {'arg': 'path'},
+    ],
 )
 def get_content_text(value: PipeValue, args: dict) -> Text:
     path = args.get('path')

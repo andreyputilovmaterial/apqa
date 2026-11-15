@@ -10,13 +10,16 @@ only *running* the cmdlet raises a readable error (chained to the original impor
 error).
 
 Args (stored named mapping):
-    path        required; full path to the ``.mdd`` file.
-    method      ``"open"`` (default) or ``"join"`` — see ``_open_document``.
-    contexts    list (or comma-separated string) of label/property contexts,
-                default ``["Question", "Analysis"]``.
-    step_into   bool, default ``True``. ``True`` expands a shared-list reference
-                into the referenced categories/elements; ``False`` ("step over")
-                keeps the reference as a single item.
+    path                 required; full path to the ``.mdd`` file.
+    open_method          ``"open"`` (default) or ``"join"`` — see ``_open_document``.
+    context              label context name (a single string, e.g. ``"Question"``
+                         or ``"Analysis"``), default ``"Analysis"``. Labels and
+                         translations are read in this context; properties are
+                         always read across every context and combined.
+    categories_step_into bool, default ``True``. ``True`` expands a shared-list
+                         reference into the referenced categories/elements;
+                         ``False`` ("step over") keeps the reference as a single
+                         item.
 
 The result is a block whose top-level fields are the MDD sections:
 
@@ -63,7 +66,7 @@ else:
     _import_error = None
 
 
-_DEFAULT_CONTEXTS = ['Question', 'Analysis']
+_DEFAULT_CONTEXT = 'Analysis'
 
 
 def _safe_get(item, attr):
@@ -204,10 +207,17 @@ def _close_document(document):
 
 
 class _MDDReader:
-    def __init__(self, document, path, contexts, step_into):
+    """Read the open document into the cmdlet's result block.
+
+    Derived from https://github.com/andreyputilovmaterial/MDM-Read-py
+    See here for a description of MDD:
+    https://github.com/andreyputilovmaterial/MDM-Read-py/blob/main/docs/mdd-model.md
+    """
+
+    def __init__(self, document, path, context, step_into):
         self.document = document
         self.path = path
-        self.contexts = contexts or _DEFAULT_CONTEXTS
+        self.context = context or _DEFAULT_CONTEXT
         self.step_into = step_into
         self._languages = list(_iter_attr(document, 'Languages'))
         self.langcodes = []
@@ -215,17 +225,47 @@ class _MDDReader:
             code = _safe_str_get(lang, 'Name') or _str_safe(lang)
             if code:
                 self.langcodes.append(code)
-        self.primary_context = self.contexts[0] if self.contexts else 'Question'
+
+    def _current_context(self):
+        contexts = _safe_get(self.document, 'Contexts')
+        return _safe_get(contexts, 'Current') if contexts is not None else None
+
+    def _set_current_context(self, context):
+        contexts = _safe_get(self.document, 'Contexts')
+        if contexts is None:
+            return
+        try:
+            contexts.Current = context
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _context_object(self, name):
+        if name is None:
+            return None
+        contexts = _safe_get(self.document, 'Contexts')
+        for read_context in _iter(contexts):
+            ctx_name = _safe_str_get(read_context, 'Name') or _str_safe(read_context)
+            if ctx_name is not None and ctx_name.lower() == name.lower():
+                return read_context
+        return None
 
     def read(self):
-        return {
-            'source_file': self.path,
-            'languages': self._read_languages(),
-            'shared_lists': self._read_shared_lists(),
-            'fields': self._read_fields(),
-            'pages': self._read_pages(),
-            'routing': self._read_routing(),
-        }
+        # Labels are read through `item.Label`, which resolves against the
+        # document's *current* context, so pin that context for the whole read.
+        preserve = self._current_context()
+        target = self._context_object(self.context)
+        self._set_current_context(target if target is not None else self.context)
+        try:
+            return {
+                'source_file': self.path,
+                'languages': self._read_languages(),
+                'shared_lists': self._read_shared_lists(),
+                'fields': self._read_fields(),
+                'pages': self._read_pages(),
+                'routing': self._read_routing(),
+            }
+        finally:
+            self._set_current_context(preserve)
 
     # -- sections -----------------------------------------------------------
 
@@ -443,7 +483,7 @@ class _MDDReader:
         result = {}
         for langcode in self.langcodes:
             try:
-                text = item.Labels(self.primary_context, langcode)
+                text = item.Labels(self.context, langcode)
             except Exception:  # noqa: BLE001
                 text = None
             result[langcode] = _str_safe(text)
@@ -464,8 +504,6 @@ class _MDDReader:
                     or _str_safe(read_context)
                 )
                 if not ctx_name:
-                    continue
-                if not any(ctx_name.lower() == c.lower() for c in self.contexts):
                     continue
                 try:
                     contexts.Current = read_context
@@ -594,27 +632,31 @@ class _MDDReader:
     args=[
         {'name': 'path', 'type': 'path', 'required': True, 'description': 'Full path to the .mdd file.'},
         {
-            'name': 'method',
+            'name': 'open_method',
             'type': 'options',
             'required': False,
             'default': 'open',
             'options': ['open', 'join'],
-            'description': 'How to open the document.',
+            'description': 'How to open the document - "open" (blocking, preserves labels), or "join" (creates a blank document and merges the source onto it, not blocking, labels can appear in different context and appear blank).',
         },
         {
-            'name': 'contexts',
-            'type': 'list',
+            'name': 'context',
+            'type': 'text',
             'required': False,
-            'default': ['Question', 'Analysis'],
-            'description': 'Label/property contexts to read.',
+            'default': _DEFAULT_CONTEXT,
+            'description': 'Label context name to read (e.g. "Question" or "Analysis"); properties are always read across every context and combined.',
         },
         {
-            'name': 'step_into',
+            'name': 'categories_step_into',
             'type': 'boolean',
             'required': False,
             'default': True,
             'description': 'Expand shared-list references into their elements.',
         },
+    ],
+    compact=[
+        {'text': '[mdd]', 'role': 'logo'},
+        {'arg': 'path'},
     ],
 )
 def get_content_mdd(value: PipeValue, args: dict) -> Block:
@@ -627,13 +669,13 @@ def get_content_mdd(value: PipeValue, args: dict) -> Block:
     if not path:
         raise ValueError("get-content-mdd: missing required arg 'path'")
 
-    method = args.get('method') or 'open'
-    contexts = _as_list(args.get('contexts', _DEFAULT_CONTEXTS))
-    step_into = bool(args.get('step_into', True))
+    method = args.get('open_method') or 'open'
+    context = args.get('context')
+    step_into = bool(args.get('categories_step_into', True))
 
     resolved = _resolved_path(path)
     document = _open_document(resolved, method)
     try:
-        return _MDDReader(document, resolved, contexts, step_into).read()
+        return _MDDReader(document, resolved, context, step_into).read()
     finally:
         _close_document(document)
