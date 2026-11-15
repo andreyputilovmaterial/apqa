@@ -86,6 +86,33 @@ def test_run_tst_case_fails_on_false():
         run_tst_case(rule)
 
 
+def test_run_tst_case_failure_message_includes_id_and_name():
+    rule = Rule(name='Verify all xml', left=[_lit(1)], op='cmp-eq', right=[_lit(2)])
+    with pytest.raises(AssertionError) as excinfo:
+        run_tst_case(rule)
+    message = str(excinfo.value)
+    assert 'Verify all xml' in message
+    assert '[verify-all-xml]' in message
+
+
+def test_run_tst_case_failure_message_includes_notes():
+    block = {'fields': {'BrandAwareness': {'label': 'a & b'}}}
+    rule = Rule(
+        name='Verify all xml',
+        left=[
+            {'cmdlet': 'literal', 'args': {'value': block}},
+            {'cmdlet': 'validate-xml-compatible'},
+        ],
+        op='cmp-eq',
+        right=[_lit(True)],
+    )
+    with pytest.raises(AssertionError) as excinfo:
+        run_tst_case(rule)
+    message = str(excinfo.value)
+    assert 'fields.BrandAwareness.label' in message
+    assert 'not XML-compatible' in message
+
+
 def test_load_case_params_from_yaml(tmp_path):
     db_file = tmp_path / 'projects.yaml'
     db_file.write_text(

@@ -9,8 +9,9 @@ if str(REPO_ROOT) not in sys.path:
 
 import pytest
 
-from src.rule_runner import run_rule
+from src.rule_runner import run_rule, run_rule_with_report
 from src.db_processors.rule_base import Rule
+from src.cmdlets.chain_runner import ChainError
 from src.cmdlets.sysmissing import sysmissing
 
 
@@ -90,8 +91,9 @@ def test_unknown_op_raises():
 
 def test_unknown_cmdlet_raises():
     rule = {'left': [{'cmdlet': 'nope'}], 'op': 'cmp-eq', 'right': [_literal(1)]}
-    with pytest.raises(KeyError):
+    with pytest.raises(ChainError) as excinfo:
         run_rule(rule)
+    assert 'cmdlet not found' in str(excinfo.value)
 
 
 def test_missing_op_raises():
@@ -111,7 +113,57 @@ def test_non_list_side_raises():
         run_rule(rule)
 
 
-def test_cmdlet_error_propagates():
+def test_cmdlet_error_propagates_with_chain_context():
     rule = {'left': [{'cmdlet': 'literal'}], 'op': 'cmp-eq', 'right': [_literal(1)]}
-    with pytest.raises(ValueError):
+    with pytest.raises(ChainError) as excinfo:
         run_rule(rule)
+    assert excinfo.value.cmdlet == 'literal'
+    assert excinfo.value.step == 0
+    assert 'step 0' in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, ValueError)
+
+
+def test_run_rule_with_report_no_notes_on_success():
+    rule = {'left': [_literal(1)], 'op': 'cmp-eq', 'right': [_literal(1)]}
+    result, notes = run_rule_with_report(rule)
+    assert result is True
+    assert notes == []
+
+
+def test_run_rule_with_report_no_notes_on_plain_false():
+    rule = {'left': [_literal(1)], 'op': 'cmp-eq', 'right': [_literal(2)]}
+    result, notes = run_rule_with_report(rule)
+    assert result is False
+    assert notes == []
+
+
+def test_run_rule_with_report_records_validation_notes():
+    block = {'fields': {'BrandAwareness': {'label': 'a & b'}}}
+    rule = {
+        'left': [
+            {'cmdlet': 'literal', 'args': {'value': block}},
+            {'cmdlet': 'validate-xml-compatible'},
+        ],
+        'op': 'cmp-eq',
+        'right': [_literal(True)],
+    }
+    result, notes = run_rule_with_report(rule)
+    assert result is False
+    assert len(notes) == 1
+    assert notes[0]['path'] == ['fields', 'BrandAwareness', 'label']
+    assert 'not XML-compatible' in notes[0]['message']
+
+
+def test_run_rule_with_report_records_array_index_paths():
+    block = {'pages': {'Q1': {'value': ['ok', 'a & b']}}}
+    rule = {
+        'left': [
+            {'cmdlet': 'literal', 'args': {'value': block}},
+            {'cmdlet': 'validate-xml-compatible'},
+        ],
+        'op': 'cmp-eq',
+        'right': [_literal(True)],
+    }
+    result, notes = run_rule_with_report(rule)
+    assert result is False
+    assert notes[0]['path'] == ['pages', 'Q1', 'value', 1]

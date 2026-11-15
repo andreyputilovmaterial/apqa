@@ -12,12 +12,20 @@ markup, so it simply passes. Compound values (blocks and arrays) run the same ch
 on every field/item and combine the results with a logical ``AND`` (an empty
 compound value is vacuously valid).
 
+When a text value fails, the cmdlet records a **diagnostic note** (if a run is
+collecting notes) whose path points at the offending leaf — e.g.
+``['fields', 'BrandAwareness', 'label']`` — so the runner can tell the user exactly
+which field of which MDD section was not XML-compatible (see
+``docs/qc-results-reporting.md``). The cmdlet still returns a plain ``bool``, so a rule
+that compares it to ``literal(True)`` keeps working unchanged.
+
 ``xml.etree.ElementTree`` is part of the Python standard library, so it is not a
 pip-installable requirement; the import is still guarded (see ``requirements.txt``)
 so the module always loads, the cmdlet is always registered, and only *running* the
 cmdlet raises a readable error if the module is genuinely unavailable.
 """
 
+from ..diagnostic import current_notes
 from ..registry import cmdlets
 from ..value_types import PipeValue
 
@@ -38,26 +46,45 @@ def validate_xml_compatible(value: PipeValue, args: dict) -> bool:
             "'xml.etree.ElementTree'"
         ) from _import_error
 
+    return _check(value, [], current_notes())
+
+
+def _check(value, path, notes):
+    """Recursively validate ``value`` and record a note per failing text leaf."""
     if isinstance(value, str):
-        return _is_xml_compatible(value)
+        problem = _xml_problem(value)
+        if problem is not None:
+            if notes is not None:
+                notes.note(
+                    path,
+                    f'not XML-compatible: {problem} (value: {_clip(value)!r})',
+                )
+            return False
+        return True
     if isinstance(value, dict):
         return all(
-            validate_xml_compatible(field_value, args)
-            for field_value in value.values()
+            _check(field_value, path + [key], notes)
+            for key, field_value in value.items()
         )
     if isinstance(value, list):
-        return all(validate_xml_compatible(item, args) for item in value)
+        return all(
+            _check(item, path + [index], notes)
+            for index, item in enumerate(value)
+        )
     return True
 
 
-def _is_xml_compatible(text: str) -> bool:
-    """Return ``True`` when ``text`` can be wrapped in a root element and parsed.
-
-    A label/snippet is considered XML-compatible when it needs no escaping to be
-    placed inside an XML document. Empty text is vacuously compatible.
-    """
+def _xml_problem(text):
+    """Return a human-readable reason the text is not XML-compatible, or ``None``."""
     try:
         ET.fromstring(f'<root>{text}</root>')
-        return True
-    except ET.ParseError:
-        return False
+        return None
+    except ET.ParseError as error:
+        return f'{error}'
+
+
+def _clip(value, limit=80):
+    text = f'{value}'
+    if len(text) <= limit:
+        return text
+    return text[:limit - 3] + '...'

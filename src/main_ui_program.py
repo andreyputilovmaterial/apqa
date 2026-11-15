@@ -32,7 +32,7 @@ if __package__:
     from .helper_logger import setup_logging
 
     from .endpoints import endpoints
-    from .rule_runner import run_rule
+    from .rule_runner import run_rule, run_rule_with_report
     from .cmdlets.meta import get_cmdlet_metadata
 else:
     # flat context: inlined with no parent package.
@@ -58,7 +58,7 @@ else:
     from helper_logger import setup_logging
 
     from endpoints import endpoints
-    from rule_runner import run_rule
+    from rule_runner import run_rule, run_rule_with_report
     from cmdlets.meta import get_cmdlet_metadata
 
 if is_in_pinliner():
@@ -168,6 +168,7 @@ def main(*argcs,**kwargs):
             'HTTP404': HTTP404,
             'get_help_pages': get_help_pages,
             'run_rule': run_rule,
+            'run_rule_with_report': run_rule_with_report,
             'get_cmdlet_metadata': get_cmdlet_metadata,
         },
     }

@@ -2,6 +2,8 @@
 
 This sections is to capture everything that comes to mind that should ideally be updated. Tasks listed here are not necessarily the highest priority.
 
+- (done — see `docs/qc-results-reporting.md`) Error visibility: a failing cmdlet now raises a `ChainError` naming the chain step (original exception chained as `__cause__`), and a *false* rule result now carries **diagnostic notes** with a data path (which field, which iteration) via `src/cmdlets/diagnostic.py` and `run_rule_with_report`; `validate-xml-compatible` records per-leaf notes.
+
 - edit cmdlet ui / literal: when "unset" is clicked, the input box should turn grey, like readonly/disabled and not clickable, until "unset" is unchecked.
 
 - Not sure how to indicate in in design in `src/cmdlets`, but not show a placeholder for follow up cmdlet from a "literal value" cmdlet - it does not make sense. After the transformation of literal value, we can only get literal value, static - then, why not just enter that final value directly? We probably don't need a suggestion for next cmdlet in a chain.

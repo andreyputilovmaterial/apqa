@@ -13,6 +13,7 @@ def handle_rule_run(net_request_handler, config: dict, added_data=None):
 
     WebResponse = config.get('iface').get('WebResponse')
     run_rule = (config.get('iface') or {}).get('run_rule')
+    run_rule_with_report = (config.get('iface') or {}).get('run_rule_with_report')
 
     def json_response(status_code, data, headers=None):
         return WebResponse(
@@ -30,7 +31,7 @@ def handle_rule_run(net_request_handler, config: dict, added_data=None):
             405, {'error': f'renderer for {method} {path} is not recognized'}
         )
 
-    if not callable(run_rule):
+    if not callable(run_rule) and not callable(run_rule_with_report):
         return json_response(404, {'error': 'rule runner is not available'})
 
     body = net_request_handler.request_body.read()
@@ -46,6 +47,12 @@ def handle_rule_run(net_request_handler, config: dict, added_data=None):
         return json_response(400, {'error': 'request body must be a JSON object (rule)'})
 
     try:
+        if callable(run_rule_with_report):
+            result, notes = run_rule_with_report(payload)
+            data = {'result': bool(result)}
+            if notes:
+                data['notes'] = notes
+            return json_response(200, data)
         result = run_rule(payload)
     except Exception as e:
         return json_response(400, {'error': f'{e}'})

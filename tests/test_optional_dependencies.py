@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.cmdlets import cmdlets
+from src.cmdlets.chain_runner import ChainError
 from src.rule_runner import run_rule
 
 
@@ -126,5 +127,12 @@ def test_run_rule_raises_for_missing_optional_dependency():
         'op': 'cmp-eq',
         'right': [{'cmdlet': 'literal', 'args': {'value': 1}}],
     }
-    with pytest.raises(ImportError):
+    # A cmdlet failure surfaces through run_rule as a ChainError that names the
+    # failing step; the original ImportError is preserved as __cause__.
+    with pytest.raises(ChainError) as exc_info:
         run_rule(rule)
+
+    message = str(exc_info.value)
+    assert 'get-content-excel' in message
+    assert 'openpyxl' in message
+    assert isinstance(exc_info.value.__cause__, ImportError)

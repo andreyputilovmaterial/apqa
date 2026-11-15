@@ -6,6 +6,8 @@ from collections.abc import Iterable
 from .db_processors import DBFile
 from .db_processors.rule_base import Rule
 from .group_aliases import AliasScopeResolver, substitute
+from .rule_runner import run_rule_with_report
+from .cmdlets.diagnostic import format_notes
 
 
 DB_FILE_ENV_VAR_NAME = "APQA_DB_FILE"
@@ -52,9 +54,13 @@ def _rule_with_scope(rule, scope):
 
 
 def run_tst_case(rule):
-    result = rule.run()
+    result, notes = run_rule_with_report(rule)
     if result is not True:
-        raise AssertionError(f'QC rule failed: {rule.name} (result: {result})')
+        details = format_notes(notes)
+        message = f'QC rule failed: {rule.name} [{rule.id}] (result: {result})'
+        if details:
+            message = f'{message}\n{details}'
+        raise AssertionError(message)
     return None
 
 

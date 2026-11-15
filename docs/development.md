@@ -606,6 +606,10 @@ promise with it, and the page then POSTs and reloads.
   upfront rather than failing later with a cryptic missing-attribute error.
 - **Do not over-validate** — leave flexibility for data format; stay Pythonic.
 
+How a QC rule reports *where* it failed — chain-step error context (`ChainError`)
+and diagnostic notes with data paths — is specified in
+[`qc-results-reporting.md`](qc-results-reporting.md).
+
 ## Submodules
 
 Reusable code is deliberately extracted into git submodules (an established habit

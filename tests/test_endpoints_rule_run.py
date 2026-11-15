@@ -10,7 +10,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from src.frontend.endpoints_rule_run import handle_rule_run
 from src.webserver_engine.webserve.src.common_defs import WebResponse
-from src.rule_runner import run_rule
+from src.rule_runner import run_rule, run_rule_with_report
 
 
 class FakeRequest:
@@ -29,6 +29,16 @@ class FakeRequest:
 
 def make_config():
     return {'iface': {'WebResponse': WebResponse, 'run_rule': run_rule}}
+
+
+def make_config_with_report():
+    return {
+        'iface': {
+            'WebResponse': WebResponse,
+            'run_rule': run_rule,
+            'run_rule_with_report': run_rule_with_report,
+        },
+    }
 
 
 def call(config, method, path, body=None):
@@ -59,6 +69,33 @@ def test_run_false():
     status, data = call(make_config(), 'POST', '/functionality/run-rule', rule)
     assert status == 200
     assert data == {'result': False}
+
+
+def test_run_true_with_report_has_no_notes_key():
+    rule = {'left': [_literal(1)], 'op': 'cmp-eq', 'right': [_literal(1)]}
+    status, data = call(
+        make_config_with_report(), 'POST', '/functionality/run-rule', rule
+    )
+    assert status == 200
+    assert data == {'result': True}
+
+
+def test_run_false_with_report_includes_notes():
+    block = {'fields': {'A': {'label': 'a & b'}}}
+    rule = {
+        'left': [
+            {'cmdlet': 'literal', 'args': {'value': block}},
+            {'cmdlet': 'validate-xml-compatible'},
+        ],
+        'op': 'cmp-eq',
+        'right': [_literal(True)],
+    }
+    status, data = call(
+        make_config_with_report(), 'POST', '/functionality/run-rule', rule
+    )
+    assert status == 200
+    assert data['result'] is False
+    assert data['notes'][0]['path'] == ['fields', 'A', 'label']
 
 
 def test_invalid_json():
