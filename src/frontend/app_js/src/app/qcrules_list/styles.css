@@ -270,6 +270,23 @@
    rules tree so nested entries indent. */
 .apqa-rules-tree-item {
   list-style-type: none;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+/* Fixed left gutter (one column for the per-rule run tick) + the indented
+   content cell. Depth indentation lives on `.apqa-rules-tree-content`, not on
+   the `<li>`, so the gutter cell stays at the same x for every nesting depth
+   and all ticks line up in a single column. */
+.apqa-rules-tree-gutter {
+  flex: 0 0 var(--mdm-space);
+  min-width: var(--mdm-space);
+}
+
+.apqa-rules-tree-content {
+  flex: 1 1 auto;
+  min-width: 0;
   padding-left: calc(var(--rules-tree-depth, 0) * var(--mdm-space));
 }
 
@@ -283,21 +300,17 @@
 }
 
 .apqa-rule-body {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Per-rule run-status tick in the left gutter: a light grey box when there is
-   no cached result, a green tick after a passed run, a red cross after a failed
-   or errored run. Positioned absolutely just left of the rule entry, so it sits
-   in the tree's indentation gutter next to each rule. */
+/* Per-rule run-status tick: a light grey box when there is no cached result, a
+   green tick after a passed run, a red cross after a failed or errored run. It
+   lives in the fixed `.apqa-rules-tree-gutter` cell, so every rule's tick lines
+   up in a single column regardless of nesting depth. */
 .apqa-rule-run-tick {
   display: block;
-  position: absolute;
-  top: 0;
-  left: -28px;
   width: 21px;
   height: 21px;
   border: 1px solid #e0e0e0;

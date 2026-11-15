@@ -39,24 +39,27 @@ const RulesTree = {
   <ul class="apqa-rules-tree-list">
     <template v-for="node in pagedNodes" :key="node.key">
       <li v-if="node.kind === 'group'" class="apqa-rules-tree-item apqa-rules-tree-group" :class="node.markClasses" :style="{ '--rules-tree-depth': node.depth }">
-        <button
-          type="button"
-          class="apqa-qcrules-entry apqa-qcrules-entry-folder apqa-rules-tree-group-header"
-          :aria-expanded="String(!collapsed[node.id])"
-          @click="toggle(node)"
-        >
-          <span class="apqa-rules-tree-group-header-row">
-            <span class="apqa-rules-tree-group-toggle" aria-hidden="true">{{ collapsed[node.id] ? '[+]' : '[-]' }}</span>
-            <span class="apqa-rules-tree-group-name">{{ node.name }}</span>
-          </span>
-          <span v-if="node.marks.length" class="apqa-rules-tree-group-marks">
-            <span class="apqa-rules-tree-group-marks-label">includes rules marked</span>
-            <marks-badges :marks="node.marks" />
-          </span>
-        </button>
-        <ul v-if="!collapsed[node.id] && node.aliases.length" class="apqa-rules-tree-aliases">
-          <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" :cmdlets="cmdlets" />
-        </ul>
+        <span class="apqa-rules-tree-gutter" aria-hidden="true"></span>
+        <div class="apqa-rules-tree-content">
+          <button
+            type="button"
+            class="apqa-qcrules-entry apqa-qcrules-entry-folder apqa-rules-tree-group-header"
+            :aria-expanded="String(!collapsed[node.id])"
+            @click="toggle(node)"
+          >
+            <span class="apqa-rules-tree-group-header-row">
+              <span class="apqa-rules-tree-group-toggle" aria-hidden="true">{{ collapsed[node.id] ? '[+]' : '[-]' }}</span>
+              <span class="apqa-rules-tree-group-name">{{ node.name }}</span>
+            </span>
+            <span v-if="node.marks.length" class="apqa-rules-tree-group-marks">
+              <span class="apqa-rules-tree-group-marks-label">includes rules marked</span>
+              <marks-badges :marks="node.marks" />
+            </span>
+          </button>
+          <ul v-if="!collapsed[node.id] && node.aliases.length" class="apqa-rules-tree-aliases">
+            <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" :cmdlets="cmdlets" />
+          </ul>
+        </div>
       </li>
       <rule-record
         v-else

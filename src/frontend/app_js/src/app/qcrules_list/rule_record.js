@@ -26,21 +26,28 @@ const RuleRecord = {
 
   template: `
 <li :class="classes">
-  <rule-body
-    :record="record"
-    :expanded="expanded"
-    :editing="editing"
-    :run-results="runResults"
-    :cmdlets="cmdlets"
-    :ops="ops"
-    :tag-suggestions="tagSuggestions"
-    @toggle="expanded = !expanded"
-    @edit="$emit('edit', record)"
-    @run="$emit('run', record)"
-    @delete="$emit('delete', record)"
-    @save="onSave"
-    @cancel="onCancel"
-  />
+  <span class="apqa-rules-tree-gutter">
+    <span class="apqa-rule-run-tick" :class="tickClass" :title="tickTitle">
+      <i v-if="tickIcon" :class="tickIcon"></i>
+    </span>
+  </span>
+  <div class="apqa-rules-tree-content">
+    <rule-body
+      :record="record"
+      :expanded="expanded"
+      :editing="editing"
+      :run-results="runResults"
+      :cmdlets="cmdlets"
+      :ops="ops"
+      :tag-suggestions="tagSuggestions"
+      @toggle="expanded = !expanded"
+      @edit="$emit('edit', record)"
+      @run="$emit('run', record)"
+      @delete="$emit('delete', record)"
+      @save="onSave"
+      @cancel="onCancel"
+    />
+  </div>
 </li>
 `,
 
@@ -65,6 +72,30 @@ const RuleRecord = {
       ];
     });
 
+    const runResult = computed(() => props.runResults[props.record.id] || null);
+
+    const tickIcon = computed(() => {
+      const status = runResult.value && runResult.value.status;
+      if (status === 'passed') return 'ri-check-double-line';
+      if (status === 'failed' || status === 'error') return 'ri-close-fill';
+      return '';
+    });
+
+    const tickClass = computed(() => {
+      const status = runResult.value && runResult.value.status;
+      if (status === 'passed') return 'is-passed';
+      if (status === 'failed' || status === 'error') return 'is-failed';
+      return 'is-empty';
+    });
+
+    const tickTitle = computed(() => {
+      const status = runResult.value && runResult.value.status;
+      if (status === 'passed') return 'Passed';
+      if (status === 'failed') return 'Failed';
+      if (status === 'error') return 'Run failed';
+      return '';
+    });
+
     function onSave(record, changes) {
       emit('save', record, changes);
     }
@@ -73,7 +104,7 @@ const RuleRecord = {
       emit('cancel', record);
     }
 
-    return { expanded, editing, classes, onSave, onCancel };
+    return { expanded, editing, classes, tickIcon, tickClass, tickTitle, onSave, onCancel };
   },
 };
 

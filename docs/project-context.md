@@ -4,6 +4,9 @@
 
 ## Last state
 
+- **Aligned the per-rule run ticks into one fixed left column and shifted the whole QC-rules tree 30px right.** Replaced the tick's absolute positioning (which drifted right with each nesting depth) with a real layout: each tree `<li>` is now a flex row of a fixed 30px `.apqa-rules-tree-gutter` cell (holding the tick) plus a `.apqa-rules-tree-content` cell that carries the depth indentation (`padding-left: calc(var(--rules-tree-depth, 0) * var(--mdm-space))`). The tick markup and its `tickIcon`/`tickClass`/`tickTitle` computeds moved from `rule_body.js` up to `rule_record.js`; folder rows get an empty gutter cell so their headings align with rules. No `position: absolute`, no negative offsets, screen-independent. Validated: frontend Vitest 239 passed / 30 files, `build.sh` OK, and live-browser measurements show every tick at the same x (left 45) for depth 0 and depth 1 rules while depth-1 cards stay indented (left 105 vs depth-0 left 75).
+
+
 - **Added a per-rule pass/fail tick to the left of each QC rule in the list.** A new `.apqa-rule-run-tick` box sits in the tree's left indent gutter (`position: absolute; left: -28px; top: 0`, 21×21px, light grey `#e0e0e0` border, transparent background), driven by the same cached `runResults` map keyed by rule id: empty when not run yet, a green `ri-check-double-line` (`var(--mdm-color-confirm)`) after a passed run, and a red `ri-close-fill` (`var(--mdm-color-error)`) after a failed or errored run (a transient `running` state stays empty). Implemented in `rule_body.js` (tick span + `tickIcon`/`tickClass`/`tickTitle` computeds) with `.apqa-rule-body` made `position: relative`; no extra prop threading was needed because `runResults` was already passed down from the previous task. Tests: 4 new tick cases in `rule_record.spec.js` (empty/passed/failed/error). Validated: frontend Vitest 239 passed / 30 files, `build.sh` OK (bundle contains the tick styles + icons).
 
 
