@@ -99,6 +99,28 @@ describe('RuleRecord', () => {
     expect(li.classes()).toContain('unfinished');
   });
 
+  it('adds the invalid class when a rule references an unrecognized cmdlet', () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord({ left: [{ cmdlet: 'no-such-cmdlet', args: {} }] }),
+        cmdlets: [{ name: 'count', kind: 'processor', args: [] }],
+      },
+    });
+
+    expect(wrapper.find('li').classes()).toContain('invalid');
+  });
+
+  it('adds the invalid class when a rule references an unrecognized comparison op', () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord({ op: 'eq-unorderedd' }),
+        ops: [{ name: 'eq' }],
+      },
+    });
+
+    expect(wrapper.find('li').classes()).toContain('invalid');
+  });
+
   it('keeps filter CSS classes from the record', () => {
     const wrapper = mountRecord({
       props: { record: makeRecord({ _filterMeta: { cssClasses: ['apqa-u-hidden'] } }) },

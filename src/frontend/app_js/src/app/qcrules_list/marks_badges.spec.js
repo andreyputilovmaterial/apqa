@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 
-import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges.js';
+import MarksBadges, { INVALID_MESSAGE, UNFINISHED_MESSAGE } from './marks_badges.js';
 
 describe('MarksBadges', () => {
   it('renders nothing when there are no marks', () => {
@@ -22,6 +22,12 @@ describe('MarksBadges', () => {
     const wrapper = mount(MarksBadges, { props: { marks: ['unfinished'] } });
 
     expect(wrapper.find('.apqa-mark-badge').attributes('title')).toBe(UNFINISHED_MESSAGE);
+  });
+
+  it('adds a title tooltip to the invalid badge', () => {
+    const wrapper = mount(MarksBadges, { props: { marks: ['invalid'] } });
+
+    expect(wrapper.find('.apqa-mark-badge').attributes('title')).toBe(INVALID_MESSAGE);
   });
 
   it('adds a per-mark class modifier', () => {

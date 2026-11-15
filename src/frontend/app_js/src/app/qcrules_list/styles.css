@@ -148,15 +148,17 @@
   border-radius: 10px;
 }
 
-/* Grey helper text under an unfinished rule's name. */
-.apqa-rule-unfinished-note {
+/* Grey helper text under a rule's name explaining a derived mark. */
+.apqa-rule-unfinished-note,
+.apqa-rule-invalid-note {
   color: #888;
   font-size: 0.8rem;
 }
 
 /* In the compact header (a wrapping row) force the note onto its own line,
    directly under the name/comment, without a gap above it. */
-.apqa-rule-compact-description .apqa-rule-unfinished-note {
+.apqa-rule-compact-description .apqa-rule-unfinished-note,
+.apqa-rule-compact-description .apqa-rule-invalid-note {
   flex-basis: 100%;
 }
 
@@ -365,12 +367,14 @@
 }
 
 /* Mark highlights. The short, non-prefixed classes below (`xfail`, `skip`,
-   `unfinished`) live on the `.apqa-rules-tree-item` <li> and are styled only
-   through that base + the inner `.apqa-qcrules-entry` box, so they never leak
-   into the global namespace. A rule (or an aggregated folder) may carry several
-   marks at once: the cascade order is the provisional precedence — `unfinished`
-   (most important) beats `skip`, which beats `xfail`. Colors are intentionally
-   light with a colored left accent; only the important marks stand out clearly. */
+   `unfinished`, `invalid`) live on the `.apqa-rules-tree-item` <li> and are
+   styled only through that base + the inner `.apqa-qcrules-entry` box, so they
+   never leak into the global namespace. A rule (or an aggregated folder) may
+   carry several marks at once: the cascade order is the provisional precedence
+   — `invalid` (most important) beats `unfinished`, which beats `skip`, which
+   beats `xfail`. Colors are intentionally light with a colored left accent;
+   only the important marks stand out clearly. `invalid` is the same pale red as
+   `unfinished` but shifted a touch toward pink so the two stay distinguishable. */
 .apqa-rules-tree-item.xfail .apqa-qcrules-entry {
   background: #f7f4fb;
   border-left: 3px solid #b9a6d6;
@@ -384,6 +388,11 @@
 .apqa-rules-tree-item.unfinished .apqa-qcrules-entry {
   background: #ffe4e4;
   border-left: 3px solid #d64545;
+}
+
+.apqa-rules-tree-item.invalid .apqa-qcrules-entry {
+  background: #ffe7ee;
+  border-left: 3px solid #c2416b;
 }
 
 .apqa-rules-tree-group-toggle {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RuleCompact from './rule_compact.js';
-import { UNFINISHED_MESSAGE } from './marks_badges.js';
+import { INVALID_MESSAGE, UNFINISHED_MESSAGE } from './marks_badges.js';
 import { cmdletComponents } from '@/common_components/cmdlet_components/index.js';
 
 function makeRecord(overrides = {}) {
@@ -99,5 +99,14 @@ describe('RuleCompact', () => {
 
     expect(wrapper.find('.apqa-rule-unfinished-note').text()).toBe(UNFINISHED_MESSAGE);
     expect(wrapper.find('.apqa-mark-badge-unfinished').exists()).toBe(true);
+  });
+
+  it('shows an invalid helper note under the name for an unrecognized cmdlet', () => {
+    const record = makeRecord({ left: [{ cmdlet: 'no-such-cmdlet', args: {} }] });
+    const cmdlets = [{ name: 'count', kind: 'processor', args: [] }];
+    const wrapper = mountCompact({ record, cmdlets, ops: OPS });
+
+    expect(wrapper.find('.apqa-rule-invalid-note').text()).toBe(INVALID_MESSAGE);
+    expect(wrapper.find('.apqa-mark-badge-invalid').exists()).toBe(true);
   });
 });

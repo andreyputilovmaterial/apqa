@@ -423,24 +423,28 @@ through the pipe. Rules may carry pytest modifiers in `meta.markers`: `skip`
 
 In the QC-rules list UI each rule entry (`<li class="apqa-rules-tree-item">` with
 the `.apqa-rule-record` kind marker) carries short CSS classes for its marks: one
-per `meta.markers` value (`skip`, `xfail`, …) plus a derived `unfinished` mark
-when any essential piece of the rule is `sysmissing` (`null`): an empty left
+per `meta.markers` value (`skip`, `xfail`, …) plus two derived marks. `unfinished`
+fires when any essential piece of the rule is `sysmissing` (`null`): an empty left
 chain, an unset comparison op, an empty right chain, or a required argument —
 recursively into nested `cmdlet-chain`/`cmdlet-chains` args — that is missing.
-This detection is frontend-only (in `grouping.js`, driven by the
-`/functionality/cmdlet-metadata` arg schemas); a piece that is present but
-unrecognized (e.g. a cmdlet name unknown to this environment) is *not* missing.
-The marks are also
-rendered as physical badges (a short line at the bottom of every rule, and inside
-each folder heading prefixed with "includes rules marked"); the `unfinished`
-badge carries a `title` tooltip and an unfinished rule gets a grey helper note
-under its name. Folders (`.apqa-rules-tree-group`) aggregate both the classes and
-badge names of every rule inside them (recursively), like VSCode's "changed
-files" bubble up to their folder. The classes are styled only as
+`invalid` fires when a piece is present but uninterpretable: a cmdlet step whose
+name is unknown to this environment (or that is not a `{cmdlet, args}` object),
+detected recursively through nested chains too, or a comparison op name unknown
+to the op metadata. This detection is frontend-only
+(in `grouping.js`, driven by the `/functionality/cmdlet-metadata` schemas); a
+piece that is present but unrecognized is *not* missing — it is `invalid`. The
+marks are also rendered as physical badges (a short line at the bottom of every
+rule, and inside each folder heading prefixed with "includes rules marked"); the
+`unfinished` and `invalid` badges carry a `title` tooltip and each derived mark
+gets a grey helper note under the rule's name. Folders
+(`.apqa-rules-tree-group`) aggregate both the classes and badge names of every
+rule inside them (recursively), like VSCode's "changed files" bubble up to their
+folder. The classes are styled only as
 `.apqa-rules-tree-item.<mark> .apqa-qcrules-entry`, so the short names never leak
-into the global CSS namespace. Colors are light with a colored left accent.
-**Provisional (review later):** the combination precedence (`unfinished` > `skip`
-> `xfail`, by cascade order in
+into the global CSS namespace. Colors are light with a colored left accent —
+`invalid` is the same pale red as `unfinished` shifted slightly toward pink.
+**Provisional (review later):** the combination precedence (`invalid` >
+`unfinished` > `skip` > `xfail`, by cascade order in
 `src/frontend/app_js/src/app/qcrules_list/styles.css`).
 
 The backend deliberately does **not** skip unfinished rules: `tstsuite.py` used

@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest';
 
 import {
   buildGroupNodes,
+  isInvalid,
   isUnfinished,
   markClassesForRecord,
   markNamesForRecord,
   markerClass,
+  ruleInvalidProblems,
   ruleProblems,
 } from './grouping.js';
 
@@ -236,16 +238,101 @@ describe('unfinished detection (deep)', () => {
     expect(isUnfinished(nested, CMDLETS, OPS)).toBe(true);
   });
 
-  it('does not flag an unknown cmdlet name (present but unrecognized)', () => {
+  it('does not flag an unknown cmdlet name as unfinished (it is invalid instead)', () => {
     const record = deepRule({ left: [{ cmdlet: 'no-such-cmdlet', args: {} }] });
     expect(isUnfinished(record, CMDLETS, OPS)).toBe(false);
     expect(ruleProblems(record, CMDLETS, OPS)).toEqual([]);
+    expect(isInvalid(record, CMDLETS)).toBe(true);
   });
 
   it('derives the unfinished mark class and badge with metadata', () => {
     const record = deepRule({ left: [{ cmdlet: 'get-content-excel', args: {} }] });
     expect(markClassesForRecord(record, CMDLETS, OPS)).toContain('unfinished');
     expect(markNamesForRecord(record, CMDLETS, OPS)).toContain('unfinished');
+  });
+});
+
+describe('invalid detection (deep)', () => {
+  const CMDLETS = [
+    { name: 'get-content', kind: 'source', args: [{ name: 'path', type: 'path', required: true }] },
+    { name: 'count', kind: 'processor', args: [] },
+    { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
+    { name: 'and', kind: 'source', args: [{ name: 'operands', type: 'cmdlet-chains', required: true }] },
+  ];
+  const OPS = [{ name: 'eq' }];
+
+  function validRule(overrides = {}) {
+    return rule('r', '', 0, {
+      left: [{ cmdlet: 'get-content', args: { path: 'a.sav' } }],
+      op: 'eq',
+      right: [{ cmdlet: 'count' }],
+      ...overrides,
+    });
+  }
+
+  it('does not flag recognized cmdlet names', () => {
+    expect(isInvalid(validRule(), CMDLETS)).toBe(false);
+    expect(ruleInvalidProblems(validRule(), CMDLETS)).toEqual([]);
+  });
+
+  it('flags an unknown cmdlet name as invalid (not unfinished)', () => {
+    const record = validRule({ left: [{ cmdlet: 'no-such-cmdlet', args: {} }] });
+    expect(isInvalid(record, CMDLETS)).toBe(true);
+    expect(ruleInvalidProblems(record, CMDLETS)).toContain("unrecognized cmdlet 'no-such-cmdlet'");
+    expect(isUnfinished(record, CMDLETS, OPS)).toBe(false);
+  });
+
+  it('flags a step that is not a cmdlet object', () => {
+    const record = validRule({ left: ['get-content'] });
+    expect(isInvalid(record, CMDLETS)).toBe(true);
+    expect(ruleInvalidProblems(record, CMDLETS)).toContain('unrecognized cmdlet step');
+  });
+
+  it('flags an unknown cmdlet nested inside a cmdlet-chain arg', () => {
+    const record = validRule({
+      left: [{ cmdlet: 'map', args: { transform: [{ cmdlet: 'no-such-cmdlet' }] } }],
+    });
+    expect(isInvalid(record, CMDLETS)).toBe(true);
+  });
+
+  it('flags an unknown cmdlet nested inside a cmdlet-chains arg', () => {
+    const record = validRule({
+      left: [{ cmdlet: 'and', args: { operands: [[{ cmdlet: 'no-such-cmdlet' }]] } }],
+    });
+    expect(isInvalid(record, CMDLETS)).toBe(true);
+  });
+
+  it('does not flag anything when cmdlet metadata is not loaded', () => {
+    expect(isInvalid(validRule({ left: [{ cmdlet: 'anything-at-all' }] }), [])).toBe(false);
+  });
+
+  it('flags an unrecognized comparison op name', () => {
+    const record = validRule({ op: 'eq-unorderedd' });
+    expect(isInvalid(record, CMDLETS, OPS)).toBe(true);
+    expect(ruleInvalidProblems(record, CMDLETS, OPS)).toContain(
+      "unrecognized comparison op 'eq-unorderedd'",
+    );
+  });
+
+  it('does not flag a recognized comparison op name', () => {
+    expect(isInvalid(validRule(), CMDLETS, OPS)).toBe(false);
+  });
+
+  it('does not flag an unrecognized comparison op when op metadata is not loaded', () => {
+    expect(isInvalid(validRule({ op: 'eq-unorderedd' }), CMDLETS, [])).toBe(false);
+  });
+
+  it('derives the invalid mark class and badge', () => {
+    const record = validRule({ left: [{ cmdlet: 'no-such-cmdlet', args: {} }] });
+    expect(markClassesForRecord(record, CMDLETS, OPS)).toContain('invalid');
+    expect(markNamesForRecord(record, CMDLETS, OPS)).toContain('invalid');
+  });
+
+  it('a rule can be both unfinished and invalid', () => {
+    const record = validRule({ left: [{ cmdlet: 'no-such-cmdlet' }], right: [] });
+    const marks = markNamesForRecord(record, CMDLETS, OPS);
+    expect(marks).toContain('unfinished');
+    expect(marks).toContain('invalid');
   });
 });
 

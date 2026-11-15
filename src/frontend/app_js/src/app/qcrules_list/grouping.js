@@ -6,13 +6,17 @@
 const orderOf = (value) => Number(value) || 0;
 
 // ---- mark helpers -------------------------------------------------------------
-// A rule carries stored markers (`skip`, `xfail`, …) and, on top of those, a
-// derived `unfinished` mark when any essential piece of the rule is `sysmissing`
-// (`null`/`undefined`): an empty left chain, an unset comparison op, an empty
-// right chain, or a required argument (recursively into nested chains) that is
-// missing. A piece that is present but unrecognized (e.g. a cmdlet name unknown
-// to this environment) is NOT missing — it fails at run time instead. Mark
-// *names* are shown as badges; their short CSS-class form drives the entry
+// A rule carries stored markers (`skip`, `xfail`, …) and, on top of those, two
+// derived marks:
+//   - `unfinished` — any essential piece of the rule is `sysmissing`
+//     (`null`/`undefined`): an empty left chain, an unset comparison op, an
+//     empty right chain, or a required argument (recursively into nested
+//     chains) that is missing.
+//   - `invalid` — a piece that is present but cannot be interpreted in this
+//     environment: a cmdlet step whose name is unknown to the cmdlet metadata
+//     (or that is not a `{cmdlet, args}` object), or a comparison op name
+//     unknown to the op metadata. It fails at run time instead.
+// Mark *names* are shown as badges; their short CSS-class form drives the entry
 // highlighting. Combined-mark color precedence is provisional (see
 // docs/development.md "Markers").
 
@@ -38,7 +42,7 @@ export function markerClass(marker) {
 // argument whose value is `sysmissing` (recursively into nested
 // `cmdlet-chain`/`cmdlet-chains` args). A piece that is present but not
 // *recognized* (e.g. a cmdlet name unknown to this environment) is NOT missing
-// — it is a value, and it fails at run time instead.
+// — it is reported by the separate `invalid` mark instead.
 export function isMissing(value, type) {
   if (value === null || value === undefined) return true;
   if (type === 'cmdlet-chain' || type === 'cmdlet-chains') {
@@ -47,8 +51,8 @@ export function isMissing(value, type) {
   return false;
 }
 
-// Problems in one chain of cmdlets. Unknown cmdlet names are skipped (they are
-// not "missing" — they fail at run time).
+// Missing pieces in one chain of cmdlets. Unknown cmdlet names are skipped (they
+// are not "missing" — see `chainInvalidProblems`).
 function chainProblems(chain, cmdlets) {
   const problems = [];
   for (const step of chain || []) {
@@ -67,6 +71,40 @@ function chainProblems(chain, cmdlets) {
         problems.push(...chainProblems(value, cmdlets));
       } else if (arg.type === 'cmdlet-chains') {
         for (const nested of value) problems.push(...chainProblems(nested, cmdlets));
+      }
+    }
+  }
+  return problems;
+}
+
+// Unrecognized pieces in one chain of cmdlets. A step is "unrecognized" when it
+// is not a `{cmdlet, args}` object or its `cmdlet` name is not registered in the
+// `cmdlets` metadata. Nested `cmdlet-chain`/`cmdlet-chains` args are walked
+// recursively for recognized parent cmdlets (an unrecognized parent already
+// flags the chain and its nested arg types are unknowable). When `cmdlets` is
+// empty the metadata is not loaded, so no name can be judged "unrecognized" —
+// the same degradation as missing-arg detection in `chainProblems`.
+function chainInvalidProblems(chain, cmdlets) {
+  if (!cmdlets || cmdlets.length === 0) return [];
+  const problems = [];
+  for (const step of Array.isArray(chain) ? chain : []) {
+    const name = step && typeof step === 'object' ? step.cmdlet : undefined;
+    if (typeof name !== 'string' || !name) {
+      problems.push('unrecognized cmdlet step');
+      continue;
+    }
+    const meta = cmdlets.find((c) => c.name === name);
+    if (!meta) {
+      problems.push(`unrecognized cmdlet '${name}'`);
+      continue;
+    }
+    for (const arg of meta.args || []) {
+      const value =
+        step.args && typeof step.args === 'object' ? step.args[arg.name] : undefined;
+      if (arg.type === 'cmdlet-chain' && Array.isArray(value)) {
+        problems.push(...chainInvalidProblems(value, cmdlets));
+      } else if (arg.type === 'cmdlet-chains' && Array.isArray(value)) {
+        for (const nested of value) problems.push(...chainInvalidProblems(nested, cmdlets));
       }
     }
   }
@@ -109,8 +147,31 @@ export function isUnfinished(record, cmdlets = [], ops = []) {
   return ruleProblems(record, cmdlets, ops).length > 0;
 }
 
+// All unrecognized pieces of a rule: cmdlet names in its left/right chains
+// (recursively) and its comparison op name. Unlike `ruleProblems` (missing
+// pieces), these are pieces that are present but cannot be interpreted in this
+// environment. As with missing-arg detection, unrecognized-op detection needs
+// the `ops` metadata and is skipped while it is not loaded (`ops` empty).
+export function ruleInvalidProblems(record, cmdlets = [], ops = []) {
+  const left = Array.isArray(record.left) ? record.left : [];
+  const right = Array.isArray(record.right) ? record.right : [];
+  const problems = [
+    ...chainInvalidProblems(left, cmdlets),
+    ...chainInvalidProblems(right, cmdlets),
+  ];
+  if (record.op && ops && ops.length > 0 && !ops.some((o) => o.name === record.op)) {
+    problems.push(`unrecognized comparison op '${record.op}'`);
+  }
+  return problems;
+}
+
+export function isInvalid(record, cmdlets = [], ops = []) {
+  return ruleInvalidProblems(record, cmdlets, ops).length > 0;
+}
+
 // Display mark names for a rule: its stored markers plus the derived
-// `unfinished` mark. Deduplicated, stored order first, `unfinished` last.
+// `unfinished` and `invalid` marks. Deduplicated, stored order first, derived
+// marks last.
 export function markNamesForRecord(record, cmdlets, ops) {
   const marks = [];
   const markers = Array.isArray(record.markers) ? record.markers : [];
@@ -120,6 +181,9 @@ export function markNamesForRecord(record, cmdlets, ops) {
   }
   if (isUnfinished(record, cmdlets, ops) && !marks.includes('unfinished')) {
     marks.push('unfinished');
+  }
+  if (isInvalid(record, cmdlets, ops) && !marks.includes('invalid')) {
+    marks.push('invalid');
   }
   return marks;
 }

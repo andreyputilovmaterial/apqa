@@ -1,8 +1,8 @@
 import { computed } from 'vue';
 
 import ComponentFormatDatetime from '@/common_components/display/format_datetime/index';
-import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges';
-import { isUnfinished, markNamesForRecord } from './grouping';
+import MarksBadges, { INVALID_MESSAGE, UNFINISHED_MESSAGE } from './marks_badges';
+import { isInvalid, isUnfinished, markNamesForRecord } from './grouping';
 
 const Rule = {
   props: ['record', 'cmdlets', 'ops'],
@@ -26,6 +26,7 @@ const Rule = {
     <span class="apqa-qcrules-list-item-name"><i class="ri-arrow-up-double-fill apqa-rule-expand-icon" aria-hidden="true"></i>{{ record.name }}</span>
     <span v-if="record.comment" class="apqa-qcrules-list-item-comment">{{ record.comment }}</span>
     <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
+    <span v-if="invalid" class="apqa-rule-invalid-note">{{ INVALID_MESSAGE }}</span>
   </div>
   <div class="apqa-qcrules-list-item-definition">
     <component-cmdlet-chain-full :chain="record.left" :cmdlets="cmdlets" />
@@ -42,8 +43,9 @@ const Rule = {
 
   setup(props) {
     const unfinished = computed(() => isUnfinished(props.record, props.cmdlets, props.ops));
+    const invalid = computed(() => isInvalid(props.record, props.cmdlets, props.ops));
     const marks = computed(() => markNamesForRecord(props.record, props.cmdlets, props.ops));
-    return { UNFINISHED_MESSAGE, unfinished, marks };
+    return { UNFINISHED_MESSAGE, INVALID_MESSAGE, unfinished, invalid, marks };
   },
 };
 

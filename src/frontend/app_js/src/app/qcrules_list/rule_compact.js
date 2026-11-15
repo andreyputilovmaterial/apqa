@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 
-import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges';
-import { isUnfinished, markNamesForRecord } from './grouping';
+import MarksBadges, { INVALID_MESSAGE, UNFINISHED_MESSAGE } from './marks_badges';
+import { isInvalid, isUnfinished, markNamesForRecord } from './grouping';
 
 // Compact QC-rule representation: one description line (name + optional
 // comment) and one definition line (left chain, comparison op, right chain).
@@ -11,8 +11,8 @@ import { isUnfinished, markNamesForRecord } from './grouping';
 //
 // The description line is the rule's "header": clicking it emits `toggle` so a
 // wrapping record component can expand/collapse the rule. A grey helper note
-// under the name explains the derived `unfinished` mark, and a final line lists
-// short mark badges.
+// under the name explains each derived mark (`unfinished`/`invalid`), and a
+// final line lists short mark badges.
 const RuleCompact = {
   props: ['record', 'cmdlets', 'ops'],
 
@@ -34,6 +34,7 @@ const RuleCompact = {
     <span class="apqa-rule-compact-name"><i class="ri-arrow-down-double-fill apqa-rule-expand-icon" aria-hidden="true"></i>{{ record.name }}</span>
     <span v-if="record.comment" class="apqa-rule-compact-comment">{{ record.comment }}</span>
     <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
+    <span v-if="invalid" class="apqa-rule-invalid-note">{{ INVALID_MESSAGE }}</span>
   </div>
   <div class="apqa-rule-compact-definition">
     <component-cmdlet-chain-compact :chain="record.left" :cmdlets="cmdlets" />
@@ -46,8 +47,9 @@ const RuleCompact = {
 
   setup(props) {
     const unfinished = computed(() => isUnfinished(props.record, props.cmdlets, props.ops));
+    const invalid = computed(() => isInvalid(props.record, props.cmdlets, props.ops));
     const marks = computed(() => markNamesForRecord(props.record, props.cmdlets, props.ops));
-    return { UNFINISHED_MESSAGE, unfinished, marks };
+    return { UNFINISHED_MESSAGE, INVALID_MESSAGE, unfinished, invalid, marks };
   },
 };
 
