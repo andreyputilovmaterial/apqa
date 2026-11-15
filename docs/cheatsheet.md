@@ -32,6 +32,20 @@ python dev_backend.py logs      # tail .dev_backend.log (default: last 50 lines)
 Flags: `--db-file PATH` (default `tests-real-sensitive-data/projects.sqlite3`),
 `--port N` (default 5280), `--json` (status/health), `--lines N` (logs).
 
+## HTTP database fixture (`http_db_server.py`)
+
+Serve the rules database as a single JSON document over HTTP (the `http(s)://`
+backend), so the UI can be pointed at a remote database:
+
+```bash
+python http_db_server.py --port 4001 --username user --password pass
+# then, in another terminal:
+./.venv/bin/python -m src.launcher --program ui --db-file http://user:pass@localhost:4001
+```
+
+Flags: `--seed PATH` (seed from any sqlite/yaml file), `--save-to PATH` (persist
+PUTs to YAML), `--host`, `--port`, `--username`/`--password` (optional Basic auth).
+
 ## Development tests
 
 ```bash
@@ -53,7 +67,8 @@ npm run test:unit  # Vitest unit tests
 Passed via `./.venv/bin/python -m src.launcher --program ui ...` (what `run_ui.sh`
 does) or `dev_backend.py start`.
 
-- `--db-file PATH` — rules database (`.sqlite3`/`.sqlite`, or `.yaml`/`.yml`).
+- `--db-file PATH` — rules database (`.sqlite3`/`.sqlite`, `.yaml`/`.yml`, or
+  an `http://`/`https://` remote address, optionally with `user:pass@`).
 - `--browser MODE` — `launch-system-default-browser` (default), `no-op`
   (headless), or `pywebview` (not implemented — fails early).
 - `--config-webserver-port PORT` — fixed port (fails if occupied); `PORT+`

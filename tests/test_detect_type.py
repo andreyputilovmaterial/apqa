@@ -24,6 +24,8 @@ def test_detect_type_distinguishes_physical_files_from_resource_addresses():
     assert detect_type('projects.yaml') == 'yaml'
     assert detect_type('projects.sqlite3') == 'sqlite'
     assert detect_type('oledb://server/database') == 'oledb'
+    assert detect_type('http://localhost:4001') == 'http'
+    assert detect_type('https://localhost:4001') == 'https'
 
 
 def test_yaml_resolves_relative_path(tmp_path, monkeypatch):

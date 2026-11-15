@@ -18,6 +18,8 @@ def detect_type(resource_path: Path | str | None) -> str | None:
         # str_rest = protocol_str_matches[2]
         if str_protocol_part=='oledb':
             return 'oledb'
+        elif str_protocol_part.lower() in ('http','https'):
+            return str_protocol_part.lower()
         elif str_protocol_part=='file':
             resource_path = Path(resource_path).resolve()
             if resource_path.suffix.lower() in ('.yaml','.yml',):

@@ -473,6 +473,19 @@ The rules database is a format-agnostic interface
   `rules`, plus an optional `project` mapping (`name`, `comment`, `meta`); each
   group may carry an `aliases` list. A legacy top-level list of
   rules is still accepted (read as rules only).
+- **HTTP/HTTPS** (`http://`/`https://`) — a remote database addressed by URL.
+  The client (`src/db_processors/http.py`, `DBFileHttp`) keeps the whole
+  database as a single JSON document with the same shape as the YAML file and
+  talks to the server via `GET <url>` (fetch the document; `404` = empty) and
+  `PUT <url>` (persist it). Credentials may be embedded as
+  `http://user:pass@host:port`; they are parsed into an
+  `Authorization: Basic ...` header and stripped from the stored/served path, so
+  `config['db_file']`, the page header, and `GET /qc/project` carry only the
+  clean URL (never a resolved filesystem path). The in-memory document CRUD is
+  shared with YAML via `src/db_processors/document_base.py`. A stdlib-only dev
+  fixture server lives at `http_db_server.py` (repo root):
+  `python http_db_server.py --port 4001 --username user --password pass`, then
+  open the app with `--db-file http://user:pass@localhost:4001`.
 
 Rules and groups have an **id/name split**: `id` is the stable technical
 identity — an ASCII alphanumeric slug auto-generated from the display `name`
@@ -488,7 +501,7 @@ written before the split (a single
 `name` used for both identity and display) is migrated: `id` is generated from
 the old `name` and old `name`-based references are remapped to the new ids.
 
-Both backends implement the same CRUD contract for rules (`list_rules`,
+All backends implement the same CRUD contract for rules (`list_rules`,
 `get_rule`, `has_rule`, `add_rule`, `update_rule`, `rename_rule`,
 `delete_rule`, `save`), a group contract (`list_groups`, `get_group`,
 `has_group`, `add_group`, `update_group`, `rename_group`, `delete_group`),
