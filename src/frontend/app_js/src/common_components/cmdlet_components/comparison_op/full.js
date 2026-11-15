@@ -1,5 +1,5 @@
-import { ComparisonOp } from './shared';
+import { makeComparisonOp } from './shared';
 
-// Placeholder for the "full" (verbose) display of a comparison op. Currently
-// identical to the compact form.
-export default ComparisonOp;
+// The "full" (verbose) display of a comparison op: the op name unless the op
+// declares a `full` display spec.
+export default makeComparisonOp('full');

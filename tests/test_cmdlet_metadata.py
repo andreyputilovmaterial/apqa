@@ -103,6 +103,54 @@ def test_comparison_ops_and_op_args():
     assert eq_args['unordered_arrays']['type'] == 'boolean'
 
 
+def test_cmdlet_display_specs():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    # get-content-excel declares a role-bearing compact spec; no `full` override
+    # (the full form is the default "name args" rendering).
+    assert meta['get-content-excel']['compact'] == [
+        {'text': '[xlsx]', 'role': 'logo'},
+        {'text': ': ', 'role': 'separator'},
+        {'arg': 'path'},
+    ]
+    assert 'full' not in meta['get-content-excel']
+    # literal renders as its value only, in both forms.
+    assert meta['literal']['compact'] == [{'arg': 'value'}]
+    assert meta['literal']['full'] == [{'arg': 'value'}]
+    # A cmdlet without a spec carries no compact/full keys (default rendering).
+    assert 'compact' not in meta['count']
+    assert 'full' not in meta['count']
+
+
+def test_comparison_op_compact_symbols():
+    ops = {o['name']: o for o in get_cmdlet_metadata()['ops']}
+    for name, symbol in (('eq', '='), ('ne', '≠'), ('lt', '<'), ('le', '≤'), ('gt', '>'), ('ge', '≥')):
+        assert ops[name]['compact'] == [{'text': symbol, 'role': 'symbol'}]
+    # Ops without a short symbol fall back to their name (no compact spec).
+    assert 'compact' not in ops['contains']
+    assert 'compact' not in ops['eq-unordered']
+
+
+def test_normalize_display():
+    from src.cmdlets.registry import normalize_display
+
+    assert normalize_display(None) is None
+    assert normalize_display('literal') == [{'text': 'literal'}]
+    assert normalize_display([
+        {'text': '[xlsx]', 'role': 'logo'},
+        {'arg': 'path'},
+    ]) == [
+        {'text': '[xlsx]', 'role': 'logo'},
+        {'arg': 'path'},
+    ]
+
+    with pytest.raises(ValueError):
+        normalize_display([{'name': 'neither text nor arg'}])
+    with pytest.raises(ValueError):
+        normalize_display([{'text': 'x', 'arg': 'y'}])
+    with pytest.raises(ValueError):
+        normalize_display(42)
+
+
 def test_endpoint_returns_metadata(config):
     resp = handle_functionality(FakeRequest('GET', '/functionality/cmdlet-metadata'), config)
     assert resp.status_code == 200

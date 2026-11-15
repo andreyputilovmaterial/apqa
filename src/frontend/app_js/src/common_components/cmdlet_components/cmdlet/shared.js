@@ -1,44 +1,45 @@
 import { computed } from 'vue';
 
-import { getCmdletRenderer } from '../cmdlet_renderers';
-
 import './styles.css';
 
-// Pure text form of one cmdlet (used by the compact chip and as the source of
-// the arg-part formatting shared with `cmdlet_arg`).
+// Pure text form of one arg value (used by the per-type value renderers and by
+// the display-spec arg parts).
 export function formatArgValue(value) {
+  if (value === undefined) return '';
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 }
 
-export function formatArgNameValue(name, value) {
-  if (value === true) return name;
-  return `${name}=${formatArgValue(value)}`;
-}
-
-export function formatArgs(args) {
-  const parts = [];
-  for (const [key, value] of Object.entries(args || {})) {
-    parts.push(formatArgNameValue(key, value));
+// CSS classes for one display-spec part. A part is either a literal token
+// (`{ text, role? }`) or an arg reference (`{ arg, role? }`). The base
+// `apqa-cmdlet-part` class is always present; `apqa-cmdlet-part-text` /
+// `apqa-cmdlet-part-arg` mark the part kind, and `apqa-cmdlet-role-<role>` is
+// added when the part carries a semantic role (logo, separator, symbol, …).
+export function partClasses(part) {
+  if (!part) return 'apqa-cmdlet-part';
+  const classes = ['apqa-cmdlet-part'];
+  if (Object.prototype.hasOwnProperty.call(part, 'arg')) {
+    classes.push('apqa-cmdlet-part-arg');
+  } else if (Object.prototype.hasOwnProperty.call(part, 'text')) {
+    classes.push('apqa-cmdlet-part-text');
   }
-  return parts;
+  if (part.role) classes.push(`apqa-cmdlet-role-${part.role}`);
+  return classes.join(' ');
 }
 
-export function cmdletParts(cmdlet) {
-  const renderer = getCmdletRenderer(cmdlet?.cmdlet);
-  const parts = renderer
-    ? [renderer(cmdlet)]
-    : [cmdlet?.cmdlet || '', ...formatArgs(cmdlet?.args)];
-  return parts.filter((part) => part !== '');
-}
-
-export function cmdletText(cmdlet) {
-  return cmdletParts(cmdlet).join(' ');
+// Arg type declared in the cmdlet metadata, falling back to `text`.
+export function argType(meta, name) {
+  for (const arg of (meta && meta.args) || []) {
+    if (arg.name === name) return arg.type || 'text';
+  }
+  return 'text';
 }
 
 // Component factory: the read-only "chip" for one cmdlet. `form` selects the
-// form of the per-arg child components (`compact` or `full`); both currently
-// share this single implementation, with `full` intended to diverge later.
+// form of the per-arg child components (`compact` or `full`). When the cmdlet's
+// metadata declares a display spec for this form (`meta.compact` /
+// `meta.full`), the chip is rendered from that spec's parts (literal tokens and
+// arg references); otherwise it falls back to the default "name args" rendering.
 export function makeCmdlet(form) {
   const argComponent = `component-cmdlet-arg-${form}`;
 
@@ -51,29 +52,46 @@ export function makeCmdlet(form) {
     setup(props) {
       const name = computed(() => props.cmdlet?.cmdlet || '');
 
-      const wholePart = computed(() => {
-        const renderer = getCmdletRenderer(props.cmdlet?.cmdlet);
-        return renderer ? renderer(props.cmdlet) : null;
+      const meta = computed(() =>
+        (props.cmdlets || []).find((c) => c.name === props.cmdlet?.cmdlet),
+      );
+
+      // Display spec for this form, or null when the cmdlet does not declare one
+      // (then fall back to the default name+args rendering). An empty array is a
+      // real spec that renders nothing.
+      const spec = computed(() => {
+        const value = meta.value && meta.value[form];
+        return Array.isArray(value) ? value : null;
       });
 
-      const argEntries = computed(() => {
-        const meta = (props.cmdlets || []).find((c) => c.name === props.cmdlet?.cmdlet);
-        const typeByName = Object.create(null);
-        for (const arg of meta?.args || []) typeByName[arg.name] = arg.type || 'text';
-        return Object.entries(props.cmdlet?.args || {}).map(([argName, value]) => ({
+      const argEntries = computed(() =>
+        Object.entries(props.cmdlet?.args || {}).map(([argName, value]) => ({
           name: argName,
           value,
-          type: typeByName[argName] || 'text',
-        }));
-      });
+          type: argType(meta.value, argName),
+        })),
+      );
 
-      return { name, wholePart, argEntries, argComponent };
+      function argValue(argName) {
+        return (props.cmdlet?.args || {})[argName];
+      }
+
+      function valueComponentFor(argName) {
+        return `component-cmdlet-arg-${argType(meta.value, argName)}-${form}`;
+      }
+
+      return { name, spec, argEntries, argValue, valueComponentFor, argComponent, partClasses };
     },
 
     template: `
 <span class="apqa-cmdlet">
-  <template v-if="wholePart !== null">
-    <span class="apqa-cmdlet-part">{{ wholePart }}</span>
+  <template v-if="spec !== null">
+    <template v-for="(part, index) in spec" :key="index">
+      <span v-if="'text' in part" :class="partClasses(part)">{{ part.text }}</span>
+      <span v-else :class="partClasses(part)">
+        <component :is="valueComponentFor(part.arg)" :value="argValue(part.arg)" />
+      </span>
+    </template>
   </template>
   <template v-else>
     <span class="apqa-cmdlet-part">{{ name }}</span>

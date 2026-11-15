@@ -34,3 +34,15 @@
   white-space: nowrap;
   vertical-align: bottom;
 }
+
+/* Display-spec part roles. A spec part carries a semantic role (declared in the
+   backend cmdlet metadata) which is mapped here to a CSS class; the frontend
+   only styles these roles and never emits raw HTML for them. */
+.apqa-cmdlet-role-logo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+}
+
+.apqa-cmdlet-role-separator {
+  opacity: 0.65;
+}

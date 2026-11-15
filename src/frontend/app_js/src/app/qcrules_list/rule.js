@@ -29,7 +29,7 @@ const Rule = {
   </div>
   <div class="apqa-qcrules-list-item-definition">
     <component-cmdlet-chain-full :chain="record.left" :cmdlets="cmdlets" />
-    <component-comparison-op-full :op="record.op" />
+    <component-comparison-op-full :op="record.op" :ops="ops" />
     <component-cmdlet-chain-full :chain="record.right" :cmdlets="cmdlets" />
   </div>
   <div class="apqa-qcrules-list-item-meta">

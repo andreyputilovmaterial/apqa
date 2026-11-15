@@ -37,7 +37,7 @@ const RuleCompact = {
   </div>
   <div class="apqa-rule-compact-definition">
     <component-cmdlet-chain-compact :chain="record.left" :cmdlets="cmdlets" />
-    <component-comparison-op-compact :op="record.op" />
+    <component-comparison-op-compact :op="record.op" :ops="ops" />
     <component-cmdlet-chain-compact :chain="record.right" :cmdlets="cmdlets" />
   </div>
   <marks-badges :marks="marks" />

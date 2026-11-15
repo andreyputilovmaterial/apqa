@@ -33,6 +33,11 @@ else:
     args=[
         {'name': 'path', 'type': 'path', 'required': True, 'description': 'Full path to the Excel workbook.'},
     ],
+    compact=[
+        {'text': '[xlsx]', 'role': 'logo'},
+        {'text': ': ', 'role': 'separator'},
+        {'arg': 'path'},
+    ],
 )
 def get_content_excel(value: PipeValue, args: dict) -> Block:
     if _openpyxl_import_error is not None:

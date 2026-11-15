@@ -3,7 +3,7 @@ import inspect
 import operator
 from datetime import date, datetime
 
-from .registry import normalize_args
+from .registry import normalize_args, normalize_display
 from .sysmissing import is_sysmissing
 
 
@@ -16,22 +16,31 @@ class ComparisonRegistry:
     ``@comparisons.register('<name>')``.
 
     The decorator also records editor metadata: ``op_args`` (a list of arg
-    schemas the rule form renders as op-specific inputs) and ``help`` (a short
-    description, defaulting to the function docstring).
+    schemas the rule form renders as op-specific inputs), ``help`` (a short
+    description, defaulting to the function docstring), and optional ``compact``
+    / ``full`` display specs (see :func:`normalize_display`) describing how the
+    op is rendered in the compact and full views — e.g. ``eq`` declares
+    ``compact=[{'text': '=', 'role': 'symbol'}]`` so the short symbol lives here
+    rather than in a frontend hardcoded map.
     """
 
     def __init__(self):
         self._ops = {}
         self._meta = {}
 
-    def register(self, name, help=None, op_args=None):
+    def register(self, name, help=None, op_args=None, compact=None, full=None):
         def decorator(fn):
             self._ops[name] = fn
-            self._meta[name] = {
+            meta = {
                 'name': name,
                 'help': help if help is not None else (inspect.getdoc(fn) or ''),
                 'op_args': normalize_args(op_args),
             }
+            if compact is not None:
+                meta['compact'] = normalize_display(compact)
+            if full is not None:
+                meta['full'] = normalize_display(full)
+            self._meta[name] = meta
             return fn
         return decorator
 
@@ -118,6 +127,7 @@ def _to_number(value):
 @comparisons.register(
     'eq',
     help='Equal (deep; arrays order-sensitive unless unordered_arrays).',
+    compact=[{'text': '=', 'role': 'symbol'}],
     op_args=[
         {
             'name': 'unordered_arrays',
@@ -161,6 +171,7 @@ def eq(left, right, args=None):
 @comparisons.register(
     'ne',
     help='Not equal.',
+    compact=[{'text': '≠', 'role': 'symbol'}],
     op_args=[
         {
             'name': 'unordered_arrays',
@@ -200,22 +211,38 @@ def _ordered(op, left, right):
     return False
 
 
-@comparisons.register('lt', help='Less than (scalar only).')
+@comparisons.register(
+    'lt',
+    help='Less than (scalar only).',
+    compact=[{'text': '<', 'role': 'symbol'}],
+)
 def lt(left, right, args=None):
     return _ordered(operator.lt, left, right)
 
 
-@comparisons.register('le', help='Less than or equal (scalar only).')
+@comparisons.register(
+    'le',
+    help='Less than or equal (scalar only).',
+    compact=[{'text': '≤', 'role': 'symbol'}],
+)
 def le(left, right, args=None):
     return _ordered(operator.le, left, right)
 
 
-@comparisons.register('gt', help='Greater than (scalar only).')
+@comparisons.register(
+    'gt',
+    help='Greater than (scalar only).',
+    compact=[{'text': '>', 'role': 'symbol'}],
+)
 def gt(left, right, args=None):
     return _ordered(operator.gt, left, right)
 
 
-@comparisons.register('ge', help='Greater than or equal (scalar only).')
+@comparisons.register(
+    'ge',
+    help='Greater than or equal (scalar only).',
+    compact=[{'text': '≥', 'role': 'symbol'}],
+)
 def ge(left, right, args=None):
     return _ordered(operator.ge, left, right)
 

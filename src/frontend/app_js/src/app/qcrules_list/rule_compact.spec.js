@@ -20,19 +20,48 @@ function makeRecord(overrides = {}) {
 // components; register them for the mount (same set as app.js).
 const GLOBAL = { components: cmdletComponents };
 
+// The comparison-op symbol is declared in the backend metadata (`src/cmdlets`);
+// the frontend only maps that metadata, so the test passes a minimal ops list.
+const OPS = [{ name: 'eq', compact: [{ text: '=', role: 'symbol' }] }];
+
 function mountCompact(props = {}) {
   return mount(RuleCompact, { global: GLOBAL, props });
 }
 
 describe('RuleCompact', () => {
   it('renders the name and both sides of the rule', () => {
-    const wrapper = mountCompact({ record: makeRecord() });
+    const wrapper = mountCompact({ record: makeRecord(), ops: OPS });
     const text = wrapper.text();
 
     expect(text).toContain('Rule A');
     expect(text).toContain('get-content path=a.sav');
     expect(text).toContain('=');
     expect(text).toContain('count');
+  });
+
+  it('renders a cmdlet compact display spec from its metadata', () => {
+    const record = makeRecord({
+      left: [{ cmdlet: 'get-content-excel', args: { path: '/data/map.xlsx' } }],
+      right: [{ cmdlet: 'count' }],
+    });
+    const cmdlets = [
+      {
+        name: 'get-content-excel',
+        kind: 'source',
+        args: [{ name: 'path', type: 'path', required: true }],
+        compact: [
+          { text: '[xlsx]', role: 'logo' },
+          { text: ': ', role: 'separator' },
+          { arg: 'path' },
+        ],
+      },
+    ];
+    const wrapper = mountCompact({ record, cmdlets, ops: OPS });
+    const text = wrapper.text();
+
+    expect(text).toContain('[xlsx]');
+    expect(text).toContain('/data/map.xlsx');
+    expect(text).not.toContain('get-content-excel');
   });
 
   it('shows a down-double arrow on the name hinting it expands', () => {

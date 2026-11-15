@@ -15,6 +15,8 @@ from ..value_types import PipeValue
             'description': 'The fixed constant value (any JSON scalar, array, or object).',
         },
     ],
+    compact=[{'arg': 'value'}],
+    full=[{'arg': 'value'}],
 )
 def literal(value: PipeValue, args: dict) -> PipeValue:
     """Return the fixed value carried in ``args['value']``.

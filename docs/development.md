@@ -521,6 +521,16 @@ is declared **next to each registration** (never hardcoded in the frontend):
 - `src/cmdlets/comparison_ops.py` — `@comparisons.register(name, help=...,
   op_args=[...])` stores the same for ops.
 
+Both registries also accept a **display spec** for the read-only (non-editing)
+views: `compact` and `full`, each an ordered list of parts (see
+`docs/cmdlet-data-formats.md` "Display specs"). They describe how a cmdlet / op
+is rendered in the collapsed (`rule_compact.js`) and expanded (`rule.js`) views,
+so the "short" form lives next to the registration instead of in a frontend
+hardcoded map — e.g. `get-content-excel` declares `compact` = `[xlsx]: path`,
+`literal` declares `compact`/`full` = just its value, and `eq` declares
+`compact` = `=`. Absent means the default rendering (`name args` for cmdlets,
+the raw name for ops).
+
 An **arg schema** is `{ name, type, required, description }` plus optional
 `default` and `options`. Arg `type`s understood by the editor:
 

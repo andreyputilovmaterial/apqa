@@ -1,3 +1,3 @@
-import { ComparisonOp } from './shared';
+import { makeComparisonOp } from './shared';
 
-export default ComparisonOp;
+export default makeComparisonOp('compact');

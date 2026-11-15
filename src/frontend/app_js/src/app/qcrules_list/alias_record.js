@@ -2,13 +2,13 @@
 // QC-rules tree. The chain reuses the same display `cmdlet-chain` renderer as
 // rules.
 const AliasRecord = {
-  props: ['alias'],
+  props: ['alias', 'cmdlets'],
 
   template: `
 <li class="apqa-alias-record">
   <span class="apqa-alias-record-name">{{ alias.name }}</span>
   <span class="apqa-alias-record-colon" aria-hidden="true">:</span>
-  <component-cmdlet-chain-compact :chain="alias.chain" />
+  <component-cmdlet-chain-compact :chain="alias.chain" :cmdlets="cmdlets" />
 </li>
 `,
 };

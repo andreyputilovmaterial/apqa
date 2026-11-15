@@ -29,6 +29,50 @@ def normalize_args(args):
     return result
 
 
+def normalize_display(parts):
+    """Normalize a display spec (an ordered list of parts) into the shape the UI
+    consumes.
+
+    A display spec describes how one cmdlet / comparison op is rendered in a
+    specific view (``compact`` or ``full``). It is an ordered list of parts, each
+    one of:
+
+    - a plain string — a literal text token;
+    - ``{'text': <str>, 'role': <str>}`` — a literal token with an optional role
+      (a semantic label the frontend maps to a CSS class);
+    - ``{'arg': <name>}`` — the value of that cmdlet arg, rendered by the arg's
+      declared type; an optional ``role`` overrides the default ``'arg'`` role.
+
+    ``None`` means "no override" (the frontend falls back to the default
+    rendering). A single string is accepted as a one-literal-part shorthand. The
+    check is intentionally permissive — it only makes the minimum structural
+    guarantees the renderer needs and fails early with a readable message on a
+    malformed part.
+    """
+    if parts is None:
+        return None
+    if isinstance(parts, str):
+        parts = [parts]
+    if not isinstance(parts, (list, tuple)):
+        raise ValueError('display spec must be a list of parts (or a single string)')
+    result = []
+    for part in parts:
+        if isinstance(part, str):
+            result.append({'text': part})
+            continue
+        if not isinstance(part, dict):
+            raise ValueError('display part must be a string or a mapping')
+        has_text = 'text' in part
+        has_arg = 'arg' in part
+        if has_text == has_arg:
+            raise ValueError('display part must have exactly one of "text" or "arg"')
+        normalized = {'text': f'{part["text"]}'} if has_text else {'arg': f'{part["arg"]}'}
+        if 'role' in part:
+            normalized['role'] = f'{part["role"]}'
+        result.append(normalized)
+    return result
+
+
 class CmdletRegistry:
     """Global registry of cmdlets, keyed by cmdlet name.
 
@@ -49,21 +93,29 @@ class CmdletRegistry:
       renders one input per arg.
     - ``help`` — a short description shown in the editor; defaults to the
       function's docstring.
+    - ``compact`` / ``full`` — optional display specs (an ordered list of parts,
+      see :func:`normalize_display`) describing how the cmdlet is rendered in the
+      compact and full views; absent means the default ``name args`` rendering.
     """
 
     def __init__(self):
         self._cmdlets = {}
         self._meta = {}
 
-    def register(self, name, kind='processor', args=None, help=None):
+    def register(self, name, kind='processor', args=None, help=None, compact=None, full=None):
         def decorator(fn):
             self._cmdlets[name] = fn
-            self._meta[name] = {
+            meta = {
                 'name': name,
                 'kind': kind,
                 'args': normalize_args(args),
                 'help': help if help is not None else (inspect.getdoc(fn) or ''),
             }
+            if compact is not None:
+                meta['compact'] = normalize_display(compact)
+            if full is not None:
+                meta['full'] = normalize_display(full)
+            self._meta[name] = meta
             return fn
         return decorator
 

@@ -54,7 +54,7 @@ const RulesTree = {
           </span>
         </button>
         <ul v-if="!collapsed[node.id] && node.aliases.length" class="apqa-rules-tree-aliases">
-          <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" />
+          <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" :cmdlets="cmdlets" />
         </ul>
       </li>
       <rule-record

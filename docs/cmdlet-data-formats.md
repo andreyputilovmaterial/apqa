@@ -398,6 +398,27 @@ Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
 `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g. `map`'s `transform`
 or `where`'s `predicate`).
 
+### Display specs (`compact` / `full`)
+
+A cmdlet or comparison op may also declare how the read-only rule list renders
+it, separately for the collapsed (`compact`) and expanded (`full`) views. A
+**display spec** is an ordered list of parts; each part is one of:
+
+- a plain string — a literal text token;
+- `{ text, role }` — a literal token with an optional **role** (a semantic label
+  the frontend maps to a CSS class, e.g. `logo`, `separator`, `symbol`);
+- `{ arg: <name> }` — the value of that cmdlet arg, rendered by the arg's
+  declared type (an optional `role` overrides the default `arg` role).
+
+`None` means "no override" (the frontend falls back to the default rendering:
+`name args` for a cmdlet, the raw name for an op); a single string is a
+one-literal-part shorthand. For example `get-content-excel` declares
+`compact: [{ text: '[xlsx]', role: 'logo' }, { text: ': ', role: 'separator' },
+{ arg: 'path' }]` so it reads `[xlsx]: /path/to/map.xlsx` instead of
+`get-content-excel path=/path/to/map.xlsx`, and `eq` declares
+`compact: [{ text: '=', role: 'symbol' }]`. The frontend never emits HTML from a
+spec — it only maps roles to CSS classes (`.apqa-cmdlet-role-<role>`).
+
 ### Arg values: `sysmissing` vs value
 
 An argument is either a value of its declared type, or `sysmissing` (`null` in
