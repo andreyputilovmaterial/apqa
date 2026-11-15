@@ -30,10 +30,12 @@ echo -
 
 
 
+# BEGIN OPTIONAL-DEPS
 # Install optional per-cmdlet/per-processor dependencies (best-effort).
 # A missing optional dependency must not fail the whole init: the affected
 # cmdlets are imported as "unavailable" and only raise their import error when
-# actually used. The distributed copy scans optional_dependencies/ instead.
+# actually used. The distributed copy (dist/) gets these inlined by build.sh
+# instead of scanning src/cmdlets/.
 if [ -d src/cmdlets ]; then
     for requirements in $(find src/cmdlets -type f -name 'requirements.txt' | sort); do
         echo "installing optional dependencies: $requirements"
@@ -42,6 +44,7 @@ if [ -d src/cmdlets ]; then
         fi
     done
 fi
+# END OPTIONAL-DEPS
 
 
 "$pythonexecutable" -m src.launcher --program done

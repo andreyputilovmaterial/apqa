@@ -11,7 +11,8 @@
   function raises a readable error (chained to the original) at its start. No
   global import-error machinery.
 - `build.sh` auto-discovers the `requirements.txt` files (plain filesystem search
-  on the source tree, before/outside the bundle) and copies them to
-  `dist/optional_dependencies/`; `run_init.*` installs them best-effort (failure
-  → WARNING, continue). `transform-run-script` rewrites `src/cmdlets` →
-  `optional_dependencies` in the dist copies.
+  on the source tree, before/outside the bundle) and inlines the installable
+  specifiers as `pip install` statements into `dist/run_init.sh` /
+  `dist/run_init.bat` (via `transform-run-script`). `run_init.*` installs each
+  one best-effort (failure → WARNING, continue). No `dist/optional_dependencies/`
+  folder is produced.

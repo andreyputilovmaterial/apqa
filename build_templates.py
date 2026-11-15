@@ -8,6 +8,7 @@ from datetime import datetime
 from importlib import resources
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 
 
@@ -427,6 +428,109 @@ def call_bundle_program(*argcs,**kwargs):
 
 
 
+def _parse_requirements(text):
+    """Return the installable requirement specifiers in a requirements.txt body.
+
+    Mirrors the subset of pip's parser that cmdlet requirements.txt files use:
+    blank lines and whole-line comments (leading ``#``) are skipped, a trailing
+    comment (a ``#`` preceded by whitespace) is stripped, and everything else is
+    kept verbatim as a single specifier. A ``#`` that is not preceded by
+    whitespace (e.g. a VCS ``#egg=`` fragment) is kept.
+    """
+    result = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        stripped = re.sub(r'\s+#.*$', '', stripped).strip()
+        if stripped:
+            result.append(stripped)
+    return result
+
+
+def collect_optional_dependencies():
+    """Scan ``src/cmdlets/**/requirements.txt`` and return ``[(name, specs), ...]``.
+
+    ``name`` is the cmdlet folder name and ``specs`` the list of installable
+    requirement specifiers. Comment-only files (stdlib-only cmdlets) are dropped:
+    there is nothing to install for them. The scan runs on the real source tree,
+    so it works both during ``build.sh`` and from a test run.
+    """
+    root = Path(__file__).resolve().parent / 'src' / 'cmdlets'
+    result = []
+    if not root.is_dir():
+        return result
+    for requirements_file in sorted(root.glob('*/requirements.txt')):
+        specs = _parse_requirements(requirements_file.read_text(encoding='utf-8'))
+        if specs:
+            result.append((requirements_file.parent.name, specs))
+    return result
+
+
+def _sh_quote(spec):
+    return "'" + spec.replace("'", "'\\''") + "'"
+
+
+def _bat_quote(spec):
+    # `%` is special in batch files; `%%` is its escaped form. Keep every other
+    # character as-is — inside double quotes &, |, <, > are literal.
+    return '"' + spec.replace('%', '%%') + '"'
+
+
+def _render_sh_optional_deps(entries):
+    lines = [
+        '# Optional per-cmdlet dependencies (inlined by build.sh from',
+        '# src/cmdlets/**/requirements.txt). Each install is best-effort: a missing',
+        '# optional dependency must not fail the whole init — the affected cmdlet is',
+        '# imported as "unavailable" and raises its import error only when used.',
+    ]
+    for name, specs in entries:
+        quoted = ' '.join(_sh_quote(spec) for spec in specs)
+        lines.append('echo "Installing optional dependencies: {0}"'.format(name))
+        lines.append('if ! "$pythonexecutable" -m pip install {0}; then'.format(quoted))
+        lines.append(
+            '    echo "WARNING: optional dependencies for {0} not installed'
+            ' (the corresponding cmdlets will be unavailable)"'.format(name)
+        )
+        lines.append('fi')
+        lines.append('')
+    return '\n'.join(lines) + '\n'
+
+
+def _render_bat_optional_deps(entries):
+    lines = [
+        '@REM Optional per-cmdlet dependencies (inlined by build.sh from',
+        '@REM src\\cmdlets\\**\\requirements.txt). Each install is best-effort: a missing',
+        '@REM optional dependency must not fail the whole init — the affected cmdlet is',
+        '@REM imported as "unavailable" and raises its import error only when used.',
+    ]
+    for name, specs in entries:
+        quoted = ' '.join(_bat_quote(spec) for spec in specs)
+        lines.append('echo Installing optional dependencies: {0}'.format(name))
+        lines.append('"%pythonexecutable%" -m pip install {0}'.format(quoted))
+        lines.append(
+            'if errorlevel 1 echo WARNING: optional dependencies for {0} not installed'
+            ' - the corresponding cmdlets will be unavailable'.format(name)
+        )
+        lines.append('')
+    return '\n'.join(lines) + '\n'
+
+
+def _replace_between_markers(text, begin_marker, end_marker, replacement):
+    lines = text.splitlines(keepends=True)
+    begin = None
+    end = None
+    for index, line in enumerate(lines):
+        if begin_marker in line and begin is None:
+            begin = index
+        elif end_marker in line and begin is not None:
+            end = index
+            break
+    if begin is None or end is None or end < begin:
+        return text
+    return ''.join(lines[:begin] + [replacement] + lines[end + 1:])
+
+
 def call_transform_run_script_program(*argcs, **kwargs):
     time_start = datetime.now()
     script_name = 'transform run script'
@@ -483,8 +587,17 @@ def call_transform_run_script_program(*argcs, **kwargs):
         f'..{sep}tests-real-sensitive-data{sep}'
     )
 
-    # 4. optional per-cmdlet dependencies live in optional_dependencies/ in dist/
-    result = result.replace(f'src{sep}cmdlets', 'optional_dependencies')
+    # 4. inline optional per-cmdlet dependencies (dist/ keeps no per-cmdlet
+    #    requirements.txt files — the pip install statements are embedded here)
+    if 'BEGIN OPTIONAL-DEPS' in result:
+        entries = collect_optional_dependencies()
+        if args.input.endswith('.bat'):
+            replacement = _render_bat_optional_deps(entries)
+        else:
+            replacement = _render_sh_optional_deps(entries)
+        result = _replace_between_markers(
+            result, 'BEGIN OPTIONAL-DEPS', 'END OPTIONAL-DEPS', replacement
+        )
 
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)

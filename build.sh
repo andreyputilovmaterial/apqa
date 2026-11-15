@@ -163,19 +163,11 @@ echo -
 
 echo "Bring run.sh and requirements.txt to \"$DIST_DIR\""
 cp "requirements.txt" "$DIST_DIR/"
-# Optional per-cmdlet/per-processor dependencies. They are copied into
-# dist/optional_dependencies/ (preserving their path under src/) and installed
-# best-effort by run_init.sh / run_init.bat. A missing one is not fatal: the
-# corresponding cmdlets simply report their import error when used.
-if [ -d src/cmdlets ]; then
-    for requirements in $(find src/cmdlets -type f -name 'requirements.txt' | sort); do
-        rel="${requirements#src/}"
-        dest="$DIST_DIR/optional_dependencies/$rel"
-        mkdir -p "$(dirname "$dest")"
-        echo "copying optional requirements: $requirements -> $dest"
-        cp "$requirements" "$dest"
-    done
-fi
+# Optional per-cmdlet/per-processor dependencies are not copied as files:
+# build_templates.py --program transform-run-script inlines them as pip install
+# statements into dist/run_init.sh / dist/run_init.bat (it scans
+# src/cmdlets/**/requirements.txt, the real source tree). A missing one is not
+# fatal: the corresponding cmdlets simply report their import error when used.
 cp LICENSE "$DIST_DIR/"
 cp README.md "$DIST_DIR/"
 cp help.md "$DIST_DIR/"

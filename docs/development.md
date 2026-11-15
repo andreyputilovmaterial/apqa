@@ -113,6 +113,8 @@ from the root during development. They launch the program as `python -m src.laun
 - `tests-real-sensitive-data/` → `../tests-real-sensitive-data/` (the data directory
   lives one level above `dist/`)
 - the dev-only "build the bundle first" block in `run_tests.*` is stripped
+- the optional per-cmdlet dependencies block in `run_init.*` is replaced with
+  inlined `pip install` statements (see "Optional dependencies")
 
 `run_tests.*` run QC rules through pytest, whose entry point exists only inside the
 bundle. So from the root they first run `build.sh` and then pytest on
@@ -175,12 +177,13 @@ import — there is no global import-error machinery.
 
 `build.sh` auto-discovers every `src/cmdlets/**/requirements.txt` (a plain
 filesystem search on the real source tree — this runs before/outside the bundle,
-so pinliner is not involved) and copies it into
-`dist/optional_dependencies/<path-under-src>/requirements.txt`. `run_init.sh` and
-`run_init.bat` install each one best-effort (a failure prints a WARNING and
-continues). `build_templates.py --program transform-run-script` rewrites the
-`src/cmdlets` path to `optional_dependencies` in the distributed copies of the
-run scripts.
+so pinliner is not involved) and inlines the installable specifiers directly as
+`pip install` statements into `dist/run_init.sh` and `dist/run_init.bat` (via
+`build_templates.py --program transform-run-script`). `run_init.sh` and
+`run_init.bat` then install each one best-effort (a failure prints a WARNING and
+continues). Comment-only `requirements.txt` files (stdlib-only cmdlets) inline
+nothing, so they are silently skipped. No `dist/optional_dependencies/` folder is
+produced — the only requirements file in `dist/` is the global `requirements.txt`.
 
 ### Adding a new optional cmdlet
 

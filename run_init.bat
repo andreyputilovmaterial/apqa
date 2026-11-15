@@ -27,15 +27,18 @@ echo done
 echo.
 echo.
 
+@REM BEGIN OPTIONAL-DEPS
 @REM Install optional per-cmdlet/per-processor dependencies (best-effort).
-@REM The distributed copy scans optional_dependencies\ instead.
+@REM The distributed copy (dist\) gets these inlined by build.sh instead of
+@REM scanning src\cmdlets\.
 if exist "src\cmdlets" (
-    for /r "src\cmdlets" %%f in (requirements.txt) do (
+    for /f "usebackq delims=" %%f in (`dir /s /b "src\cmdlets\requirements.txt"`) do (
         echo Installing optional dependencies: %%f
         "%pythonexecutable%" -m pip install -r "%%f"
         if errorlevel 1 echo WARNING: optional dependencies in %%f not installed - the corresponding cmdlets will be unavailable
     )
 )
+@REM END OPTIONAL-DEPS
 
 "%pythonexecutable%" -m src.launcher --program done
 
