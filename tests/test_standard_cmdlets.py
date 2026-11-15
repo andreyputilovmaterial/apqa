@@ -152,6 +152,55 @@ def test_any_and_all_require_array():
         cmdlets.get('logical-all')(5, {})
 
 
+# ---- logical (three-valued) -------------------------------------------------
+
+def test_tristate_not():
+    n = cmdlets.get('logical-tristate-not')
+    assert n(False, {}) is True
+    assert n(True, {}) is False
+    assert n(sysmissing, {}) is None
+    assert n('', {}) is True
+    assert n(1, {}) is False
+
+
+def test_tristate_and():
+    a = cmdlets.get('logical-tristate-and')
+    assert a(None, _operands(True, 1, 'x')) is True
+    assert a(None, _operands(True, 0)) is False
+    assert a(None, _operands(True, sysmissing)) is None
+    assert a(None, _operands(True, 0, sysmissing)) is False
+
+
+def test_tristate_or():
+    o = cmdlets.get('logical-tristate-or')
+    assert o(None, _operands(False, '', 2)) is True
+    assert o(None, _operands(False, '', 0)) is False
+    assert o(None, _operands(False, '', sysmissing)) is None
+    assert o(None, _operands(False, '', 2, sysmissing)) is True
+
+
+def test_tristate_any():
+    assert cmdlets.get('logical-tristate-any')([0, '', 3], {}) is True
+    assert cmdlets.get('logical-tristate-any')([0, '', None], {}) is None
+    assert cmdlets.get('logical-tristate-any')([0, ''], {}) is False
+    assert cmdlets.get('logical-tristate-any')([], {}) is False
+
+
+def test_tristate_all():
+    assert cmdlets.get('logical-tristate-all')([1, 'x'], {}) is True
+    assert cmdlets.get('logical-tristate-all')([1, ''], {}) is False
+    assert cmdlets.get('logical-tristate-all')([1, None], {}) is None
+    assert cmdlets.get('logical-tristate-all')([1, '', None], {}) is False
+    assert cmdlets.get('logical-tristate-all')([], {}) is True
+
+
+def test_tristate_any_and_all_require_array():
+    with pytest.raises(TypeError):
+        cmdlets.get('logical-tristate-any')('abc', {})
+    with pytest.raises(TypeError):
+        cmdlets.get('logical-tristate-all')(5, {})
+
+
 # ---- bitwise ---------------------------------------------------------------
 
 def test_bit_not():

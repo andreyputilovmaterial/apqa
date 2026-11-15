@@ -196,6 +196,19 @@ Logical operators coerce operands to boolean and always return a boolean:
   `sysmissing` operand counts as `false`.
 - `logical-any` / `logical-all` — reduce an array's iterations to a boolean.
 
+The `logical-tristate-*` variants mirror these with SQL three-valued logic, so
+`sysmissing` is *unknown* rather than `false` and the result may itself be
+`sysmissing`:
+
+- `logical-tristate-not` — `not true` is `false`, `not false` is `true`, and
+  `not sysmissing` is `sysmissing`.
+- `logical-tristate-and` / `logical-tristate-or` — combine operand cmdlet chains
+  in `args['operands']`; the result is the dominant truth value when one
+  dominates (`false` for AND, `true` for OR), otherwise `sysmissing` when any
+  operand is `sysmissing`, otherwise the remaining value.
+- `logical-tristate-any` / `logical-tristate-all` — reduce an array's iterations
+  with the same OR / AND three-valued rules.
+
 Bitwise operators require integer operands (bool excluded) and use
 `args['operands']` for the binary/n-ary ones: `bitwise-not` (unary), `bitwise-and`,
 `bitwise-or`, `bitwise-xor`, `bitwise-lshift`, `bitwise-rshift`.

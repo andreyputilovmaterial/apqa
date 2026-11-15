@@ -35,6 +35,11 @@ from . import logical_and  # noqa: F401 - import registers the cmdlet
 from . import logical_any  # noqa: F401 - import registers the cmdlet
 from . import logical_not  # noqa: F401 - import registers the cmdlet
 from . import logical_or  # noqa: F401 - import registers the cmdlet
+from . import logical_tristate_all  # noqa: F401 - import registers the cmdlet
+from . import logical_tristate_and  # noqa: F401 - import registers the cmdlet
+from . import logical_tristate_any  # noqa: F401 - import registers the cmdlet
+from . import logical_tristate_not  # noqa: F401 - import registers the cmdlet
+from . import logical_tristate_or  # noqa: F401 - import registers the cmdlet
 from . import map_  # noqa: F401 - import registers the cmdlet
 from . import matches  # noqa: F401 - import registers the cmdlet
 from . import select_field  # noqa: F401 - import registers the cmdlet
