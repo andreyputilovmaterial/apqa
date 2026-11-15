@@ -4,6 +4,9 @@
 
 ## Last state
 
+- **Removed the unused `common_components/pages` "page stack" component (a leftover from an older design).** It was dead code — its default export `PagesSite` and the `mdm-ui-pages` / `mdm-git-ui-page` markup were never imported anywhere (a whole-tree grep found references only inside the component itself). The app stays a single-screen Vue app: `app.js` mounts one fixed template, and secondary views (project settings, test page) are opened as overlays through `common_components/modals` (`ModalsSite` + `createModal`) via `background_navlinks_attachmodals/manipulate_links.js` — no router, no address-bar navigation. Decision recorded: **no vue-router**; the modal/overlay model *is* the navigation mechanism, and a router is only worth reconsidering if a genuinely URL-addressable second screen ever appears. Also dropped the now-stale "pages" word from the `// all "system" components ...` comment in `app.js`.
+
+
 - **Escaped an HTML-like angle-bracket placeholder in the docs.** `docs/roadmap.md` had `the page title becomes "QC rules for <project name>"` written as plain prose, so `<project name>` could be misparsed as an HTML tag; it now reads `&lt;project name&gt;`. Reviewed every repo markdown doc (`docs/`, `README.md`, `help.md`, `.clinerules/`): all other `<...>` occurrences are already inside backticks (code spans) or fenced code blocks, so they render as literal text and are safe.
 
 - **Cmdlets and the comparison op are now bordered "chips" (qcrules_list).**

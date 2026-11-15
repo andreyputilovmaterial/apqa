@@ -30,7 +30,7 @@ import ComponentLoaderSpinner from './common_components/loader_spinner/index';
 import ComponentLoaderInProgress from './common_components/loader_inprogress/index';
 import './common_components/css_grid/styles.css';
 
-// all "system" components - modals, pages, environment for showing errors...
+// all "system" components - modals and the environment for showing errors...
 import { ModalsSite } from './common_components/modals/modals';
 import ManipulateNavLinksDummyWrapper from './app/background_navlinks_attachmodals/manipulate_links';
 
