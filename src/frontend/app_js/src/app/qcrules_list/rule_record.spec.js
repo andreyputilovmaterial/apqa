@@ -138,6 +138,66 @@ describe('RuleRecord', () => {
     expect(wrapper.find('.apqa-rule-body-action').exists()).toBe(false);
   });
 
+  it('shows a green "Passed" banner for a cached passed result', async () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: { 'Rule A': { status: 'passed', notes: [] } },
+      },
+    });
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+
+    const banner = wrapper.find('.apqa-rule-run-result-passed');
+    expect(banner.exists()).toBe(true);
+    expect(banner.text()).toBe('Passed');
+  });
+
+  it('shows a red "Failed" banner with notes for a cached failed result', async () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: {
+          'Rule A': {
+            status: 'failed',
+            notes: [{ path: ['fields', 'A', 'label'], message: 'not XML-compatible' }],
+          },
+        },
+      },
+    });
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+
+    expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
+    expect(wrapper.find('.apqa-rule-run-result-notes li').text()).toContain(
+      'fields.A.label: not XML-compatible',
+    );
+  });
+
+  it('shows a red exception snippet for a cached error result', async () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: {
+          'Rule A': {
+            status: 'error',
+            message: "cmdlet 'nope' (step 0): cmdlet not found: nope",
+          },
+        },
+      },
+    });
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+
+    const error = wrapper.find('.apqa-rule-run-result-error');
+    expect(error.exists()).toBe(true);
+    expect(error.text()).toBe("cmdlet 'nope' (step 0): cmdlet not found: nope");
+  });
+
+  it('shows no banner when there is no cached result', async () => {
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+
+    expect(wrapper.find('.apqa-rule-run-result').exists()).toBe(false);
+  });
+
   it('forwards save and cancel from the inline edit form', async () => {
     const wrapper = mountRecord({
       props: { record: makeRecord(), editingId: 'Rule A' },

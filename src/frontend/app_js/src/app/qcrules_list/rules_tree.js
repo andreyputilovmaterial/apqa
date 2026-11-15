@@ -20,6 +20,7 @@ const RulesTree = {
     groups: { type: Array, default: () => [] },
     recordsPerPage: { type: Number, default: 25 },
     editingId: { type: String, default: '' },
+    runResults: { type: Object, default: () => ({}) },
     cmdlets: { type: Array, default: () => [] },
     ops: { type: Array, default: () => [] },
     tagSuggestions: { type: Array, default: () => [] },
@@ -62,6 +63,7 @@ const RulesTree = {
         :record="node.record"
         :style="{ '--rules-tree-depth': node.depth }"
         :editing-id="editingId"
+        :run-results="runResults"
         :cmdlets="cmdlets"
         :ops="ops"
         :tag-suggestions="tagSuggestions"

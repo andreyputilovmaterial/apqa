@@ -1,4 +1,4 @@
-import { computed, ref, onMounted, defineComponent, h } from 'vue';
+import { computed, ref, reactive, onMounted, defineComponent, h } from 'vue';
 
 import RecordsFilter from '@/common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '@/common_defs/helper_functions';
@@ -82,7 +82,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @save="onSaveRule" @cancel="onCancelEdit" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @save="onSaveRule" @cancel="onCancelEdit" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -98,6 +98,13 @@ const QcRulesList = {
     const loadError = ref('');
     const cmdletMetadata = ref(null);
     const editingId = ref('');
+
+    // Per-rule run results, cached in the UI (keyed by rule id). Kept here, on
+    // the page, rather than on the record objects themselves: the records filter
+    // passes shallow copies of records down to the tree, so a result written onto
+    // a copied record would be lost on the next recompute. Keying by id also keeps
+    // the result visible across list reloads until the rule is edited/deleted.
+    const runResults = reactive({});
 
     // The create/edit forms need the cmdlet + comparison-op metadata, fetched
     // lazily on first use. These computed refs keep the template readable.
@@ -352,9 +359,54 @@ const QcRulesList = {
       editingId.value = record.id;
     }
 
-    function onRunRule(record) {
-      // TODO(roadmap): run the rule once the runner UI is implemented.
-      console.debug('run rule (not implemented yet):', record.name);
+    async function onRunRule(record) {
+      runResults[record.id] = { status: 'running' };
+
+      // Run the rule exactly like the backend's "run QC tests" mode does:
+      // `tstsuite.py` -> `rule.run()` -> `run_rule(self.to_dict())`. The
+      // `/functionality/run-rule` endpoint executes the same
+      // `run_rule_with_report` path and returns `{result, notes?}` (or `{error}`
+      // when a cmdlet raised).
+      const payload = {
+        name: record.name,
+        id: record.id,
+        group: record.group,
+        meta: { ...(record.meta || {}) },
+        left: Array.isArray(record.left) ? record.left : [],
+        op: record.op || '',
+        op_args: record.op_args && typeof record.op_args === 'object' ? { ...record.op_args } : {},
+        right: Array.isArray(record.right) ? record.right : [],
+      };
+
+      try {
+        const response = await fetch('/functionality/run-rule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (e) {
+          data = {};
+        }
+
+        if (!response.ok) {
+          runResults[record.id] = {
+            status: 'error',
+            message: (data && data.error) || `HTTP ${response.status}`,
+          };
+          return;
+        }
+
+        runResults[record.id] = {
+          status: data && data.result ? 'passed' : 'failed',
+          notes: Array.isArray(data && data.notes) ? data.notes : [],
+        };
+      } catch (e) {
+        runResults[record.id] = { status: 'error', message: `${e}` };
+      }
     }
 
     // Persist the edits from the inline form. Only the fields the form manages
@@ -381,6 +433,7 @@ const QcRulesList = {
       try {
         await putJson(`/qc/rules/${encodeURIComponent(record.id)}`, payload);
         editingId.value = '';
+        delete runResults[record.id];
         await load();
       } catch (e) {
         window.alert(`Failed to update QC rule: ${e}`);
@@ -410,6 +463,7 @@ const QcRulesList = {
 
       try {
         await deleteJson(`/qc/rules/${encodeURIComponent(record.id)}`);
+        delete runResults[record.id];
         await load();
       } catch (e) {
         window.alert(`Failed to delete QC rule: ${e}`);
@@ -426,6 +480,7 @@ const QcRulesList = {
       loading,
       loadError,
       editingId,
+      runResults,
       cmdlets,
       ops,
       tagSuggestions,

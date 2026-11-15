@@ -12,6 +12,7 @@ const RuleRecord = {
   props: {
     record: { type: Object, required: true },
     editingId: { type: String, default: '' },
+    runResults: { type: Object, default: () => ({}) },
     cmdlets: { type: Array, default: () => [] },
     ops: { type: Array, default: () => [] },
     tagSuggestions: { type: Array, default: () => [] },
@@ -29,6 +30,7 @@ const RuleRecord = {
     :record="record"
     :expanded="expanded"
     :editing="editing"
+    :run-results="runResults"
     :cmdlets="cmdlets"
     :ops="ops"
     :tag-suggestions="tagSuggestions"

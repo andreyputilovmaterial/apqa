@@ -317,6 +317,47 @@
   color: #990000;
 }
 
+/* Run-result banner shown above the Edit/Run/Delete actions after a rule has
+   been run (results are cached in the page, keyed by rule id). Passed is green,
+   failed is red, and a run that raised shows its exception snippet in red. */
+.apqa-rule-run-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.apqa-rule-run-result-status {
+  font-weight: 600;
+}
+
+.apqa-rule-run-result-running {
+  color: #666;
+}
+
+.apqa-rule-run-result-passed {
+  color: #1c6b3e;
+}
+
+.apqa-rule-run-result-failed {
+  color: #cc0000;
+}
+
+.apqa-rule-run-result-error {
+  color: #cc0000;
+  white-space: pre-wrap;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.apqa-rule-run-result-notes {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  color: #cc0000;
+  font-size: 0.8rem;
+}
+
 /* Foldable QC-rule tree (rules_tree.js). Groups are simple [+]/[-] folder
    headers that toggle their descendants; rule leaves reuse `rule-record`.
    Depth is expressed as a CSS custom property so indentation scales without

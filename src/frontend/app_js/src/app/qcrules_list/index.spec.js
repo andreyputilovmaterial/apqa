@@ -36,4 +36,83 @@ describe('QcRulesList', () => {
     expect(tree.exists()).toBe(true);
     expect(tree.props('tagSuggestions')).toEqual(['counts', 'wave69']);
   });
+
+  it('runs a rule on Run click and shows the cached failed result', async () => {
+    const rule = {
+      id: 'r1',
+      name: 'Rule one',
+      group: '',
+      left: [],
+      op: 'eq',
+      op_args: {},
+      right: [],
+      meta: {},
+    };
+
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
+      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/functionality/run-rule') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            result: false,
+            notes: [{ path: ['fields', 'A', 'label'], message: 'not XML-compatible' }],
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+    await wrapper.find('.apqa-rule-body-action-run').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
+    expect(wrapper.find('.apqa-rule-run-result-notes li').text()).toContain(
+      'fields.A.label: not XML-compatible',
+    );
+  });
+
+  it('shows a red exception snippet when running raises', async () => {
+    const rule = {
+      id: 'r1',
+      name: 'Rule one',
+      group: '',
+      left: [],
+      op: 'eq',
+      op_args: {},
+      right: [],
+      meta: {},
+    };
+
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
+      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/functionality/run-rule') {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({ error: "cmdlet 'nope' (step 0): cmdlet not found: nope" }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    await wrapper.find('.apqa-rule-compact-description').trigger('click');
+    await wrapper.find('.apqa-rule-body-action-run').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('.apqa-rule-run-result-error').text()).toBe(
+      "cmdlet 'nope' (step 0): cmdlet not found: nope",
+    );
+  });
 });
