@@ -29,6 +29,7 @@ if __package__:
         is_in_pinliner,
         assess_python_ver,
     )
+    from .helper_logger import setup_logging
 
     from .endpoints import endpoints
     from .rule_runner import run_rule
@@ -54,6 +55,7 @@ else:
         is_in_pinliner,
         assess_python_ver,
     )
+    from helper_logger import setup_logging
 
     from endpoints import endpoints
     from rule_runner import run_rule
@@ -94,6 +96,7 @@ def get_help_pages():
 
 
 def main(*argcs,**kwargs):
+    logger = setup_logging()
     time_start = datetime.now(timezone.utc)
     script_name = 'apqa ui script'
 
@@ -137,7 +140,7 @@ def main(*argcs,**kwargs):
             f'--browser {BROWSER_MODE_PYWEBVIEW} is not implemented yet'
         )
 
-    print(f'{STDOUT_COLOR_GREEN}starting {script_name} at {time_start}{STDOUT_COLOR_RESET}')
+    logger.info(f'{STDOUT_COLOR_GREEN}starting {script_name} at {time_start}{STDOUT_COLOR_RESET}')
     config = {
         'time_start': time_start,
         'script_name': script_name,
@@ -186,7 +189,7 @@ def main(*argcs,**kwargs):
     else:
         raise Exception('db_file not specified')
 
-    print('\npreparing webserver...\n')
+    logger.info('\npreparing webserver...\n')
     config['http_host'] = 'localhost'
     config['http_port'] = select_webserver_port(config['http_host'], args.config_webserver_port)
     config['http_protocol'] = 'http'
@@ -199,8 +202,8 @@ def main(*argcs,**kwargs):
         "db_file":config.get("db_file"),
         "http_address":config.get("http_address"),
     }
-    print(f'CONFIG:\n{prettyprint_config(cfg_to_print_verify)}')
-    print('\n')
+    logger.info(f'CONFIG:\n{prettyprint_config(cfg_to_print_verify)}')
+    logger.info('\n')
     server = Webserver(config,is_threading=CONFIG_WEBSERVER_MULTITHREADED) # a wrapper around python http.server - no flask or django
     server.assign_handlers(endpoints)
     # print(f'{STDOUT_COLOR_GREEN}starting webserver at {config.get("http_address")}{STDOUT_COLOR_RESET}')

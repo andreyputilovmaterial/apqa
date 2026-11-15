@@ -10,6 +10,7 @@ if __package__:
 
     from .GENERATED.VERSION import _VERSION as script_version
     from .helper_utilities import prettyprint_config
+    from .helper_logger import setup_logging
 else:
     # flat context: inlined with no parent package.
     from db_processors import DBFile
@@ -17,6 +18,7 @@ else:
 
     from GENERATED.VERSION import _VERSION as script_version
     from helper_utilities import prettyprint_config
+    from helper_logger import setup_logging
 
 
 script_version = f'{script_version}'.strip()
@@ -28,6 +30,7 @@ STDOUT_COLOR_GREEN = "\033[32m"
 
 
 def main(*argcs,**kwargs):
+    logger = setup_logging()
     time_start = datetime.now(timezone.utc)
     script_name = 'apqa init script'
 
@@ -50,7 +53,7 @@ def main(*argcs,**kwargs):
     )
     args = parser.parse_args(*argcs,**kwargs)
 
-    print(f'{STDOUT_COLOR_GREEN}starting {script_name} at {time_start}{STDOUT_COLOR_RESET}')
+    logger.info(f'{STDOUT_COLOR_GREEN}starting {script_name} at {time_start}{STDOUT_COLOR_RESET}')
 
     if args.db_file:
         db_file = f'{args.db_file}' # make sure it's text
@@ -63,15 +66,15 @@ def main(*argcs,**kwargs):
         "db_file": db_file,
         "db_format": db_format if db_format is not None else detect_type(db_file),
     }
-    print(f'CONFIG:\n{prettyprint_config(cfg_to_print_verify)}')
-    print('\n')
+    logger.info(f'CONFIG:\n{prettyprint_config(cfg_to_print_verify)}')
+    logger.info('\n')
 
     # Thin router: DBFile.init_storage dispatches to the init of the proper
     # registered db_processor. It supports every format currently registered in
     # src/db_processors — nothing is hardcoded here.
     created_path = DBFile.init_storage(db_file, db_format)
 
-    print(f'{STDOUT_COLOR_GREEN}created {created_path}{STDOUT_COLOR_RESET}')
+    logger.info(f'{STDOUT_COLOR_GREEN}created {created_path}{STDOUT_COLOR_RESET}')
     return created_path
 
 
