@@ -15,6 +15,7 @@ from ..get_content_text import ARGS, get_content_text
     kind='source',
     help='Proxy for get-content-text: read a text file into a single text value.',
     args=ARGS,
+    permissions=['filesystem'],
 )
 def get_content(value: PipeValue, args: dict) -> Text:
     return get_content_text(value, args)

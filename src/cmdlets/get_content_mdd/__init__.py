@@ -654,6 +654,7 @@ class _MDDReader:
             'description': 'Expand shared-list references into their elements.',
         },
     ],
+    permissions=['filesystem'],
     compact=[
         {'text': '[mdd]', 'role': 'logo'},
         {'arg': 'path'},

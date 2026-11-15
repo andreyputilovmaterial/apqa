@@ -33,6 +33,7 @@ else:
     args=[
         {'name': 'path', 'type': 'path', 'required': True, 'description': 'Full path to the Excel workbook.'},
     ],
+    permissions=['filesystem'],
     compact=[
         {'text': '[xlsx]', 'role': 'logo'},
         {'arg': 'path'},

@@ -72,6 +72,30 @@ def test_network_cmdlet_kinds():
     assert kinds['validate-network-request-result'] == 'terminal'
 
 
+def test_every_cmdlet_has_permission_list():
+    for cmdlet in get_cmdlet_metadata()['cmdlets']:
+        assert isinstance(cmdlet['permissions'], list)
+
+
+def test_cmdlet_permission_groups():
+    perms = {c['name']: c['permissions'] for c in get_cmdlet_metadata()['cmdlets']}
+    filesystem_readers = (
+        'get-content',
+        'get-content-text',
+        'get-content-excel',
+        'get-content-mdd',
+    )
+    for name in filesystem_readers:
+        assert perms[name] == ['filesystem']
+    assert perms['get-content-network-fetch'] == ['network']
+    # `validate-network-request-result` only inspects an already-fetched block;
+    # it makes no request itself, so it requires no group.
+    assert perms['validate-network-request-result'] == []
+    for name, groups in perms.items():
+        if name not in filesystem_readers and name != 'get-content-network-fetch':
+            assert groups == []
+
+
 def test_shape_cmdlet_kinds_and_args():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
     for name in ('select-field', 'select-item', 'select-range', 'map', 'where'):
@@ -148,6 +172,21 @@ def test_normalize_display():
         normalize_display([{'text': 'x', 'arg': 'y'}])
     with pytest.raises(ValueError):
         normalize_display(42)
+
+
+def test_normalize_permissions():
+    from src.cmdlets.registry import normalize_permissions
+
+    assert normalize_permissions(None) == []
+    assert normalize_permissions('network') == ['network']
+    assert normalize_permissions(['network', 'filesystem', 'network']) == [
+        'filesystem',
+        'network',
+    ]
+    with pytest.raises(ValueError):
+        normalize_permissions(42)
+    with pytest.raises(ValueError):
+        normalize_permissions(['ok', ''])
 
 
 def test_endpoint_returns_metadata(config):

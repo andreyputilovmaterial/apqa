@@ -73,6 +73,33 @@ def normalize_display(parts):
     return result
 
 
+def normalize_permissions(permissions):
+    """Normalize a permission-group declaration into a sorted list of names.
+
+    A cmdlet declares the permission groups it requires to run; most cmdlets
+    require none. ``None`` means no groups and a single string is accepted as a
+    one-group shorthand. The result is de-duplicated and sorted so the metadata
+    stays stable.
+
+    Group names are free-form strings; the two groups defined today are
+    ``'filesystem'`` (reads/touches physical files) and ``'network'`` (makes a
+    network request). Enforcement is not wired yet — this is declarative
+    metadata for a future allow-list of granted groups.
+    """
+    if permissions is None:
+        return []
+    if isinstance(permissions, str):
+        permissions = [permissions]
+    if not isinstance(permissions, (list, tuple)):
+        raise ValueError('permissions must be a list of permission-group names')
+    result = []
+    for name in permissions:
+        if not isinstance(name, str) or not name:
+            raise ValueError('each permission group must be a non-empty string')
+        result.append(name)
+    return sorted(set(result))
+
+
 class CmdletRegistry:
     """Global registry of cmdlets, keyed by cmdlet name.
 
@@ -93,6 +120,9 @@ class CmdletRegistry:
       renders one input per arg.
     - ``help`` — a short description shown in the editor; defaults to the
       function's docstring.
+    - ``permissions`` — an optional list of permission-group names the cmdlet
+      requires (see :func:`normalize_permissions`); empty by default. Currently
+      declarative only — enforcement is future work.
     - ``compact`` / ``full`` — optional display specs (an ordered list of parts,
       see :func:`normalize_display`) describing how the cmdlet is rendered in the
       compact and full views; absent means the default ``name args`` rendering.
@@ -102,7 +132,7 @@ class CmdletRegistry:
         self._cmdlets = {}
         self._meta = {}
 
-    def register(self, name, kind='processor', args=None, help=None, compact=None, full=None):
+    def register(self, name, kind='processor', args=None, help=None, compact=None, full=None, permissions=None):
         def decorator(fn):
             self._cmdlets[name] = fn
             meta = {
@@ -110,6 +140,7 @@ class CmdletRegistry:
                 'kind': kind,
                 'args': normalize_args(args),
                 'help': help if help is not None else (inspect.getdoc(fn) or ''),
+                'permissions': normalize_permissions(permissions),
             }
             if compact is not None:
                 meta['compact'] = normalize_display(compact)

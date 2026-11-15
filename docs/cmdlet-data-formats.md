@@ -406,7 +406,13 @@ served to the frontend by `GET /functionality/cmdlet-metadata` (see
 - a cmdlet carries a `kind` — `source` (needs no piped value, can be first),
   `processor` (transforms the piped value), or `terminal` (validation/predicate);
 - an arg (and an op's `op_args`) carries `{ name, type, required, description }`
-  plus optional `default` and `options`.
+  plus optional `default` and `options`;
+- a cmdlet also carries a `permissions` list — the permission groups it requires,
+  sorted and de-duplicated, usually empty. The two groups defined today are
+  `filesystem` (reads/touches physical files) and `network` (makes a network
+  request). This is currently **declarative only**: run-time enforcement against
+  a user-configured allow-list of granted groups is tracked in
+  `docs/roadmap.md`.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
 `json`, `cmdlet-chains` (a list of cmdlet chains, e.g. `logical-and`/`logical-or`/`bitwise-*`

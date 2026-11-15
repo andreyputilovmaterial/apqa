@@ -67,6 +67,7 @@ _ALLOWED_SCHEMES = ('http', 'https')
             'description': 'Request timeout in seconds.',
         },
     ],
+    permissions=['network'],
     compact=[
         {'text': '[network]', 'role': 'logo'},
     ],

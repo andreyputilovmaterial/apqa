@@ -41,6 +41,7 @@ ARGS = [
     kind='source',
     help='Read a text file into a single text value.',
     args=ARGS,
+    permissions=['filesystem'],
     compact=[
         {'text': '[file]', 'role': 'logo'},
         {'arg': 'path'},
