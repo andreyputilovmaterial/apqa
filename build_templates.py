@@ -2,6 +2,7 @@
 
 
 import argparse
+import logging
 # from pathlib import Path
 import traceback, sys
 from datetime import datetime
@@ -26,6 +27,48 @@ from src.frontend.bundler_engine.lib.py_js_bundler.src.run import process as pac
 STDOUT_COLOR_RED = "\033[31m"
 STDOUT_COLOR_RESET = "\033[0m"
 STDOUT_COLOR_GREEN = "\033[32m"
+
+
+LOGGER_NAME = "build_templates"
+logger = logging.getLogger(LOGGER_NAME)
+
+
+class _StdoutStreamHandler(logging.StreamHandler):
+    """A stdout handler that resolves ``sys.stdout`` at emit time.
+
+    ``logging.StreamHandler(sys.stdout)`` would bind to whatever stdout is at
+    configuration time (module import). Resolving per-emit keeps logger output
+    following the *current* stdout, matching the old ``print()`` behavior — so
+    pytest's output capture (and any other redirection) still sees it.
+    """
+
+    def emit(self, record):
+        try:
+            stream = sys.stdout
+            stream.write(self.format(record) + self.terminator)
+            stream.flush()
+        except Exception:
+            self.handleError(record)
+
+
+def configure_logging(verbose=False):
+    """Configure build_templates output verbosity.
+
+    * ``verbose=False`` (default): info + warnings + errors. The high-level
+      ``building X...`` / ``done`` lines are shown, per-file details are hidden.
+    * ``verbose=True``: also debug messages (e.g. each file being saved).
+    """
+    level = logging.DEBUG if verbose else logging.INFO
+    logger.setLevel(level)
+    logger.propagate = False
+    for handler in list(logger.handlers):
+        logger.removeHandler(handler)
+    handler = _StdoutStreamHandler()
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(handler)
+
+
+configure_logging()
 
 
 # def wrap_argparse_coloroutputs(Classname):
@@ -350,14 +393,14 @@ def call_build_program(*argcs,**kwargs):
     if args.dest:
         out_path = Path(args.dest).resolve()
 
-    print(f'{script_name}: script started at {time_start}')
+    logger.debug('%s: script started at %s', script_name, time_start)
 
     renderer = renderers.get(res_processed,None)
     results = None
     if not renderer:
         raise Exception(f'Can\'t build given resource and find handler: {res_processed}')
     try:
-        print(f'{script_name}: building {res_processed}...')
+        logger.info('%s: building %s...', script_name, res_processed)
         results = renderer()
     except Exception as e:
         print(f'{STDOUT_COLOR_RED}Failed when building {res_processed}: {e}{STDOUT_COLOR_RESET}',file=sys.stderr)
@@ -366,7 +409,7 @@ def call_build_program(*argcs,**kwargs):
     for result in results:
         result_fname = Path(out_path) / result.filename
         try:
-            print('{script_name}: saving as "{fname}"'.format(fname=result_fname,script_name=script_name))
+            logger.debug('%s: saving as "%s"', script_name, result_fname)
             result_fname.parent.mkdir(parents=True, exist_ok=True)
             with open(result_fname, 'wb' if result.is_binary else 'w', encoding=None if result.is_binary else 'utf-8') as outfile:
                 outfile.write(result.payload)
@@ -379,7 +422,7 @@ def call_build_program(*argcs,**kwargs):
             raise e
 
     time_finish = datetime.now()
-    print(f'{script_name}: {STDOUT_COLOR_GREEN}finished at {time_finish} (elapsed {time_finish-time_start}){STDOUT_COLOR_RESET}')
+    logger.info('%s: %sdone%s (elapsed %s)', script_name, STDOUT_COLOR_GREEN, STDOUT_COLOR_RESET, time_finish-time_start)
 
 
 
@@ -604,7 +647,7 @@ def call_transform_run_script_program(*argcs, **kwargs):
     out_path.write_text(result, encoding='utf-8')
 
     time_finish = datetime.now()
-    print(f'{script_name}: {STDOUT_COLOR_GREEN}finished at {time_finish} (elapsed {time_finish-time_start}){STDOUT_COLOR_RESET}')
+    logger.info('%s: %sdone%s (elapsed %s)', script_name, STDOUT_COLOR_GREEN, STDOUT_COLOR_RESET, time_finish-time_start)
 
 
 run_programs = {
@@ -627,6 +670,13 @@ def main():
             type=str,
             required=True
         )
+        parser.add_argument(
+            '-v',
+            '--verbose',
+            action='count',
+            default=0,
+            help='increase output verbosity (show per-file details)'
+        )
         args = None
         args_rest = None
         try:
@@ -634,6 +684,7 @@ def main():
         except SystemExit as e:
             print(f'{STDOUT_COLOR_RED}Error: Invalid command-line arguments{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
+        configure_logging(verbose=args.verbose >= 1)
         if args.program:
             program = f'{args.program}'
             if program in run_programs:
