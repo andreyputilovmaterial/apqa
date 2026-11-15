@@ -23,10 +23,10 @@ groups:
 rules:
   - name: in-data
     group: Data
-    op: eq
+    op: cmp-eq
   - name: in-metadata
     group: Metadata
-    op: ne
+    op: cmp-ne
 """
 
 
@@ -148,7 +148,7 @@ def test_sqlite_update_group_parent(sqlite_dbfile):
 def test_sqlite_rename_group(sqlite_dbfile):
     sqlite_dbfile.add_group({"name": "Data"})
     sqlite_dbfile.add_group({"name": "Metadata", "parent": "Data"})
-    sqlite_dbfile.add_rule({"name": "in-data", "group": "Data", "op": "eq"})
+    sqlite_dbfile.add_rule({"name": "in-data", "group": "Data", "op": "cmp-eq"})
 
     group = sqlite_dbfile.rename_group("data", "Core")
     assert group.name == "Core"
@@ -206,7 +206,7 @@ groups:
 rules:
   - name: r1
     group: Data
-    op: eq
+    op: cmp-eq
 """
 
 

@@ -203,7 +203,7 @@ def test_help_example_pipeline():
             _field('B'),
             {'cmdlet': 'count'},
         ],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'right': [_literal(2)],
     }
     assert run_rule(rule) is True
@@ -215,7 +215,7 @@ def test_map_pipeline():
             _literal([{'B': 1}, {'B': 2}]),
             {'cmdlet': 'map', 'args': {'transform': [_field('B')]}},
         ],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'right': [_literal([1, 2])],
     }
     assert run_rule(rule) is True
@@ -227,7 +227,7 @@ def test_where_pipeline():
             _literal([{'x': 0}, {'x': 1}]),
             {'cmdlet': 'where', 'args': {'predicate': [_field('x')]}},
         ],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'right': [_literal([{'x': 1}])],
     }
     assert run_rule(rule) is True

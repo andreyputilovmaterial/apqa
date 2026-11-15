@@ -48,14 +48,14 @@ def _literal(value):
 
 
 def test_run_true():
-    rule = {'left': [_literal(1)], 'op': 'eq', 'right': [_literal(1)]}
+    rule = {'left': [_literal(1)], 'op': 'cmp-eq', 'right': [_literal(1)]}
     status, data = call(make_config(), 'POST', '/functionality/run-rule', rule)
     assert status == 200
     assert data == {'result': True}
 
 
 def test_run_false():
-    rule = {'left': [_literal(1)], 'op': 'eq', 'right': [_literal(2)]}
+    rule = {'left': [_literal(1)], 'op': 'cmp-eq', 'right': [_literal(2)]}
     status, data = call(make_config(), 'POST', '/functionality/run-rule', rule)
     assert status == 200
     assert data == {'result': False}
@@ -74,7 +74,7 @@ def test_non_object_body():
 
 
 def test_runner_error_is_4xx_with_message():
-    rule = {'left': [{'cmdlet': 'nope'}], 'op': 'eq', 'right': [_literal(1)]}
+    rule = {'left': [{'cmdlet': 'nope'}], 'op': 'cmp-eq', 'right': [_literal(1)]}
     status, data = call(make_config(), 'POST', '/functionality/run-rule', rule)
     assert 400 <= status < 500
     assert 'cmdlet not found' in data['error']
@@ -88,5 +88,5 @@ def test_wrong_method():
 def test_runner_missing_in_config():
     config = make_config()
     config['iface'].pop('run_rule')
-    status, data = call(config, 'POST', '/functionality/run-rule', {'left': [], 'op': 'eq', 'right': []})
+    status, data = call(config, 'POST', '/functionality/run-rule', {'left': [], 'op': 'cmp-eq', 'right': []})
     assert status == 404

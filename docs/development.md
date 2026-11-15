@@ -369,13 +369,13 @@ A QC rule has three essential parts: **left side**, **comparison op**, **right s
   `created_at`, `modified_at`, `comment`, `tags`, `markers`, …),
   `left` (list of cmdlets), `op` (string), `op_args` (optional mapping,
   JSON-serializable), `right` (list of cmdlets).
-- `op` is a registered comparison op name (e.g. `eq`, `ne`, `eq-unordered`,
-  `lt`, `gt`, `contains`). `eq`/`ne` compare compound values deeply (blocks by
+- `op` is a registered comparison op name (e.g. `cmp-eq`, `cmp-ne`, `cmp-eq-unordered`,
+  `cmp-lt`, `cmp-gt`, `cmp-contains`). `cmp-eq`/`cmp-ne` compare compound values deeply (blocks by
   field name, order-insensitive; arrays in strict position order); the ordering
-  ops (`lt`/`le`/`gt`/`ge`) are scalar-only. `op_args` (optional) passes
-  op-specific options, e.g. `eq`/`ne` accept
+  ops (`cmp-lt`/`cmp-le`/`cmp-gt`/`cmp-ge`) are scalar-only. `op_args` (optional) passes
+  op-specific options, e.g. `cmp-eq`/`cmp-ne` accept
   `op_args: { unordered_arrays: true }` for order-agnostic array comparison;
-  `eq-unordered` is that flag hard-wired.
+  `cmp-eq-unordered` is that flag hard-wired.
 
 Three cmdlet types:
 
@@ -404,8 +404,8 @@ once per iteration, with the iteration threaded through as the piped value:
 which a **cmdlet chain** (`args.predicate`, arg type `cmdlet-chain`) returns a
 truthy value; the iteration is threaded through as the piped value and the result
 is coerced with `bool()`. For now the predicate is limited to the existing
-predicate/validation cmdlets (`is-sysmissing`, `not`, `and`, `or`, `validate-*`,
-or truthiness of a field); comparison-as-cmdlet (`eq`/`ne`/…) is tracked in
+predicate/validation cmdlets (`is-sysmissing`, `logical-not`, `logical-and`, `logical-or`, `validate-*`,
+or truthiness of a field); comparison-as-cmdlet (`cmp-eq`/`cmp-ne`/…) is tracked in
 `docs/roadmap.md`.
 
 **`sort`.** `sort` reorders an array: `args.by` (optional) sorts blocks by a
@@ -518,8 +518,12 @@ is declared **next to each registration** (never hardcoded in the frontend):
   the first in a chain — it needs no piped value), `'processor'` (it transforms
   the piped value), or `'terminal'` (a validation/predicate cmdlet that answers
   a question about the piped value). `help` defaults to the function docstring.
-- `src/cmdlets/comparison_ops.py` — `@comparisons.register(name, help=...,
-  op_args=[...])` stores the same for ops.
+- Comparison ops live **one folder per op** under `src/cmdlets/cmp_*` (e.g.
+  `src/cmdlets/cmp_eq/__init__.py`), each registered with
+  `@comparisons.register(name, help=..., op_args=[...])` — the same shape as
+  cmdlets but with `op_args` instead of `args`. The `ComparisonRegistry` (and its
+  `comparisons` instance) lives in `src/cmdlets/registry.py`; shared type /
+  ordering helpers live in `src/cmdlets/comparison_helpers.py`.
 
 Both registries also accept a **display spec** for the read-only (non-editing)
 views: `compact` and `full`, each an ordered list of parts (see
@@ -527,7 +531,7 @@ views: `compact` and `full`, each an ordered list of parts (see
 is rendered in the collapsed (`rule_compact.js`) and expanded (`rule.js`) views,
 so the "short" form lives next to the registration instead of in a frontend
 hardcoded map — e.g. `get-content-excel` declares `compact` = `[xlsx]: path`,
-`literal` declares `compact`/`full` = just its value, and `eq` declares
+`literal` declares `compact`/`full` = just its value, and `cmp-eq` declares
 `compact` = `=`. Absent means the default rendering (`name args` for cmdlets,
 the raw name for ops).
 
@@ -537,7 +541,7 @@ An **arg schema** is `{ name, type, required, description }` plus optional
 - `text` (default), `number`, `boolean`, `path`, `options` (single-select from
   `options`), `list` (comma-separated text → array), `json` (e.g.
   `literal.value`), `cmdlet-chains` (a list of cmdlet chains, e.g.
-  `and`/`or`/`bit-*` `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g.
+  `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g.
   `map`'s `transform` / `where`'s `predicate`).
 
 `src/cmdlets/meta.py` snapshots both registries into `{ cmdlets, ops }`, exposed

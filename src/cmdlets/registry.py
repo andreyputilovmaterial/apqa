@@ -135,3 +135,58 @@ class CmdletRegistry:
 
 
 cmdlets = CmdletRegistry()
+
+
+class ComparisonRegistry:
+    """Global registry of comparison ops, keyed by op name.
+
+    A comparison op is a plain function ``(left, right, args=None) -> bool``
+    comparing two values. ``args`` is an optional mapping of op-specific options
+    (e.g. ``cmp-eq`` accepts ``{'unordered_arrays': True}``). Register an op with
+    ``@comparisons.register('<name>')``.
+
+    The decorator also records editor metadata: ``op_args`` (a list of arg
+    schemas the rule form renders as op-specific inputs), ``help`` (a short
+    description, defaulting to the function docstring), and optional ``compact``
+    / ``full`` display specs (see :func:`normalize_display`) describing how the
+    op is rendered in the compact and full views — e.g. ``cmp-eq`` declares
+    ``compact=[{'text': '=', 'role': 'symbol'}]`` so the short symbol lives here
+    rather than in a frontend hardcoded map.
+    """
+
+    def __init__(self):
+        self._ops = {}
+        self._meta = {}
+
+    def register(self, name, help=None, op_args=None, compact=None, full=None):
+        def decorator(fn):
+            self._ops[name] = fn
+            meta = {
+                'name': name,
+                'help': help if help is not None else (inspect.getdoc(fn) or ''),
+                'op_args': normalize_args(op_args),
+            }
+            if compact is not None:
+                meta['compact'] = normalize_display(compact)
+            if full is not None:
+                meta['full'] = normalize_display(full)
+            self._meta[name] = meta
+            return fn
+        return decorator
+
+    def get(self, name):
+        if name not in self._ops:
+            raise KeyError(f'comparison op not found: {name}')
+        return self._ops[name]
+
+    def names(self):
+        return list(self._ops)
+
+    def describe(self, name):
+        return self._meta.get(name)
+
+    def metadata(self):
+        return [self._meta[name] for name in self._ops]
+
+
+comparisons = ComparisonRegistry()

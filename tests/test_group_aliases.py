@@ -100,7 +100,7 @@ groups:
               value: 42
 rules:
   - name: ungrouped
-    op: eq
+    op: cmp-eq
     left:
       - cmdlet: literal
         args:
@@ -111,7 +111,7 @@ rules:
           value: expected
   - name: grouped
     group: Data
-    op: eq
+    op: cmp-eq
     left:
       - cmdlet: literal
         args:

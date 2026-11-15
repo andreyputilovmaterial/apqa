@@ -97,9 +97,9 @@ def test_shape_cmdlet_kinds_and_args():
 
 def test_comparison_ops_and_op_args():
     ops = {o['name']: o for o in get_cmdlet_metadata()['ops']}
-    for name in ('eq', 'ne', 'eq-unordered', 'lt', 'le', 'gt', 'ge', 'contains'):
+    for name in ('cmp-eq', 'cmp-ne', 'cmp-eq-unordered', 'cmp-lt', 'cmp-le', 'cmp-gt', 'cmp-ge', 'cmp-contains'):
         assert name in ops
-    eq_args = {a['name']: a for a in ops['eq']['op_args']}
+    eq_args = {a['name']: a for a in ops['cmp-eq']['op_args']}
     assert eq_args['unordered_arrays']['type'] == 'boolean'
 
 
@@ -123,11 +123,11 @@ def test_cmdlet_display_specs():
 
 def test_comparison_op_compact_symbols():
     ops = {o['name']: o for o in get_cmdlet_metadata()['ops']}
-    for name, symbol in (('eq', '='), ('ne', '≠'), ('lt', '<'), ('le', '≤'), ('gt', '>'), ('ge', '≥')):
+    for name, symbol in (('cmp-eq', '='), ('cmp-ne', '≠'), ('cmp-lt', '<'), ('cmp-le', '≤'), ('cmp-gt', '>'), ('cmp-ge', '≥')):
         assert ops[name]['compact'] == [{'text': symbol, 'role': 'symbol'}]
     # Ops without a short symbol fall back to their name (no compact spec).
-    assert 'compact' not in ops['contains']
-    assert 'compact' not in ops['eq-unordered']
+    assert 'compact' not in ops['cmp-contains']
+    assert 'compact' not in ops['cmp-eq-unordered']
 
 
 def test_normalize_display():

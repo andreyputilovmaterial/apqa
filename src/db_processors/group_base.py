@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field, fields, asdict
 
 from .ids import is_valid_id, make_slug
+from .name_migrations import migrate_group_dict
 
 
 def normalize_aliases(aliases):
@@ -75,6 +76,7 @@ class Group:
     def from_dict(cls, data):
         if not isinstance(data, dict):
             raise ValueError(f'group must be a mapping, got {type(data).__name__}')
+        data = migrate_group_dict(data)
         name = data.get('name')
         if name is None or name == '':
             raise ValueError('group is missing a name')

@@ -1,21 +1,26 @@
 
-from .registry import CmdletRegistry, cmdlets
+from .registry import CmdletRegistry, cmdlets, ComparisonRegistry, comparisons
 from .sysmissing import sysmissing
-from . import all_  # noqa: F401 - import registers the cmdlet
-from . import and_  # noqa: F401 - import registers the cmdlet
-from . import any_  # noqa: F401 - import registers the cmdlet
 from . import as_boolean  # noqa: F401 - import registers the cmdlet
 from . import as_date  # noqa: F401 - import registers the cmdlet
 from . import as_integer  # noqa: F401 - import registers the cmdlet
 from . import as_path  # noqa: F401 - import registers the cmdlet
 from . import as_real  # noqa: F401 - import registers the cmdlet
 from . import as_text  # noqa: F401 - import registers the cmdlet
-from . import bit_and  # noqa: F401 - import registers the cmdlet
-from . import bit_lshift  # noqa: F401 - import registers the cmdlet
-from . import bit_not  # noqa: F401 - import registers the cmdlet
-from . import bit_or  # noqa: F401 - import registers the cmdlet
-from . import bit_rshift  # noqa: F401 - import registers the cmdlet
-from . import bit_xor  # noqa: F401 - import registers the cmdlet
+from . import bitwise_and  # noqa: F401 - import registers the cmdlet
+from . import bitwise_lshift  # noqa: F401 - import registers the cmdlet
+from . import bitwise_not  # noqa: F401 - import registers the cmdlet
+from . import bitwise_or  # noqa: F401 - import registers the cmdlet
+from . import bitwise_rshift  # noqa: F401 - import registers the cmdlet
+from . import bitwise_xor  # noqa: F401 - import registers the cmdlet
+from . import cmp_contains  # noqa: F401 - import registers the comparison op
+from . import cmp_eq  # noqa: F401 - import registers the comparison op
+from . import cmp_eq_unordered  # noqa: F401 - import registers the comparison op
+from . import cmp_ge  # noqa: F401 - import registers the comparison op
+from . import cmp_gt  # noqa: F401 - import registers the comparison op
+from . import cmp_le  # noqa: F401 - import registers the comparison op
+from . import cmp_lt  # noqa: F401 - import registers the comparison op
+from . import cmp_ne  # noqa: F401 - import registers the comparison op
 from . import count  # noqa: F401 - import registers the cmdlet
 from . import get_content_text  # noqa: F401 - import registers the cmdlet
 from . import get_content  # noqa: F401 - import registers the proxy for get-content-text
@@ -25,10 +30,13 @@ from . import get_content_network_fetch  # noqa: F401 - import registers the cmd
 from . import is_sysmissing  # noqa: F401 - import registers the cmdlet
 from . import length  # noqa: F401 - import registers the cmdlet
 from . import literal  # noqa: F401 - import registers the cmdlet
+from . import logical_all  # noqa: F401 - import registers the cmdlet
+from . import logical_and  # noqa: F401 - import registers the cmdlet
+from . import logical_any  # noqa: F401 - import registers the cmdlet
+from . import logical_not  # noqa: F401 - import registers the cmdlet
+from . import logical_or  # noqa: F401 - import registers the cmdlet
 from . import map_  # noqa: F401 - import registers the cmdlet
 from . import matches  # noqa: F401 - import registers the cmdlet
-from . import not_  # noqa: F401 - import registers the cmdlet
-from . import or_  # noqa: F401 - import registers the cmdlet
 from . import select_field  # noqa: F401 - import registers the cmdlet
 from . import select_item  # noqa: F401 - import registers the cmdlet
 from . import select_range  # noqa: F401 - import registers the cmdlet
@@ -38,4 +46,3 @@ from . import transform_text_regex  # noqa: F401 - import registers the cmdlet
 from . import validate_network_request_result  # noqa: F401 - import registers the cmdlet
 from . import validate_xml_compatible  # noqa: F401 - import registers the optional-dep cmdlet
 from . import where  # noqa: F401 - import registers the cmdlet
-from .comparison_ops import ComparisonRegistry, comparisons

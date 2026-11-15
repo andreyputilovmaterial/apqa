@@ -1,4 +1,4 @@
-"""`bit-lshift` — bitwise left shift over integer operand chains."""
+"""`bitwise-and` — bitwise AND over integer operand chains."""
 
 from functools import reduce
 import operator
@@ -9,25 +9,25 @@ from ..value_types import Integer, PipeValue
 
 
 @cmdlets.register(
-    'bit-lshift',
+    'bitwise-and',
     kind='source',
     args=[
         {
             'name': 'operands',
             'type': 'cmdlet-chains',
             'required': True,
-            'description': 'Integer cmdlet chains left-shifted left-to-right.',
+            'description': 'Integer cmdlet chains combined with bitwise AND.',
         },
     ],
 )
-def bit_lshift(value: PipeValue, args: dict) -> Integer:
-    """Return the integer operands left-shifted left-to-right (``a << b``).
+def bitwise_and(value: PipeValue, args: dict) -> Integer:
+    """Return the bitwise AND of the integer operand chains.
 
     Each operand is a cmdlet chain in ``args['operands']``; every result must be
     an integer (bool excluded). The piped value is ignored.
     """
     results = [
-        require_int(result, 'bit-lshift')
-        for result in eval_operand_chains(args, 'bit-lshift')
+        require_int(result, 'bitwise-and')
+        for result in eval_operand_chains(args, 'bitwise-and')
     ]
-    return reduce(operator.lshift, results)
+    return reduce(operator.and_, results)

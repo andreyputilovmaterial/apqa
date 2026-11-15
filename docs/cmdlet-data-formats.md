@@ -68,10 +68,10 @@ and `False` are all real values, and none of them equals `None`.
 
 In comparison, `None` is undefined/uncertain:
 
-- `eq`: `None` equals only `None`; `None` vs anything else → `false`.
-- `ne`: `None` vs `None` → `false`; `None` vs anything else → `true`.
-- ordering (`lt`, `le`, `gt`, `ge`) with `None` on either side → `false`.
-- `contains` with `None` on either side → `false`.
+- `cmp-eq`: `None` equals only `None`; `None` vs anything else → `false`.
+- `cmp-ne`: `None` vs `None` → `false`; `None` vs anything else → `true`.
+- ordering (`cmp-lt`, `cmp-le`, `cmp-gt`, `cmp-ge`) with `None` on either side → `false`.
+- `cmp-contains` with `None` on either side → `false`.
 
 ## Compound types
 
@@ -190,15 +190,15 @@ conversion (native errors propagate):
 
 Logical operators coerce operands to boolean and always return a boolean:
 
-- `not` — unary over the piped value; `not sysmissing` is `true`.
-- `and` / `or` — combine operand cmdlet chains in `args['operands']` (each chain
+- `logical-not` — unary over the piped value; `logical-not sysmissing` is `true`.
+- `logical-and` / `logical-or` — combine operand cmdlet chains in `args['operands']` (each chain
   starts with a source reader and does not depend on the piped value); a
   `sysmissing` operand counts as `false`.
-- `any` / `all` — reduce an array's iterations to a boolean.
+- `logical-any` / `logical-all` — reduce an array's iterations to a boolean.
 
 Bitwise operators require integer operands (bool excluded) and use
-`args['operands']` for the binary/n-ary ones: `bit-not` (unary), `bit-and`,
-`bit-or`, `bit-xor`, `bit-lshift`, `bit-rshift`.
+`args['operands']` for the binary/n-ary ones: `bitwise-not` (unary), `bitwise-and`,
+`bitwise-or`, `bitwise-xor`, `bitwise-lshift`, `bitwise-rshift`.
 
 String helpers: `length` returns the text length; `matches` searches text for
 `args['pattern']` with optional `case_insensitive` / `regex` flags (default:
@@ -255,17 +255,17 @@ On a **block** (object) or an **array** (collection):
   `true` (and likewise for ordering), because Excel/pandas auto-detection makes
   this hard to avoid.
 - a non-numeric string vs a number → `false`.
-- text vs text: exact (`eq`/`ne`), lexicographic (`lt`/`le`/`gt`/`ge`), substring
-  (`contains`).
+- text vs text: exact (`cmp-eq`/`cmp-ne`), lexicographic (`cmp-lt`/`cmp-le`/`cmp-gt`/`cmp-ge`), substring
+  (`cmp-contains`).
 - date/time vs date/time: chronological (timezone-aware). A calendar date and a
   full timestamp are not directly comparable (Python raises); a naive datetime is
   invalid per "Dates & time".
 
 Net effect: `0 == false` → `false`, while `"0" == 0` → `true`.
 
-### Compound comparison (`eq` / `ne`)
+### Compound comparison (`cmp-eq` / `cmp-ne`)
 
-`eq` and `ne` also compare compound values **deeply**: the comparison recurses
+`cmp-eq` and `cmp-ne` also compare compound values **deeply**: the comparison recurses
 into fields/iterations and re-applies the scalar rules above to each leaf. Two
 compound values of different kinds are never equal (a block ≠ an array ≠ a
 scalar).
@@ -277,9 +277,9 @@ scalar).
   compares equal **in position order**. The same iterations at different
   positions are **not** equal by default.
 
-`lt`/`le`/`gt`/`ge` stay **scalar-only**: ordering has no meaning for a compound
+`cmp-lt`/`cmp-le`/`cmp-gt`/`cmp-ge` stay **scalar-only**: ordering has no meaning for a compound
 value, so a compound value on either side returns `false` (they never recurse).
-`contains` keeps its membership semantics (substring for text, membership for
+`cmp-contains` keeps its membership semantics (substring for text, membership for
 arrays) and does not deep-compare.
 
 ### Order-agnostic arrays
@@ -290,10 +290,10 @@ compared as equal **sets** — strictly, as *multisets* (duplicates still matter
 Array equality is strict-order by default; order-agnostic comparison is opt-in,
 spelled in either of two equivalent ways:
 
-- **an argument on the comparison** — `eq`/`ne` accept
+- **an argument on the comparison** — `cmp-eq`/`cmp-ne` accept
   `args: { unordered_arrays: true }`, stored on the rule as
   `op_args: { unordered_arrays: true }`; or
-- **a dedicated op** — `eq-unordered`, which is `eq` with
+- **a dedicated op** — `cmp-eq-unordered`, which is `cmp-eq` with
   `unordered_arrays: true` hard-wired.
 
 The flag is recursive (nested arrays inside blocks are also compared
@@ -394,7 +394,7 @@ served to the frontend by `GET /functionality/cmdlet-metadata` (see
   plus optional `default` and `options`.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
-`json`, `cmdlet-chains` (a list of cmdlet chains, e.g. `and`/`or`/`bit-*`
+`json`, `cmdlet-chains` (a list of cmdlet chains, e.g. `logical-and`/`logical-or`/`bitwise-*`
 `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g. `map`'s `transform`
 or `where`'s `predicate`).
 
@@ -415,7 +415,7 @@ it, separately for the collapsed (`compact`) and expanded (`full`) views. A
 one-literal-part shorthand. For example `get-content-excel` declares
 `compact: [{ text: '[xlsx]', role: 'logo' }, { text: ': ', role: 'separator' },
 { arg: 'path' }]` so it reads `[xlsx]: /path/to/map.xlsx` instead of
-`get-content-excel path=/path/to/map.xlsx`, and `eq` declares
+`get-content-excel path=/path/to/map.xlsx`, and `cmp-eq` declares
 `compact: [{ text: '=', role: 'symbol' }]`. The frontend never emits HTML from a
 spec — it only maps roles to CSS classes (`.apqa-cmdlet-role-<role>`).
 
@@ -463,7 +463,7 @@ value a cmdlet can return — rather than a plain path.
   apply.
 - Source readers beyond `get-content-excel` and `get-content-mdd` (CSV, SPSS, DB,
   …) and the rest of the middle/terminal cmdlet set (`select-properties`,
-  `to-string`, comparison-as-cmdlet `eq`/`ne`/…, …).
+  `to-string`, comparison-as-cmdlet `cmp-eq`/`cmp-ne`/…, …).
 - Record/row naming in source readers (per "Row & column names") — required for
   name-based `select-item` on arrays.
 

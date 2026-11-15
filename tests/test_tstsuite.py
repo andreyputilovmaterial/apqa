@@ -28,7 +28,7 @@ def _complete_rule(markers):
         name='r',
         meta={'markers': markers},
         left=[literal],
-        op='eq',
+        op='cmp-eq',
         right=[literal],
     )
 
@@ -76,12 +76,12 @@ def _lit(value):
 
 
 def test_run_tst_case_passes_on_true():
-    rule = Rule(name='r', left=[_lit(1)], op='eq', right=[_lit(1)])
+    rule = Rule(name='r', left=[_lit(1)], op='cmp-eq', right=[_lit(1)])
     assert run_tst_case(rule) is None
 
 
 def test_run_tst_case_fails_on_false():
-    rule = Rule(name='r', left=[_lit(1)], op='eq', right=[_lit(2)])
+    rule = Rule(name='r', left=[_lit(1)], op='cmp-eq', right=[_lit(2)])
     with pytest.raises(AssertionError):
         run_tst_case(rule)
 
@@ -98,7 +98,7 @@ def test_load_case_params_from_yaml(tmp_path):
             '    - cmdlet: literal',
             '      args:',
             '        value: 1',
-            '  op: eq',
+            '  op: cmp-eq',
             '  right:',
             '    - cmdlet: literal',
             '      args:',

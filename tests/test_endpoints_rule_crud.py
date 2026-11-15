@@ -55,7 +55,7 @@ def test_list_empty(config):
 
 
 def test_create_and_list(config):
-    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
+    status, data = call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'cmp-eq'})
     assert status == 201
     assert data['rule']['name'] == 'r1'
     assert data['rule']['id'] == 'r1'
@@ -82,7 +82,7 @@ def test_create_explicit_duplicate_id_returns_400(config):
 
 
 def test_create_missing_name(config):
-    status, data = call(config, 'POST', '/qc/rules', {'op': 'eq'})
+    status, data = call(config, 'POST', '/qc/rules', {'op': 'cmp-eq'})
     assert status == 400
 
 
@@ -92,10 +92,10 @@ def test_create_invalid_json(config):
 
 
 def test_get_rule(config):
-    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'cmp-eq'})
     status, data = call(config, 'GET', '/qc/rules/r1')
     assert status == 200
-    assert data['rule']['op'] == 'eq'
+    assert data['rule']['op'] == 'cmp-eq'
 
 
 def test_get_rule_missing(config):
@@ -104,10 +104,10 @@ def test_get_rule_missing(config):
 
 
 def test_update_rule(config):
-    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'eq'})
-    status, data = call(config, 'PUT', '/qc/rules/r1', {'op': 'lt'})
+    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'cmp-eq'})
+    status, data = call(config, 'PUT', '/qc/rules/r1', {'op': 'cmp-lt'})
     assert status == 200
-    assert data['rule']['op'] == 'lt'
+    assert data['rule']['op'] == 'cmp-lt'
 
 
 def test_update_rule_rejects_id_change(config):

@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field, fields, asdict
 
 from .ids import is_valid_id, make_slug
+from .name_migrations import migrate_rule_dict
 
 
 @dataclass
@@ -53,6 +54,7 @@ class Rule:
     def from_dict(cls, data):
         if not isinstance(data, dict):
             raise ValueError(f'rule must be a mapping, got {type(data).__name__}')
+        data = migrate_rule_dict(data)
         name = data.get('name')
         if name is None or name == '':
             raise ValueError('rule is missing a name')

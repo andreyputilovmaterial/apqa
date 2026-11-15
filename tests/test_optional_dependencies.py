@@ -123,7 +123,7 @@ def test_run_rule_raises_for_missing_optional_dependency():
     rule = {
         'name': 'uses-excel',
         'left': [{'cmdlet': 'get-content-excel', 'args': {'path': 'whatever.xlsx'}}],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'right': [{'cmdlet': 'literal', 'args': {'value': 1}}],
     }
     with pytest.raises(ImportError):

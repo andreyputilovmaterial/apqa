@@ -19,43 +19,43 @@ def _literal(value):
 
 
 def test_literal_eq_true():
-    rule = {'left': [_literal(15)], 'op': 'eq', 'right': [_literal(15)]}
+    rule = {'left': [_literal(15)], 'op': 'cmp-eq', 'right': [_literal(15)]}
     assert run_rule(rule) is True
 
 
 def test_literal_eq_false():
-    rule = {'left': [_literal(15)], 'op': 'eq', 'right': [_literal(16)]}
+    rule = {'left': [_literal(15)], 'op': 'cmp-eq', 'right': [_literal(16)]}
     assert run_rule(rule) is False
 
 
 def test_count_pipeline():
     rule = {
         'left': [_literal([1, 2, 3]), {'cmdlet': 'count'}],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'right': [_literal(3)],
     }
     assert run_rule(rule) is True
 
 
 def test_accepts_rule_object():
-    rule = Rule(name='r', left=[_literal(1)], op='eq', right=[_literal(1)])
+    rule = Rule(name='r', left=[_literal(1)], op='cmp-eq', right=[_literal(1)])
     assert run_rule(rule) is True
 
 
 def test_sysmissing_eq_sysmissing():
-    rule = {'left': [_literal(sysmissing)], 'op': 'eq', 'right': [_literal(sysmissing)]}
+    rule = {'left': [_literal(sysmissing)], 'op': 'cmp-eq', 'right': [_literal(sysmissing)]}
     assert run_rule(rule) is True
 
 
 def test_sysmissing_eq_zero_is_false():
-    rule = {'left': [_literal(sysmissing)], 'op': 'eq', 'right': [_literal(0)]}
+    rule = {'left': [_literal(sysmissing)], 'op': 'cmp-eq', 'right': [_literal(0)]}
     assert run_rule(rule) is False
 
 
 def test_op_args_passed_to_eq():
     rule = {
         'left': [_literal([1, 2, 3])],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'op_args': {'unordered_arrays': True},
         'right': [_literal([3, 1, 2])],
     }
@@ -65,7 +65,7 @@ def test_op_args_passed_to_eq():
 def test_op_args_must_be_mapping():
     rule = {
         'left': [_literal(1)],
-        'op': 'eq',
+        'op': 'cmp-eq',
         'op_args': 'not-a-mapping',
         'right': [_literal(1)],
     }
@@ -76,7 +76,7 @@ def test_op_args_must_be_mapping():
 def test_eq_unordered_dedicated_op():
     rule = {
         'left': [_literal([1, 2, 3])],
-        'op': 'eq-unordered',
+        'op': 'cmp-eq-unordered',
         'right': [_literal([3, 1, 2])],
     }
     assert run_rule(rule) is True
@@ -89,7 +89,7 @@ def test_unknown_op_raises():
 
 
 def test_unknown_cmdlet_raises():
-    rule = {'left': [{'cmdlet': 'nope'}], 'op': 'eq', 'right': [_literal(1)]}
+    rule = {'left': [{'cmdlet': 'nope'}], 'op': 'cmp-eq', 'right': [_literal(1)]}
     with pytest.raises(KeyError):
         run_rule(rule)
 
@@ -106,12 +106,12 @@ def test_non_mapping_rule_raises():
 
 
 def test_non_list_side_raises():
-    rule = {'left': 'not-a-list', 'op': 'eq', 'right': [_literal(1)]}
+    rule = {'left': 'not-a-list', 'op': 'cmp-eq', 'right': [_literal(1)]}
     with pytest.raises(ValueError):
         run_rule(rule)
 
 
 def test_cmdlet_error_propagates():
-    rule = {'left': [{'cmdlet': 'literal'}], 'op': 'eq', 'right': [_literal(1)]}
+    rule = {'left': [{'cmdlet': 'literal'}], 'op': 'cmp-eq', 'right': [_literal(1)]}
     with pytest.raises(ValueError):
         run_rule(rule)

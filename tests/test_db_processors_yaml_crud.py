@@ -23,7 +23,7 @@ SAMPLE = """\
       args:
         path: /path/to/specs.sav
     - cmdlet: count
-  op: eq
+  op: cmp-eq
   right:
     - cmdlet: literal
       args:
@@ -43,7 +43,7 @@ def test_load_rules(dbfile):
     assert "wave69-counts-equal-9002" in dbfile
     rule = dbfile.get_rule("wave69-counts-equal-9002")
     assert isinstance(rule, Rule)
-    assert rule.op == "eq"
+    assert rule.op == "cmp-eq"
     assert rule.meta["tags"] == ["counts", "wave69"]
     assert len(rule.left) == 2
     assert rule.left[0]["cmdlet"] == "get-content"
@@ -61,9 +61,9 @@ def test_get_rule_missing(dbfile):
 
 
 def test_add_rule_from_dict(dbfile):
-    dbfile.add_rule({"name": "new-rule", "op": "eq"})
+    dbfile.add_rule({"name": "new-rule", "op": "cmp-eq"})
     assert dbfile.has_rule("new-rule")
-    assert dbfile.get_rule("new-rule").op == "eq"
+    assert dbfile.get_rule("new-rule").op == "cmp-eq"
 
 
 def test_add_rule_duplicate_id_raises(dbfile):
@@ -79,9 +79,9 @@ def test_add_rule_explicit_duplicate_id_raises(dbfile):
 
 
 def test_update_rule(dbfile):
-    rule = dbfile.update_rule("wave69-counts-equal-9002", op="lt")
-    assert rule.op == "lt"
-    assert dbfile.get_rule("wave69-counts-equal-9002").op == "lt"
+    rule = dbfile.update_rule("wave69-counts-equal-9002", op="cmp-lt")
+    assert rule.op == "cmp-lt"
+    assert dbfile.get_rule("wave69-counts-equal-9002").op == "cmp-lt"
 
 
 def test_update_rule_unknown_field(dbfile):
@@ -111,7 +111,7 @@ def test_rename_rule_allows_duplicate_display_name(dbfile):
 
 def test_update_rule_missing(dbfile):
     with pytest.raises(KeyError):
-        dbfile.update_rule("nope", op="eq")
+        dbfile.update_rule("nope", op="cmp-eq")
 
 
 def test_delete_rule(dbfile):
@@ -126,22 +126,22 @@ def test_delete_rule_missing(dbfile):
 
 
 def test_save_roundtrip(dbfile):
-    dbfile.add_rule({"name": "second-rule", "op": "gt", "right": [
+    dbfile.add_rule({"name": "second-rule", "op": "cmp-gt", "right": [
         {"cmdlet": "literal", "args": {"value": 5}},
     ]})
-    dbfile.update_rule("wave69-counts-equal-9002", op="ne")
+    dbfile.update_rule("wave69-counts-equal-9002", op="cmp-ne")
     dbfile.save()
 
     reloaded = DBFile(str(dbfile.resource_path))
     assert len(reloaded) == 2
-    assert reloaded.get_rule("wave69-counts-equal-9002").op == "ne"
-    assert reloaded.get_rule("second-rule").op == "gt"
+    assert reloaded.get_rule("wave69-counts-equal-9002").op == "cmp-ne"
+    assert reloaded.get_rule("second-rule").op == "cmp-gt"
     assert reloaded.get_rule("second-rule").right[0]["args"]["value"] == 5
 
 
 def test_rule_from_dict_requires_name():
     with pytest.raises(ValueError):
-        Rule.from_dict({"op": "eq"})
+        Rule.from_dict({"op": "cmp-eq"})
 
 
 def test_rule_from_dict_non_mapping():
@@ -160,7 +160,7 @@ def test_rule_to_dict(dbfile):
 def test_op_args_roundtrip(dbfile):
     dbfile.add_rule({
         "name": "unordered-rule",
-        "op": "eq",
+        "op": "cmp-eq",
         "op_args": {"unordered_arrays": True},
     })
     dbfile.save()
@@ -188,7 +188,7 @@ def test_yaml_load_generates_ids_and_remaps_group_references(tmp_path):
             "rules:",
             "  - name: list of comp titles matches excel",
             "    group: comp titles",
-            "    op: eq",
+            "    op: cmp-eq",
         ]),
         encoding="utf-8",
     )

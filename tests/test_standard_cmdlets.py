@@ -115,7 +115,7 @@ def test_as_date_rejects_invalid_tz_arg():
 # ---- logical ---------------------------------------------------------------
 
 def test_not():
-    n = cmdlets.get('not')
+    n = cmdlets.get('logical-not')
     assert n(False, {}) is True
     assert n('', {}) is True
     assert n(sysmissing, {}) is True
@@ -123,58 +123,58 @@ def test_not():
 
 
 def test_and():
-    a = cmdlets.get('and')
+    a = cmdlets.get('logical-and')
     assert a(None, _operands(True, 1, 'x')) is True
     assert a(None, _operands(True, 0)) is False
     assert a(None, _operands(True, sysmissing)) is False
 
 
 def test_or():
-    o = cmdlets.get('or')
+    o = cmdlets.get('logical-or')
     assert o(None, _operands(False, '', 2)) is True
     assert o(None, _operands(False, '', 0)) is False
 
 
 def test_any():
-    assert cmdlets.get('any')([0, '', 3], {}) is True
-    assert cmdlets.get('any')([0, '', None], {}) is False
+    assert cmdlets.get('logical-any')([0, '', 3], {}) is True
+    assert cmdlets.get('logical-any')([0, '', None], {}) is False
 
 
 def test_all():
-    assert cmdlets.get('all')([1, 'x'], {}) is True
-    assert cmdlets.get('all')([1, ''], {}) is False
+    assert cmdlets.get('logical-all')([1, 'x'], {}) is True
+    assert cmdlets.get('logical-all')([1, ''], {}) is False
 
 
 def test_any_and_all_require_array():
     with pytest.raises(TypeError):
-        cmdlets.get('any')('abc', {})
+        cmdlets.get('logical-any')('abc', {})
     with pytest.raises(TypeError):
-        cmdlets.get('all')(5, {})
+        cmdlets.get('logical-all')(5, {})
 
 
 # ---- bitwise ---------------------------------------------------------------
 
 def test_bit_not():
-    assert cmdlets.get('bit-not')(0, {}) == -1
-    assert cmdlets.get('bit-not')(5, {}) == -6
+    assert cmdlets.get('bitwise-not')(0, {}) == -1
+    assert cmdlets.get('bitwise-not')(5, {}) == -6
 
 
 def test_bit_and_or_xor():
-    assert cmdlets.get('bit-and')(None, _operands(6, 3)) == 2
-    assert cmdlets.get('bit-or')(None, _operands(4, 1)) == 5
-    assert cmdlets.get('bit-xor')(None, _operands(6, 3)) == 5
+    assert cmdlets.get('bitwise-and')(None, _operands(6, 3)) == 2
+    assert cmdlets.get('bitwise-or')(None, _operands(4, 1)) == 5
+    assert cmdlets.get('bitwise-xor')(None, _operands(6, 3)) == 5
 
 
 def test_bitwise_rejects_non_integer():
     with pytest.raises(TypeError):
-        cmdlets.get('bit-not')(True, {})
+        cmdlets.get('bitwise-not')(True, {})
     with pytest.raises(TypeError):
-        cmdlets.get('bit-and')(None, _operands(1, 1.5))
+        cmdlets.get('bitwise-and')(None, _operands(1, 1.5))
 
 
 def test_bit_shifts():
-    assert cmdlets.get('bit-lshift')(None, _operands(1, 3)) == 8
-    assert cmdlets.get('bit-rshift')(None, _operands(8, 2)) == 2
+    assert cmdlets.get('bitwise-lshift')(None, _operands(1, 3)) == 8
+    assert cmdlets.get('bitwise-rshift')(None, _operands(8, 2)) == 2
 
 
 # ---- string ----------------------------------------------------------------
