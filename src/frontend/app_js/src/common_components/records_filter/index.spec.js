@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RecordsFilter from './index.js';
-import InputMultipunch from '../input_multipunch/index.js';
-import InputRegexText from '../input_regex_text/index.js';
+import InputMultipunch from '../input_types/multipunch/index.js';
+import InputRegexText from '../input_types/regex_text/index.js';
 
 const columns = {
   name: { label: 'Name', type: 'text' },

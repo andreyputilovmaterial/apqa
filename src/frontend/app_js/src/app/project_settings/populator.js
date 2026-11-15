@@ -1,6 +1,6 @@
 import { onMounted } from 'vue';
 
-import logError from '@/common_components/_log_error_proxy';
+import logError from '@/common_components/log_error';
 import { fetchProjectInfo, applyProjectHeaderInfo } from './project_header';
 
 // Fills the page-header project lines (database path, project name, description)

@@ -1,4 +1,4 @@
-import InputGallery from '@/common_components/input_gallery/index';
+import InputGallery from './input_gallery/index';
 
 import './styles.css';
 

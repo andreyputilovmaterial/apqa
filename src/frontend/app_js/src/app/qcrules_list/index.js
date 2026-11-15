@@ -2,7 +2,7 @@ import { computed, ref, onMounted, defineComponent, h } from 'vue';
 
 import RecordsFilter from '@/common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '@/common_defs/helper_functions';
-import logError from '@/common_components/_log_error_proxy';
+import logError from '@/common_components/log_error';
 import { createModal } from '@/common_components/modals/modals';
 import RuleRecord from './rule_record';
 import RulesTree from './rules_tree';

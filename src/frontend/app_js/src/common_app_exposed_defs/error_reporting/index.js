@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 
-import { _logErrorProxyContext } from '@/common_components/_log_error_proxy';
+import { logErrorContext } from '@/common_components/log_error';
 import { genId } from '@/common_defs/helper_functions';
 
 function useErrorReporting() {
@@ -16,10 +16,10 @@ function useErrorReporting() {
     console.error(e);
   }
 
-  // Resolve the deferred logger in `_log_error_proxy` so that anything logged
-  // through `logError` before this composable was initialized is now delivered
-  // to the banner (and to the console).
-  _logErrorProxyContext.promiseResolve(logError);
+  // Resolve the deferred logger in `log_error` so that anything logged through
+  // `logError` before this composable was initialized is now delivered to the
+  // banner (and to the console).
+  logErrorContext.promiseResolve(logError);
 
   return {
     errors,

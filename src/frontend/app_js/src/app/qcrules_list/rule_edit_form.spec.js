@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RuleEditForm from './rule_edit_form.js';
-
-// `input_cmdlet` references the chain component by its global name for the
-// `cmdlet-chains` arg type (to avoid a circular import); register a stub so the
-// form mounts without global registration.
-const ChainStub = { template: '<div class="chain-stub" />' };
+import { inputCmdletComponents } from '@/common_components/input_types/cmdlets/index.js';
 
 function makeRecord(overrides = {}) {
   return {
@@ -22,10 +18,12 @@ function makeRecord(overrides = {}) {
   };
 }
 
+// The form renders the cmdlet chain and comparison op through the globally-
+// registered editing components; register the full editing set for the mount.
 function mountForm(props = {}) {
   return mount(RuleEditForm, {
     props: { record: makeRecord(), cmdlets: [], ops: [], tagSuggestions: [], ...props },
-    global: { components: { 'component-input-cmdlet-chain': ChainStub } },
+    global: { components: inputCmdletComponents },
   });
 }
 

@@ -1,7 +1,7 @@
 import { ref, onMounted } from 'vue';
 
 import { makeFetchResponseErrorMessage } from '@/common_defs/helper_functions';
-import logError from '@/common_components/_log_error_proxy';
+import logError from '@/common_components/log_error';
 import { fetchProjectInfo, applyProjectHeaderInfo } from './project_header';
 
 import './styles.css';

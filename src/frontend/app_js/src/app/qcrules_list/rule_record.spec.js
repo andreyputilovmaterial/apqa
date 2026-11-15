@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RuleRecord from './rule_record.js';
+import { cmdletComponents } from '@/common_components/cmdlet_components/index.js';
+import { inputCmdletComponents } from '@/common_components/input_types/cmdlets/index.js';
 
 function makeRecord(overrides = {}) {
   return {
@@ -20,17 +22,27 @@ function makeRecord(overrides = {}) {
   };
 }
 
-const ChainStub = { template: '<div class="chain-stub" />' };
+const GLOBAL_COMPONENTS = {
+  ...cmdletComponents,
+  ...inputCmdletComponents,
+};
+const mountRuleRecord = mount.bind(null, RuleRecord);
+function mountRecord(options = {}) {
+  return mountRuleRecord({
+    ...options,
+    global: { components: { ...GLOBAL_COMPONENTS, ...options.global?.components } },
+  });
+}
 
 describe('RuleRecord', () => {
   it('starts collapsed (compact view, no actions)', () => {
-    const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
     expect(wrapper.find('.apqa-rule-compact').exists()).toBe(true);
     expect(wrapper.find('.apqa-rule-body-action').exists()).toBe(false);
   });
 
   it('expands to the full view on header click and shows actions', async () => {
-    const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
     await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
     expect(wrapper.find('.apqa-qcrules-list-item').exists()).toBe(true);
@@ -39,7 +51,7 @@ describe('RuleRecord', () => {
   });
 
   it('shows a down arrow when compact and an up arrow when expanded', async () => {
-    const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
     expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(true);
     expect(wrapper.find('.apqa-qcrules-list-item-name .ri-arrow-up-double-fill').exists()).toBe(false);
 
@@ -49,7 +61,7 @@ describe('RuleRecord', () => {
   });
 
   it('collapses back to compact view on a second header click', async () => {
-    const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
     await wrapper.find('.apqa-rule-compact-description').trigger('click');
     expect(wrapper.find('.apqa-qcrules-list-item').exists()).toBe(true);
 
@@ -59,7 +71,7 @@ describe('RuleRecord', () => {
   });
 
   it('forwards edit, run and delete actions with the record', async () => {
-    const wrapper = mount(RuleRecord, { props: { record: makeRecord() } });
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
     await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
     const buttons = wrapper.findAll('.apqa-rule-body-action');
@@ -76,7 +88,7 @@ describe('RuleRecord', () => {
   });
 
   it('adds the shared base, rule kind and mark classes to the <li>', () => {
-    const wrapper = mount(RuleRecord, {
+    const wrapper = mountRecord({
       props: { record: makeRecord({ markers: ['skip'], op: '', right: [] }) },
     });
 
@@ -88,7 +100,7 @@ describe('RuleRecord', () => {
   });
 
   it('keeps filter CSS classes from the record', () => {
-    const wrapper = mount(RuleRecord, {
+    const wrapper = mountRecord({
       props: { record: makeRecord({ _filterMeta: { cssClasses: ['apqa-u-hidden'] } }) },
     });
 
@@ -96,9 +108,8 @@ describe('RuleRecord', () => {
   });
 
   it('renders the inline edit form when it is the rule being edited', () => {
-    const wrapper = mount(RuleRecord, {
+    const wrapper = mountRecord({
       props: { record: makeRecord(), editingId: 'Rule A' },
-      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
     });
 
     expect(wrapper.find('.apqa-rule-edit-form').exists()).toBe(true);
@@ -106,9 +117,8 @@ describe('RuleRecord', () => {
   });
 
   it('forwards save and cancel from the inline edit form', async () => {
-    const wrapper = mount(RuleRecord, {
+    const wrapper = mountRecord({
       props: { record: makeRecord(), editingId: 'Rule A' },
-      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
     });
 
     await wrapper.find('input[name="name"]').setValue('Renamed');

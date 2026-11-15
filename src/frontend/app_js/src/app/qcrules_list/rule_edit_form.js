@@ -1,9 +1,7 @@
 import { ref } from 'vue';
 
-import InputCmdletChain from '@/common_components/input_cmdlet_chain/index';
-import InputComparisonOp from '@/common_components/input_comparison_op/index';
-import InputQcruleTags from '@/common_components/input_qcrule_tags/index';
-import InputQcruleMarks from '@/common_components/input_qcrule_marks/index';
+import InputQcruleTags from '@/common_components/input_types/qcrules/tags/index';
+import InputQcruleMarks from '@/common_components/input_types/qcrules/marks/index';
 
 import './rule_form.css';
 import './rule_edit_form.css';
@@ -27,8 +25,6 @@ const RuleEditForm = {
   emits: ['save', 'cancel'],
 
   components: {
-    'input-cmdlet-chain': InputCmdletChain,
-    'input-comparison-op': InputComparisonOp,
     'input-qcrule-tags': InputQcruleTags,
     'input-qcrule-marks': InputQcruleMarks,
   },
@@ -67,17 +63,17 @@ const RuleEditForm = {
 
       <label class="apqa-rule-form-field apqa-rule-form-field-chain">
         <span class="apqa-rule-form-field-label">Left side</span>
-        <input-cmdlet-chain v-model="left" :cmdlets="cmdlets" />
+        <component-input-cmdlet-chain v-model="left" :cmdlets="cmdlets" />
       </label>
 
       <label class="apqa-rule-form-field">
         <span class="apqa-rule-form-field-label">Comparison</span>
-        <input-comparison-op v-model="comparison" :ops="ops" />
+        <component-input-comparison-op v-model="comparison" :ops="ops" />
       </label>
 
       <label class="apqa-rule-form-field apqa-rule-form-field-chain">
         <span class="apqa-rule-form-field-label">Right side</span>
-        <input-cmdlet-chain v-model="right" :cmdlets="cmdlets" />
+        <component-input-cmdlet-chain v-model="right" :cmdlets="cmdlets" />
       </label>
     </div>
 

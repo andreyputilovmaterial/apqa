@@ -1,14 +1,13 @@
 import { computed } from 'vue';
 
-import CmdletChain from './cmdlet_chain';
-import Comparison from './comparison';
 import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges';
 import { isUnfinished, markNamesForRecord } from './grouping';
 
 // Compact QC-rule representation: one description line (name + optional
 // comment) and one definition line (left chain, comparison op, right chain).
-// Reuses the same `CmdletChain` and `Comparison` building blocks as the full
-// `rule.js`, only the surrounding layout differs.
+// Reuses the same display `cmdlet-chain` / `comparison-op` building blocks as
+// the full `rule.js`, only the form (compact vs full) and surrounding layout
+// differ.
 //
 // The description line is the rule's "header": clicking it emits `toggle` so a
 // wrapping record component can expand/collapse the rule. A grey helper note
@@ -20,8 +19,6 @@ const RuleCompact = {
   emits: ['toggle'],
 
   components: {
-    'cmdlet-chain': CmdletChain,
-    'comparison': Comparison,
     'marks-badges': MarksBadges,
   },
 
@@ -39,9 +36,9 @@ const RuleCompact = {
     <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
   </div>
   <div class="apqa-rule-compact-definition">
-    <cmdlet-chain :chain="record.left" />
-    <comparison :op="record.op" />
-    <cmdlet-chain :chain="record.right" />
+    <component-cmdlet-chain-compact :chain="record.left" :cmdlets="cmdlets" />
+    <component-comparison-op-compact :op="record.op" />
+    <component-cmdlet-chain-compact :chain="record.right" :cmdlets="cmdlets" />
   </div>
   <marks-badges :marks="marks" />
 </div>

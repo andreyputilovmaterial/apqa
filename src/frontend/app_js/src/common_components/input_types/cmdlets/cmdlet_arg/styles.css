@@ -1,0 +1,39 @@
+.apqa-input-cmdlet-arg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apqa-input-cmdlet-arg-label {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.apqa-input-cmdlet-arg-required {
+  color: #990000;
+}
+
+.apqa-input-cmdlet-arg-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 7px;
+  background: #fff;
+  color: #333;
+}
+
+.apqa-input-cmdlet-arg-bool {
+  align-self: flex-start;
+}
+
+.apqa-input-cmdlet-arg-help {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.apqa-input-cmdlet-arg-error {
+  font-size: 0.8rem;
+  color: #cc0000;
+}

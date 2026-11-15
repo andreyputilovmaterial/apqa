@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 
 import QcRulesList from './index.js';
 import RulesTree from './rules_tree.js';
+import { cmdletComponents } from '@/common_components/cmdlet_components/index.js';
 
 // `QcRulesList` loads rules + groups in its `onMounted` hook and renders the
 // `records-filter` -> `rules-tree` pipeline. Stub `fetch` so the page renders
@@ -28,7 +29,7 @@ describe('QcRulesList', () => {
       { id: 'r2', name: 'Rule two', left: [], op: '', right: [], meta: { tags: ['wave69'] } },
     ]);
 
-    const wrapper = mount(QcRulesList);
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
     await flushPromises();
 
     const tree = wrapper.findComponent(RulesTree);

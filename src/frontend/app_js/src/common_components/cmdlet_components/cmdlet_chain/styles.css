@@ -1,0 +1,19 @@
+.apqa-cmdlet-chain {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.apqa-cmdlet-chain-pipe {
+  padding: 0 4px;
+  color: #999;
+  /* Center the pipe vertically against the chip boxes (which are top-aligned
+     inline-blocks), instead of leaving it glued to the text baseline. */
+  vertical-align: middle;
+}
+
+.apqa-cmdlet-chain-empty {
+  color: #999;
+  font-style: italic;
+  font-family: 'IBM Plex Sans'; /* switch from monospace - to address slight misalignment in the left indent - the size of "(" and "[" characters in monospace font is bigger than the char itself, causing couple pixes of whitespace and the feel of misalignment */
+}

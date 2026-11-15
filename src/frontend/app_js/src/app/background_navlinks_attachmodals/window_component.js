@@ -3,7 +3,7 @@
 import { ref, reactive, onMounted } from 'vue';
 
 import safetyUrlCheck from './safetycheck';
-import logError from '@/common_components/_log_error_proxy';
+import logError from '@/common_components/log_error';
 
 
 const Window = {

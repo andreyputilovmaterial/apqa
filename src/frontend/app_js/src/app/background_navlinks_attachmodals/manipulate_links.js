@@ -3,7 +3,7 @@ import { defineComponent, h, markRaw, onMounted } from 'vue';
 
 import Window from './window_component';
 import safetyUrlCheck from './safetycheck';
-import logError from '@/common_components/_log_error_proxy';
+import logError from '@/common_components/log_error';
 import { createModal } from '@/common_components/modals/modals';
 import TestPageModal from '@/app/testpage/index';
 import ProjectSettingsModal from '@/app/project_settings/index';

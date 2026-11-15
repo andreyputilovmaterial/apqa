@@ -12,22 +12,21 @@ import ComponentSectionRollup from './common_components/rollable_sections/index'
 import ComponentTabbedPanes from './common_components/tabbed_panes/tabbed_panes';
 import ComponentTabbedPane from './common_components/tabbed_panes/tabbed_pane';
 import ComponentFilterRecordsForm from './common_components/filter_records_form/index';
-import ComponentFormatDatetime from './common_components/format_datetime/index';
-import ComponentFormatFilesize from './common_components/format_filesize/index';
-import ComponentFormatHash from './common_components/format_hash/index';
-import ComponentFormatLocalFilePath from './common_components/format_local_file_path/index';
-import ComponentInputNumericRange from './common_components/input_numeric_range/index';
-import ComponentInputDatetimeRange from './common_components/input_datetime_range/index';
-import ComponentInputMultipunch from './common_components/input_multipunch/index';
-import ComponentInputRegexText from './common_components/input_regex_text/index';
-import ComponentInputCmdlet from './common_components/input_cmdlet/index';
-import ComponentInputCmdletChain from './common_components/input_cmdlet_chain/index';
-import ComponentInputComparisonOp from './common_components/input_comparison_op/index';
-import ComponentInputQcruleTags from './common_components/input_qcrule_tags/index';
-import ComponentInputQcruleMarks from './common_components/input_qcrule_marks/index';
-import ComponentInputSearchSelect from './common_components/input_search_select/index';
-import ComponentLoaderSpinner from './common_components/loader_spinner/index';
-import ComponentLoaderInProgress from './common_components/loader_inprogress/index';
+import ComponentFormatDatetime from './common_components/display/format_datetime/index';
+import ComponentFormatFilesize from './common_components/display/format_filesize/index';
+import ComponentFormatHash from './common_components/display/format_hash/index';
+import ComponentFormatLocalFilePath from './common_components/display/format_local_file_path/index';
+import ComponentInputNumericRange from './common_components/input_types/numeric_range/index';
+import ComponentInputDatetimeRange from './common_components/input_types/datetime_range/index';
+import ComponentInputMultipunch from './common_components/input_types/multipunch/index';
+import ComponentInputRegexText from './common_components/input_types/regex_text/index';
+import ComponentInputQcruleTags from './common_components/input_types/qcrules/tags/index';
+import ComponentInputQcruleMarks from './common_components/input_types/qcrules/marks/index';
+import ComponentInputSearchSelect from './common_components/input_types/search_select/index';
+import ComponentLoaderSpinner from './common_components/display/loader_spinner/index';
+import ComponentLoaderInProgress from './common_components/display/loader_inprogress/index';
+import { registerCmdletComponents } from './common_components/cmdlet_components/index';
+import { registerInputCmdletComponents } from './common_components/input_types/cmdlets/index';
 import './common_components/css_grid/styles.css';
 
 // all "system" components - modals and the environment for showing errors...
@@ -98,13 +97,12 @@ document.addEventListener("DOMContentLoaded", () => {
   app.component('component-input-multipunch', ComponentInputMultipunch);
   app.component('component-input-regextext', ComponentInputRegexText);
   app.component('component-input-search-select', ComponentInputSearchSelect);
-  app.component('component-input-cmdlet', ComponentInputCmdlet);
-  app.component('component-input-cmdlet-chain', ComponentInputCmdletChain);
-  app.component('component-input-comparison-op', ComponentInputComparisonOp);
   app.component('component-input-qcrule-tags', ComponentInputQcruleTags);
   app.component('component-input-qcrule-marks', ComponentInputQcruleMarks);
   app.component('component-loader-spinner', ComponentLoaderSpinner);
   app.component('component-loader-inprogress', ComponentLoaderInProgress);
+  registerCmdletComponents(app);
+  registerInputCmdletComponents(app);
   app.mount('#ui_app');
 
 

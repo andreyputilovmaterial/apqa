@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 
 import RulesTree from './rules_tree.js';
+import { cmdletComponents } from '@/common_components/cmdlet_components/index.js';
+import { inputCmdletComponents } from '@/common_components/input_types/cmdlets/index.js';
 
 function rule(name, group = '', extra = {}) {
   return {
@@ -24,14 +26,26 @@ function group(name, parent = '', aliases = []) {
   return { id: name, name, parent, aliases };
 }
 
-// `input_cmdlet` references the chain component by its global name for the
-// `cmdlet-chains` arg type; a stub silences the resolution warning when the
-// inline edit form renders.
-const ChainStub = { template: '<div class="chain-stub" />' };
+// `rules_tree` renders cmdlets through the globally-registered display
+// components and the edit form through the editing components; register both
+// for every mount (same sets as app.js).
+const GLOBAL_COMPONENTS = {
+  ...cmdletComponents,
+  ...inputCmdletComponents,
+};
+
+function mountTree(options = {}) {
+  return mount(RulesTree, {
+    ...options,
+    global: {
+      components: { ...GLOBAL_COMPONENTS, ...options.global?.components },
+    },
+  });
+}
 
 describe('RulesTree', () => {
   it('starts with folders folded and expands on click', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [group('Data')],
         records: [rule('r1', 'Data')],
@@ -55,7 +69,7 @@ describe('RulesTree', () => {
   });
 
   it('renders ungrouped rules directly, without a folder heading', () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: { groups: [], records: [rule('r1')] },
     });
 
@@ -64,7 +78,7 @@ describe('RulesTree', () => {
   });
 
   it('renders folder aliases as name: chain when expanded', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [
           group('Data', '', [
@@ -85,7 +99,7 @@ describe('RulesTree', () => {
   });
 
   it('keeps child rules hidden while a parent folder is folded', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [group('Data'), group('Metadata', 'Data')],
         records: [rule('r1', 'Metadata')],
@@ -110,7 +124,7 @@ describe('RulesTree', () => {
   });
 
   it('paginates the visible node list', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [],
         records: [rule('r1'), rule('r2')],
@@ -129,7 +143,7 @@ describe('RulesTree', () => {
   });
 
   it('forwards delete actions from an expanded rule', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: { groups: [], records: [rule('r1')] },
     });
     await wrapper.find('.apqa-rule-compact-description').trigger('click');
@@ -140,7 +154,7 @@ describe('RulesTree', () => {
   });
 
   it('assigns mark classes to rule leaves', () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: { groups: [], records: [rule('r1', '', { markers: ['skip'] })] },
     });
 
@@ -150,7 +164,7 @@ describe('RulesTree', () => {
   });
 
   it('aggregates rule mark classes onto a folder heading', () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [group('Data')],
         records: [rule('r1', 'Data', { markers: ['skip'] })],
@@ -163,7 +177,7 @@ describe('RulesTree', () => {
   });
 
   it('shows a folder mark summary with aggregated badges', () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [group('Data')],
         records: [rule('r1', 'Data', { markers: ['skip'] })],
@@ -177,12 +191,11 @@ describe('RulesTree', () => {
   });
 
   it('refuses to collapse a folder that contains the rule being edited', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [group('Data')],
         records: [rule('r1', 'Data')],
       },
-      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
     });
 
     await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
@@ -203,14 +216,13 @@ describe('RulesTree', () => {
 
   it('refuses to change page while a rule is being edited', async () => {
     const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [],
         records: [rule('r1'), rule('r2')],
         recordsPerPage: 1,
         editingId: 'r1',
       },
-      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
     });
 
     await wrapper.findAll('.apqa-rules-tree-page')[1].trigger('click');
@@ -224,13 +236,12 @@ describe('RulesTree', () => {
   });
 
   it('forwards save and cancel from an editing rule', async () => {
-    const wrapper = mount(RulesTree, {
+    const wrapper = mountTree({
       props: {
         groups: [],
         records: [rule('r1')],
         editingId: 'r1',
       },
-      global: { components: { 'component-input-cmdlet-chain': ChainStub } },
     });
 
     await wrapper.find('input[name="name"]').setValue('renamed');

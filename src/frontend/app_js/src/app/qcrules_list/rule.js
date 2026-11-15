@@ -1,8 +1,6 @@
 import { computed } from 'vue';
 
-import CmdletChain from './cmdlet_chain';
-import Comparison from './comparison';
-import ComponentFormatDatetime from '@/common_components/format_datetime/index';
+import ComponentFormatDatetime from '@/common_components/display/format_datetime/index';
 import MarksBadges, { UNFINISHED_MESSAGE } from './marks_badges';
 import { isUnfinished, markNamesForRecord } from './grouping';
 
@@ -12,8 +10,6 @@ const Rule = {
   emits: ['toggle'],
 
   components: {
-    'cmdlet-chain': CmdletChain,
-    'comparison': Comparison,
     'component-format-datetime': ComponentFormatDatetime,
     'marks-badges': MarksBadges,
   },
@@ -32,9 +28,9 @@ const Rule = {
     <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
   </div>
   <div class="apqa-qcrules-list-item-definition">
-    <cmdlet-chain :chain="record.left" />
-    <comparison :op="record.op" />
-    <cmdlet-chain :chain="record.right" />
+    <component-cmdlet-chain-full :chain="record.left" :cmdlets="cmdlets" />
+    <component-comparison-op-full :op="record.op" />
+    <component-cmdlet-chain-full :chain="record.right" :cmdlets="cmdlets" />
   </div>
   <div class="apqa-qcrules-list-item-meta">
     <span v-if="record.tags.length" class="apqa-qcrules-list-item-tags">{{ record.tags.join(', ') }}</span>
