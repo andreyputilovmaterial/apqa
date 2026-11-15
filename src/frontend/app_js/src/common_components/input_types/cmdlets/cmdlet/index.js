@@ -11,6 +11,7 @@ function defaultArgValue(arg) {
     case 'boolean':
       return false;
     case 'list':
+    case 'strings':
       return [];
     case 'number':
     case 'path':

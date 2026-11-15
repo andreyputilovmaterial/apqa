@@ -1,5 +1,6 @@
 """Run a chain of cmdlets, threading each output into the next."""
 
+from .navigation import navigation_scope
 from .registry import cmdlets
 
 
@@ -27,29 +28,34 @@ def run_chain(chain, initial=None):
 
     A failing cmdlet (including an unknown cmdlet name) raises `ChainError`
     identifying the step, with the original exception chained as ``__cause__``.
+
+    Each run also opens a fresh navigation-path scope (see
+    ``src/cmdlets/navigation.py``) so navigating cmdlets can record their step
+    and a downstream ``filter`` can read the path that led to its input.
     """
     value = initial
-    for index, step in enumerate(chain):
-        if not isinstance(step, dict):
-            raise ValueError(
-                f'cmdlet must be a mapping, got {type(step).__name__}'
-            )
-        name = step.get('cmdlet')
-        if name is None or name == '':
-            raise ValueError('cmdlet is missing a name')
-        name = f'{name}'
-        args = step.get('args') or {}
-        if not isinstance(args, dict):
-            raise ValueError(f"cmdlet {name!r}: args must be a mapping")
-        try:
-            value = cmdlets.get(name)(value, args)
-        except ChainError:
-            raise
-        except Exception as error:
-            raise ChainError(
-                cmdlet=name,
-                step=index,
-                args=args,
-                message=f'cmdlet {name!r} (step {index}): {error}',
-            ) from error
+    with navigation_scope():
+        for index, step in enumerate(chain):
+            if not isinstance(step, dict):
+                raise ValueError(
+                    f'cmdlet must be a mapping, got {type(step).__name__}'
+                )
+            name = step.get('cmdlet')
+            if name is None or name == '':
+                raise ValueError('cmdlet is missing a name')
+            name = f'{name}'
+            args = step.get('args') or {}
+            if not isinstance(args, dict):
+                raise ValueError(f"cmdlet {name!r}: args must be a mapping")
+            try:
+                value = cmdlets.get(name)(value, args)
+            except ChainError:
+                raise
+            except Exception as error:
+                raise ChainError(
+                    cmdlet=name,
+                    step=index,
+                    args=args,
+                    message=f'cmdlet {name!r} (step {index}): {error}',
+                ) from error
     return value

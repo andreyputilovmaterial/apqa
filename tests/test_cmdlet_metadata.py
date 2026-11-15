@@ -150,6 +150,14 @@ def test_cmdlet_display_specs():
     assert 'full' not in meta['count']
 
 
+def test_filter_ignorelist_arg_is_strings_list():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    ignorelist = {a['name']: a for a in meta['filter']['args']}['ignorelist']
+    assert ignorelist['type'] == 'strings'
+    assert ignorelist['required'] is True
+    assert 'first_kinds' not in ignorelist
+
+
 def test_literal_value_arg_is_typed():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
     value_args = {a['name']: a for a in meta['literal']['args']}

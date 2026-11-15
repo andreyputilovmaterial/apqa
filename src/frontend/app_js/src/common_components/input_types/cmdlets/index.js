@@ -13,6 +13,7 @@ import InputArgBoolean from './data_types/boolean/index';
 import InputArgPath from './data_types/path/index';
 import InputArgOptions from './data_types/options/index';
 import InputArgList from './data_types/list/index';
+import InputArgStrings from './data_types/strings/index';
 import InputArgJson from './data_types/json/index';
 import InputArgLiteralValue from './data_types/literal_value/index';
 import InputArgCmdletChain from './data_types/cmdlet_chain/index';
@@ -31,6 +32,7 @@ export const inputCmdletComponents = {
   'component-input-cmdlet-arg-path': InputArgPath,
   'component-input-cmdlet-arg-options': InputArgOptions,
   'component-input-cmdlet-arg-list': InputArgList,
+  'component-input-cmdlet-arg-strings': InputArgStrings,
   'component-input-cmdlet-arg-json': InputArgJson,
   'component-input-cmdlet-arg-literal-value': InputArgLiteralValue,
   'component-input-cmdlet-arg-cmdlet-chain': InputArgCmdletChain,

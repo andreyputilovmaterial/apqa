@@ -563,7 +563,8 @@ An **arg schema** is `{ name, type, required, description }` plus optional
 
 - `text` (default), `number`, `boolean` (a `true`/`false` drop-down), `path`,
   `options` (single-select from `options`), `list` (comma-separated text →
-  array), `json` (raw JSON), `literal-value` (the `literal` cmdlet's typed
+  array), `strings` (a list of strings with add/remove rows), `json` (raw JSON),
+  `literal-value` (the `literal` cmdlet's typed
   constant editor: text / number / boolean / path / date / json),
   `cmdlet-chains` (a list of cmdlet chains, e.g.
   `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a

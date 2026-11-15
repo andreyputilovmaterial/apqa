@@ -23,6 +23,8 @@ import DataTypeOptionsCompact from './data_types/options/compact';
 import DataTypeOptionsFull from './data_types/options/full';
 import DataTypeListCompact from './data_types/list/compact';
 import DataTypeListFull from './data_types/list/full';
+import DataTypeStringsCompact from './data_types/strings/compact';
+import DataTypeStringsFull from './data_types/strings/full';
 import DataTypeJsonCompact from './data_types/json/compact';
 import DataTypeJsonFull from './data_types/json/full';
 import DataTypeLiteralValueCompact from './data_types/literal_value/compact';
@@ -56,6 +58,8 @@ export const cmdletComponents = {
   'component-cmdlet-arg-options-full': DataTypeOptionsFull,
   'component-cmdlet-arg-list-compact': DataTypeListCompact,
   'component-cmdlet-arg-list-full': DataTypeListFull,
+  'component-cmdlet-arg-strings-compact': DataTypeStringsCompact,
+  'component-cmdlet-arg-strings-full': DataTypeStringsFull,
   'component-cmdlet-arg-json-compact': DataTypeJsonCompact,
   'component-cmdlet-arg-json-full': DataTypeJsonFull,
   'component-cmdlet-arg-literal-value-compact': DataTypeLiteralValueCompact,

@@ -45,6 +45,7 @@ const InputCmdletArg = {
         case 'boolean':
           return false;
         case 'list':
+        case 'strings':
         case 'cmdlet-chains':
           return [];
         case 'number':
