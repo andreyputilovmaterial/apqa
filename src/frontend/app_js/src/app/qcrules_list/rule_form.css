@@ -17,10 +17,49 @@
 .apqa-rule-form-fields {
   display: flex;
   flex-direction: column;
+  gap: 28px;
+}
+
+/* A plain, unlabeled group of related fields. The only visual cue is the
+   slightly larger gap between sections than between the fields inside one. */
+.apqa-rule-form-section {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
 .apqa-rule-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Collapsible QC rule ID line: a one-line, muted, clickable summary of the
+   technical id that expands into the editable/read-only input. */
+.apqa-rule-form-id-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.apqa-rule-form-id-icon {
+  color: #999;
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.apqa-rule-form-id-value {
+  color: #555;
+}
+
+.apqa-rule-form-id-editor {
   display: flex;
   flex-direction: column;
   gap: 3px;

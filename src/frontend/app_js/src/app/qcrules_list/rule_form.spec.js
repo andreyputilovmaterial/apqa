@@ -12,6 +12,10 @@ function mountForm(props = {}) {
   });
 }
 
+async function expandId(wrapper) {
+  await wrapper.find('.apqa-rule-form-id-toggle').trigger('click');
+}
+
 describe('makeSlug', () => {
   it('lowercases and joins words with hyphens', () => {
     expect(makeSlug('Wave 69 Counts')).toBe('wave-69-counts');
@@ -91,6 +95,7 @@ describe('RuleForm', () => {
     const wrapper = mountForm({ resolve, existingIds: ['taken'] });
 
     await wrapper.find('input[name="name"]').setValue('Wave 69');
+    await expandId(wrapper);
     await wrapper.find('input[name="id"]').setValue('taken');
     await wrapper.find('form').trigger('submit');
 
@@ -103,6 +108,7 @@ describe('RuleForm', () => {
     const wrapper = mountForm({ resolve, existingIds: ['wave-69'] });
 
     await wrapper.find('input[name="name"]').setValue('Wave 69');
+    await expandId(wrapper);
     await wrapper.find('input[name="id"]').setValue('');
     await wrapper.find('form').trigger('submit');
 
@@ -114,7 +120,9 @@ describe('RuleForm', () => {
     const wrapper = mountForm();
 
     await wrapper.find('input[name="name"]').setValue('Wave 69');
-    expect(wrapper.find('input[name="id"]').element.value).toBe('wave-69');
+    expect(wrapper.find('.apqa-rule-form-id-value').text()).toBe('wave-69');
+
+    await expandId(wrapper);
 
     // Manually editing the id stops auto-fill…
     await wrapper.find('input[name="id"]').setValue('my-custom-id');
@@ -131,5 +139,29 @@ describe('RuleForm', () => {
     // And it keeps tracking the name again afterwards.
     await wrapper.find('input[name="name"]').setValue('Wave 71');
     expect(wrapper.find('input[name="id"]').element.value).toBe('wave-71');
+  });
+
+  it('shows the QC rule ID as a collapsed line that expands on click', async () => {
+    const wrapper = mountForm();
+    await wrapper.find('input[name="name"]').setValue('Wave 69');
+
+    const toggle = wrapper.find('.apqa-rule-form-id-toggle');
+    expect(toggle.find('.ri-arrow-down-double-fill').exists()).toBe(true);
+    expect(toggle.find('.ri-arrow-up-double-fill').exists()).toBe(false);
+    expect(toggle.find('.apqa-rule-form-id-value').text()).toBe('wave-69');
+    expect(wrapper.find('input[name="id"]').exists()).toBe(false);
+
+    await toggle.trigger('click');
+
+    expect(wrapper.find('.ri-arrow-up-double-fill').exists()).toBe(true);
+    expect(wrapper.find('.ri-arrow-down-double-fill').exists()).toBe(false);
+    expect(wrapper.find('input[name="id"]').exists()).toBe(true);
+    expect(wrapper.find('input[name="id"]').element.value).toBe('wave-69');
+    expect(wrapper.find('.apqa-rule-form-id-editor .apqa-rule-form-field-label').text()).toBe('QC rule ID');
+
+    await wrapper.find('.apqa-rule-form-id-toggle').trigger('click');
+
+    expect(wrapper.find('input[name="id"]').exists()).toBe(false);
+    expect(wrapper.find('.ri-arrow-down-double-fill').exists()).toBe(true);
   });
 });

@@ -35,46 +35,68 @@ const RuleEditForm = {
     <div v-if="error" class="apqa-rule-form-error">{{ error }}</div>
 
     <div class="apqa-rule-form-fields">
-      <label class="apqa-rule-form-field">
-        <span class="apqa-rule-form-field-label">Name <span class="apqa-rule-form-required">*</span></span>
-        <input type="text" class="apqa-rule-form-input" name="name" v-model="name" />
-      </label>
+      <div class="apqa-rule-form-section">
+        <div class="apqa-rule-form-field apqa-rule-form-id">
+          <button
+            type="button"
+            class="apqa-rule-form-id-toggle"
+            :aria-expanded="idExpanded ? 'true' : 'false'"
+            @click="toggleId"
+          >
+            <i
+              :class="idExpanded ? 'ri-arrow-up-double-fill' : 'ri-arrow-down-double-fill'"
+              class="apqa-rule-form-id-icon"
+              aria-hidden="true"
+            ></i>
+            <span class="apqa-rule-form-id-value">{{ record.id }}</span>
+          </button>
 
-      <label class="apqa-rule-form-field">
-        <span class="apqa-rule-form-field-label">Technical name (id)</span>
-        <input type="text" class="apqa-rule-form-input apqa-rule-form-input-disabled" name="id" :value="record.id" disabled />
-        <span class="apqa-rule-form-field-help">The technical id cannot be changed.</span>
-      </label>
+          <label v-if="idExpanded" class="apqa-rule-form-id-editor">
+            <span class="apqa-rule-form-field-label">QC rule ID</span>
+            <input type="text" class="apqa-rule-form-input apqa-rule-form-input-disabled" name="id" :value="record.id" disabled />
+            <span class="apqa-rule-form-field-help">The QC rule ID cannot be changed.</span>
+          </label>
+        </div>
 
-      <label class="apqa-rule-form-field">
-        <span class="apqa-rule-form-field-label">Comment</span>
-        <input type="text" class="apqa-rule-form-input" name="comment" v-model="comment" />
-      </label>
+        <label class="apqa-rule-form-field">
+          <span class="apqa-rule-form-field-label">Name <span class="apqa-rule-form-required">*</span></span>
+          <input type="text" class="apqa-rule-form-input" name="name" v-model="name" />
+        </label>
 
-      <label class="apqa-rule-form-field">
-        <span class="apqa-rule-form-field-label">Tags</span>
-        <input-qcrule-tags v-model="tags" :suggestions="tagSuggestions" />
-      </label>
+        <label class="apqa-rule-form-field">
+          <span class="apqa-rule-form-field-label">Comment</span>
+          <input type="text" class="apqa-rule-form-input" name="comment" v-model="comment" />
+        </label>
+      </div>
 
-      <label class="apqa-rule-form-field">
-        <span class="apqa-rule-form-field-label">Markers</span>
-        <input-qcrule-marks v-model="markers" />
-      </label>
+      <div class="apqa-rule-form-section">
+        <label class="apqa-rule-form-field apqa-rule-form-field-chain">
+          <span class="apqa-rule-form-field-label">Left side</span>
+          <component-input-cmdlet-chain v-model="left" :cmdlets="cmdlets" />
+        </label>
 
-      <label class="apqa-rule-form-field apqa-rule-form-field-chain">
-        <span class="apqa-rule-form-field-label">Left side</span>
-        <component-input-cmdlet-chain v-model="left" :cmdlets="cmdlets" />
-      </label>
+        <label class="apqa-rule-form-field">
+          <span class="apqa-rule-form-field-label">Comparison</span>
+          <component-input-comparison-op v-model="comparison" :ops="ops" />
+        </label>
 
-      <label class="apqa-rule-form-field">
-        <span class="apqa-rule-form-field-label">Comparison</span>
-        <component-input-comparison-op v-model="comparison" :ops="ops" />
-      </label>
+        <label class="apqa-rule-form-field apqa-rule-form-field-chain">
+          <span class="apqa-rule-form-field-label">Right side</span>
+          <component-input-cmdlet-chain v-model="right" :cmdlets="cmdlets" />
+        </label>
+      </div>
 
-      <label class="apqa-rule-form-field apqa-rule-form-field-chain">
-        <span class="apqa-rule-form-field-label">Right side</span>
-        <component-input-cmdlet-chain v-model="right" :cmdlets="cmdlets" />
-      </label>
+      <div class="apqa-rule-form-section">
+        <label class="apqa-rule-form-field">
+          <span class="apqa-rule-form-field-label">Tags</span>
+          <input-qcrule-tags v-model="tags" :suggestions="tagSuggestions" />
+        </label>
+
+        <label class="apqa-rule-form-field">
+          <span class="apqa-rule-form-field-label">Markers</span>
+          <input-qcrule-marks v-model="markers" />
+        </label>
+      </div>
     </div>
 
     <div class="apqa-rule-form-actions">
@@ -100,6 +122,7 @@ const RuleEditForm = {
         : null,
     );
     const error = ref('');
+    const idExpanded = ref(false);
 
     function submit() {
       const trimmedName = name.value.trim();
@@ -125,6 +148,10 @@ const RuleEditForm = {
       emit('cancel');
     }
 
+    function toggleId() {
+      idExpanded.value = !idExpanded.value;
+    }
+
     return {
       name,
       comment,
@@ -134,6 +161,8 @@ const RuleEditForm = {
       right,
       comparison,
       error,
+      idExpanded,
+      toggleId,
       submit,
       cancel,
     };

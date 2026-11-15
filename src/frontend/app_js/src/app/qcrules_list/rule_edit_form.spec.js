@@ -28,13 +28,37 @@ function mountForm(props = {}) {
 }
 
 describe('RuleEditForm', () => {
-  it('prefills the editable fields from the record', () => {
+  it('prefills the editable fields from the record', async () => {
     const wrapper = mountForm();
+    await wrapper.find('.apqa-rule-form-id-toggle').trigger('click');
 
     expect((wrapper.find('input[name="name"]').element).value).toBe('Wave 69');
     expect((wrapper.find('input[name="comment"]').element).value).toBe('check the count');
     expect((wrapper.find('input[name="id"]').element).value).toBe('wave-69');
     expect(wrapper.find('input[name="id"]').attributes('disabled')).toBeDefined();
+  });
+
+  it('shows the read-only QC rule ID collapsed above the name and expands on click', async () => {
+    const wrapper = mountForm();
+
+    const toggle = wrapper.find('.apqa-rule-form-id-toggle');
+    expect(toggle.find('.ri-arrow-down-double-fill').exists()).toBe(true);
+    expect(toggle.find('.ri-arrow-up-double-fill').exists()).toBe(false);
+    expect(toggle.find('.apqa-rule-form-id-value').text()).toBe('wave-69');
+    expect(wrapper.find('input[name="id"]').exists()).toBe(false);
+
+    const html = wrapper.html();
+    expect(html.indexOf('apqa-rule-form-id-toggle')).toBeLessThan(html.indexOf('name="name"'));
+
+    await toggle.trigger('click');
+
+    expect(wrapper.find('.ri-arrow-up-double-fill').exists()).toBe(true);
+    expect(wrapper.find('.ri-arrow-down-double-fill').exists()).toBe(false);
+    expect(wrapper.find('.apqa-rule-form-id-editor .apqa-rule-form-field-label').text()).toBe('QC rule ID');
+
+    const idInput = wrapper.find('input[name="id"]');
+    expect(idInput.exists()).toBe(true);
+    expect(idInput.attributes('disabled')).toBeDefined();
   });
 
   it('emits the edited fields on save', async () => {
