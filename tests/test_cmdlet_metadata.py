@@ -144,6 +144,13 @@ def test_cmdlet_display_specs():
     assert 'full' not in meta['count']
 
 
+def test_literal_value_arg_is_typed():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    value_args = {a['name']: a for a in meta['literal']['args']}
+    assert value_args['value']['type'] == 'literal-value'
+    assert value_args['value']['required'] is True
+
+
 def test_comparison_op_compact_symbols():
     ops = {o['name']: o for o in get_cmdlet_metadata()['ops']}
     for name, symbol in (('cmp-eq', '='), ('cmp-ne', '≠'), ('cmp-lt', '<'), ('cmp-le', '≤'), ('cmp-gt', '>'), ('cmp-ge', '≥')):

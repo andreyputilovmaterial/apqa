@@ -21,6 +21,7 @@ function defaultArgValue(arg) {
     case 'cmdlet-chain':
       return [];
     case 'json':
+    case 'literal-value':
       return null;
     default:
       return '';

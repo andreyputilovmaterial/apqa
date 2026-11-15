@@ -10,9 +10,12 @@ from ..value_types import PipeValue
     args=[
         {
             'name': 'value',
-            'type': 'json',
+            'type': 'literal-value',
             'required': True,
-            'description': 'The fixed constant value (any JSON scalar, array, or object).',
+            'description': (
+                'The fixed constant value — text, number, boolean, or raw JSON '
+                '(array/object). The editor offers a type selector.'
+            ),
         },
     ],
     compact=[{'arg': 'value'}],

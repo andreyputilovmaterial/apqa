@@ -33,12 +33,12 @@ describe('InputComparisonOp', () => {
 
   it('renders op_args inputs once selected', () => {
     const wrapper = mountOp({ modelValue: { op: 'eq', op_args: {} } });
-    expect(wrapper.find('input[name="unordered_arrays"]').exists()).toBe(true);
+    expect(wrapper.find('select[name="unordered_arrays"]').exists()).toBe(true);
   });
 
   it('emits updated op_args when a boolean option changes', async () => {
     const wrapper = mountOp({ modelValue: { op: 'eq', op_args: {} } });
-    await wrapper.find('input[name="unordered_arrays"]').setValue(true);
+    await wrapper.find('select[name="unordered_arrays"]').setValue('true');
     expect(wrapper.emitted('update:modelValue').at(-1)).toEqual([
       { op: 'eq', op_args: { unordered_arrays: true } },
     ]);

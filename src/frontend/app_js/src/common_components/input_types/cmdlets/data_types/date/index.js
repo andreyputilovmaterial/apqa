@@ -1,6 +1,5 @@
-// `date` arg editor — placeholder. No backend arg type `date` exists yet, so
-// this editor is dormant until one is registered; for now it is a plain text
-// input like `text`.
+// `date` arg editor — a plain text input (ISO date/time text). A blank date is
+// not a value — it is stored as `sysmissing` (null), like `path`/`number`.
 const InputArgDate = {
   inheritAttrs: false,
 
@@ -11,7 +10,15 @@ const InputArgDate = {
 
   emits: ['update:value'],
 
-  template: `<input type="text" class="apqa-input-cmdlet-arg-input" :name="name" :value="value" @input="$emit('update:value', $event.target.value)" />`,
+  setup(props, { emit }) {
+    function onInput(event) {
+      const value = event.target.value;
+      emit('update:value', value === '' || value == null ? null : value);
+    }
+    return { onInput };
+  },
+
+  template: `<input type="text" class="apqa-input-cmdlet-arg-input" :name="name" :value="value" @input="onInput" />`,
 };
 
 export default InputArgDate;

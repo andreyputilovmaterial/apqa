@@ -4,7 +4,16 @@
   gap: 2px;
 }
 
+.apqa-input-cmdlet-arg-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
 .apqa-input-cmdlet-arg-label {
+  flex: 0 0 auto;
+  min-width: 6em;
   font-size: 0.85rem;
   color: #555;
 }
@@ -17,6 +26,7 @@
   width: 100%;
   box-sizing: border-box;
   font: inherit;
+  line-height: 1.2;
   padding: 4px 6px;
   border: 1px solid #d0d0d0;
   border-radius: 7px;
@@ -24,8 +34,42 @@
   color: #333;
 }
 
-.apqa-input-cmdlet-arg-bool {
-  align-self: flex-start;
+/* Native selects ignore `line-height`/`padding` for their height, so they render
+   a few px taller than text inputs. Flatten them and draw a caret so every
+   control in a row shares one height. */
+select.apqa-input-cmdlet-arg-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 26px;
+}
+
+.apqa-input-cmdlet-arg-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.apqa-input-cmdlet-arg-control.is-unset {
+  opacity: 0.55;
+}
+
+.apqa-input-cmdlet-arg-unset {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #777;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.apqa-input-cmdlet-arg-unset input {
+  margin: 0;
+  accent-color: #385;
+  cursor: pointer;
 }
 
 .apqa-input-cmdlet-arg-help {

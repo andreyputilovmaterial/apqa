@@ -561,11 +561,18 @@ the raw name for ops).
 An **arg schema** is `{ name, type, required, description }` plus optional
 `default` and `options`. Arg `type`s understood by the editor:
 
-- `text` (default), `number`, `boolean`, `path`, `options` (single-select from
-  `options`), `list` (comma-separated text → array), `json` (e.g.
-  `literal.value`), `cmdlet-chains` (a list of cmdlet chains, e.g.
-  `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a single cmdlet chain, e.g.
-  `map`'s `transform` / `where`'s `predicate`).
+- `text` (default), `number`, `boolean` (a `true`/`false` drop-down), `path`,
+  `options` (single-select from `options`), `list` (comma-separated text →
+  array), `json` (raw JSON), `literal-value` (the `literal` cmdlet's typed
+  constant editor: text / number / boolean / path / date / json),
+  `cmdlet-chains` (a list of cmdlet chains, e.g.
+  `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a
+  single cmdlet chain, e.g. `map`'s `transform` / `where`'s `predicate`).
+
+Every arg editor also carries a shared **"unset"** checkbox — the uniform
+opt-out for `sysmissing` (see `docs/cmdlet-data-formats.md` "Arg values"):
+checking it stores `null` for the argument, un-checking it restores the last
+value.
 
 `src/cmdlets/meta.py` snapshots both registries into `{ cmdlets, ops }`, exposed
 as `get_cmdlet_metadata` on `config['iface']` and served by

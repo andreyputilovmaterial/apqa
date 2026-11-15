@@ -2,6 +2,10 @@
 
 This sections is to capture everything that comes to mind that should ideally be updated. Tasks listed here are not necessarily the highest priority.
 
+- edit cmdlet ui / literal: when "unset" is clicked, the input box should turn grey, like readonly/disabled and not clickable, until "unset" is unchecked.
+
+- Not sure how to indicate in in design in `src/cmdlets`, but not show a placeholder for follow up cmdlet from a "literal value" cmdlet - it does not make sense. After the transformation of literal value, we can only get literal value, static - then, why not just enter that final value directly? We probably don't need a suggestion for next cmdlet in a chain.
+
 - (http db) Credentials for the remote HTTP database are passed in ``--db-file`` (``http://user:pass@host:port``). They are stripped from everything the app stores/serves, but they still appear in the process command line / shell history. Consider a safer mechanism (an env var, a token file, or an interactive prompt) for future use.
 
 - (qcrules_list UI) Nested cmdlet args: some `args` values are whole cmdlets or whole chains (e.g. the logical `logical-and`/`logical-or`/`bitwise-*` `operands`, `map`'s `transform`, `where`'s `predicate`). They currently render as a single `JSON.stringify`d blob and are styled as one non-breakable `.apqa-cmdlet-part` (`white-space: nowrap`), so a long nested chain does not wrap and overflows/overlaps. Needs a proper approach — e.g. render `cmdlet-chain`/`cmdlet-chains`-typed args with the real `CmdletChain` component (or a compact variant) instead of a JSON blob, and/or relax the no-wrap rule for those arg types so they can wrap between tokens.

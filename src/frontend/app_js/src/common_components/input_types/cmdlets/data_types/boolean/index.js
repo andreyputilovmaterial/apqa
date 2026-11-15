@@ -1,19 +1,26 @@
-// `boolean` arg editor: a plain checkbox. Booleans are strictly two-valued
-// (true/false); they have no `sysmissing` state.
+// `boolean` arg editor: a `true`/`false` drop down. The value stays a strict
+// boolean; `sysmissing` is expressed through the shared "unset" control on the
+// surrounding arg editor, never as a third drop-down option.
 const InputArgBoolean = {
   inheritAttrs: false,
 
   props: {
-    value: { default: undefined },
+    value: { default: false },
     name: { type: String, default: '' },
   },
 
   emits: ['update:value'],
 
   template: `
-<span class="apqa-input-cmdlet-arg-bool">
-  <input type="checkbox" :name="name" :checked="!!value" @change="$emit('update:value', $event.target.checked)" />
-</span>
+<select
+  class="apqa-input-cmdlet-arg-input"
+  :name="name"
+  :value="String(value)"
+  @change="$emit('update:value', $event.target.value === 'true')"
+>
+  <option value="false">false</option>
+  <option value="true">true</option>
+</select>
 `,
 };
 

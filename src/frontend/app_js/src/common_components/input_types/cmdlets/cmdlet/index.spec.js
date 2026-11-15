@@ -4,7 +4,7 @@ import InputCmdlet from './index.js';
 import { inputCmdletComponents } from '../index.js';
 
 const CMDLETS = [
-  { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'json', required: true }] },
+  { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'literal-value', required: true }] },
   { name: 'count', kind: 'processor', args: [{ name: 'fail_on_sysmissing', type: 'boolean', default: false }] },
   { name: 'matches', kind: 'processor', args: [{ name: 'pattern', type: 'text', required: true }] },
   { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },

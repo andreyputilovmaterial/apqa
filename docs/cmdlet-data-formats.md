@@ -415,9 +415,20 @@ served to the frontend by `GET /functionality/cmdlet-metadata` (see
   `docs/roadmap.md`.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
-`json`, `cmdlet-chains` (a list of cmdlet chains, e.g. `logical-and`/`logical-or`/`bitwise-*`
-`operands`), and `cmdlet-chain` (a single cmdlet chain, e.g. `map`'s `transform`
-or `where`'s `predicate`).
+`json`, `literal-value` (the `literal` cmdlet's typed constant editor — see
+below), `cmdlet-chains` (a list of cmdlet chains, e.g.
+`logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a single
+cmdlet chain, e.g. `map`'s `transform` or `where`'s `predicate`).
+
+`literal-value` (used only by `literal.value`) is a **composite editor**: a type
+selector (`text` / `number` / `boolean` / `path` / `date` / `json`) plus the
+matching typed input. The stored `value` stays a single JSON value — there is no
+separate type field, so existing rules keep working. The selector is a view over
+that value: inferred from its JSON type when the rule is opened (`path`/`date`
+are string-shaped, so they open as `text` and are picked explicitly), and coerced
+when the user changes it (text → stringified, `path`/`date` → stringified or
+`sysmissing`, number → parsed or `sysmissing`, boolean → kept or `false`, json →
+kept). A blank `literal.value` is `sysmissing` (`null`), like `json`.
 
 ### Display specs (`compact` / `full`)
 
@@ -443,22 +454,24 @@ spec — it only maps roles to CSS classes (`.apqa-cmdlet-role-<role>`).
 ### Arg values: `sysmissing` vs value
 
 An argument is either a value of its declared type, or `sysmissing` (`null` in
-the stored JSON/YAML). The editor stores a blank input as `sysmissing` for types
-whose empty form is not a valid value — `path`, `number`, `options`, and the
-chain types (`cmdlet-chain`, `cmdlet-chains`) — and as a real empty value for
-types whose empty form is meaningful: `text` → `""` and `list` → `[]`; for
-these, `sysmissing` is an explicit opt-out (a separate "unset" control), because
-an empty string / empty list is a legitimate value. For `json`, `null` *is*
-`sysmissing` — there is no way to store a JSON `null` value. A blank
-`path`/`number` therefore never becomes a sentinel like `""` or `0`; it is
-stored as `sysmissing`. Likewise a date is always either a real date or
-`sysmissing` — never a placeholder like `1970-01-01`.
+the stored JSON/YAML). `sysmissing` is an allowed value for **every** arg type:
+each arg editor carries a shared **"unset"** toggle that stores `null` regardless
+of type; un-checking it restores the last non-`sysmissing` value. On top of that,
+a *blank* input is stored as `sysmissing` for types whose empty form is not a
+valid value — `number`, `path`, `date`, `options`, and the chain types
+(`cmdlet-chain`, `cmdlet-chains`) — and as a real empty value for types whose
+empty form is meaningful (`text` → `""`, `list` → `[]`), where the "unset"
+toggle is the explicit opt-out. For `json`, `null` *is* `sysmissing` — there is
+no way to store a JSON `null` value. A blank `path`/`number`/`date` therefore
+never becomes a sentinel like `""` or `0`; it is stored as `sysmissing`, and a
+date is always either a real date or `sysmissing` — never a placeholder like
+`1970-01-01`.
 
-`boolean` args are strictly two-valued (`true`/`false`): they have no
-`sysmissing` state and render as a plain checkbox. Three-valued logic
-(true/false/unknown) is deliberately **not** folded into `boolean` — it is a
-separate future cmdlet family with its own naming prefix (see
-`docs/roadmap.md`).
+`boolean` args are two-valued (`true`/`false`) and render as a `true`/`false`
+drop-down; their `sysmissing` state is expressed through the same shared "unset"
+toggle, not as a third drop-down value. Three-valued logic (true/false/unknown)
+is deliberately **not** folded into `boolean` — it is a separate future cmdlet
+family with its own naming prefix (see `docs/roadmap.md`).
 
 Consequence for "unfinished": a *required* arg is considered missing when its
 value is `sysmissing`, never when it is an empty-but-valid value. For example,

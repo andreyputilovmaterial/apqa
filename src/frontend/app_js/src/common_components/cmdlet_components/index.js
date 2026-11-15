@@ -25,6 +25,8 @@ import DataTypeListCompact from './data_types/list/compact';
 import DataTypeListFull from './data_types/list/full';
 import DataTypeJsonCompact from './data_types/json/compact';
 import DataTypeJsonFull from './data_types/json/full';
+import DataTypeLiteralValueCompact from './data_types/literal_value/compact';
+import DataTypeLiteralValueFull from './data_types/literal_value/full';
 import DataTypeCmdletChainCompact from './data_types/cmdlet_chain/compact';
 import DataTypeCmdletChainFull from './data_types/cmdlet_chain/full';
 import DataTypeCmdletChainsCompact from './data_types/cmdlet_chains/compact';
@@ -56,6 +58,8 @@ export const cmdletComponents = {
   'component-cmdlet-arg-list-full': DataTypeListFull,
   'component-cmdlet-arg-json-compact': DataTypeJsonCompact,
   'component-cmdlet-arg-json-full': DataTypeJsonFull,
+  'component-cmdlet-arg-literal-value-compact': DataTypeLiteralValueCompact,
+  'component-cmdlet-arg-literal-value-full': DataTypeLiteralValueFull,
   'component-cmdlet-arg-cmdlet-chain-compact': DataTypeCmdletChainCompact,
   'component-cmdlet-arg-cmdlet-chain-full': DataTypeCmdletChainFull,
   'component-cmdlet-arg-cmdlet-chains-compact': DataTypeCmdletChainsCompact,
