@@ -198,6 +198,55 @@ describe('RuleRecord', () => {
     expect(wrapper.find('.apqa-rule-run-result').exists()).toBe(false);
   });
 
+  it('shows a light grey empty tick when there is no cached result', () => {
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
+
+    const tick = wrapper.find('.apqa-rule-run-tick');
+    expect(tick.exists()).toBe(true);
+    expect(tick.classes()).toContain('is-empty');
+    expect(tick.find('i').exists()).toBe(false);
+  });
+
+  it('shows a green tick for a cached passed result', () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: { 'Rule A': { status: 'passed', notes: [] } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-passed');
+    expect(tick.find('i.ri-check-double-line').exists()).toBe(true);
+    expect(tick.find('i.ri-close-fill').exists()).toBe(false);
+  });
+
+  it('shows a red cross for a cached failed result', () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: { 'Rule A': { status: 'failed', notes: [] } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-failed');
+    expect(tick.find('i.ri-close-fill').exists()).toBe(true);
+  });
+
+  it('shows a red cross for a cached errored result', () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: { 'Rule A': { status: 'error', message: 'boom' } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-failed');
+    expect(tick.find('i.ri-close-fill').exists()).toBe(true);
+  });
+
   it('forwards save and cancel from the inline edit form', async () => {
     const wrapper = mountRecord({
       props: { record: makeRecord(), editingId: 'Rule A' },

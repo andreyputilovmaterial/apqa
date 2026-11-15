@@ -30,6 +30,9 @@ const RuleBody = {
 
   template: `
 <div class="apqa-rule-body">
+  <span class="apqa-rule-run-tick" :class="tickClass" :title="tickTitle">
+    <i v-if="tickIcon" :class="tickIcon"></i>
+  </span>
   <rule-edit-form
     v-if="editing"
     :record="record"
@@ -65,7 +68,30 @@ const RuleBody = {
 
   setup(props) {
     const runResult = computed(() => props.runResults[props.record.id] || null);
-    return { runResult, formatNote };
+
+    const tickIcon = computed(() => {
+      const status = runResult.value && runResult.value.status;
+      if (status === 'passed') return 'ri-check-double-line';
+      if (status === 'failed' || status === 'error') return 'ri-close-fill';
+      return '';
+    });
+
+    const tickClass = computed(() => {
+      const status = runResult.value && runResult.value.status;
+      if (status === 'passed') return 'is-passed';
+      if (status === 'failed' || status === 'error') return 'is-failed';
+      return 'is-empty';
+    });
+
+    const tickTitle = computed(() => {
+      const status = runResult.value && runResult.value.status;
+      if (status === 'passed') return 'Passed';
+      if (status === 'failed') return 'Failed';
+      if (status === 'error') return 'Run failed';
+      return '';
+    });
+
+    return { runResult, tickIcon, tickClass, tickTitle, formatNote };
   },
 };
 

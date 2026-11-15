@@ -283,9 +283,37 @@
 }
 
 .apqa-rule-body {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* Per-rule run-status tick in the left gutter: a light grey box when there is
+   no cached result, a green tick after a passed run, a red cross after a failed
+   or errored run. Positioned absolutely just left of the rule entry, so it sits
+   in the tree's indentation gutter next to each rule. */
+.apqa-rule-run-tick {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: -28px;
+  width: 21px;
+  height: 21px;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  text-align: center;
+  line-height: 21px;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.apqa-rule-run-tick.is-passed {
+  color: var(--mdm-color-confirm);
+}
+
+.apqa-rule-run-tick.is-failed {
+  color: var(--mdm-color-error);
 }
 
 .apqa-rule-body-actions {
