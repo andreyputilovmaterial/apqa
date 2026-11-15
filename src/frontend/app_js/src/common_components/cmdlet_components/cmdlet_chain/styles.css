@@ -4,12 +4,13 @@
   min-width: 0;
 }
 
-.apqa-cmdlet-chain-pipe {
-  padding: 0 4px;
-  color: #999;
-  /* Center the pipe vertically against the chip boxes (which are top-aligned
-     inline-blocks), instead of leaving it glued to the text baseline. */
-  vertical-align: middle;
+/* No pipe separator between chips: each cmdlet renders its own leading
+   indicator (e.g. `->` for select-field, `[xlsx]` for a source reader), so no
+   extra separator glyph is inserted between them. The chips are boxed, so a
+   small gap is all that separates them; a following chip gets a left margin,
+   which also reads correctly when the chain wraps onto the next line. */
+.apqa-cmdlet-chain .apqa-cmdlet:not(:first-child) {
+  margin-left: 6px;
 }
 
 .apqa-cmdlet-chain-empty {

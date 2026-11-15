@@ -139,6 +139,12 @@ def test_cmdlet_display_specs():
     # literal renders as its value only, in both forms.
     assert meta['literal']['compact'] == [{'arg': 'value'}]
     assert meta['literal']['full'] == [{'arg': 'value'}]
+    # select-field reads as an arrow in the compact view (no `full` override).
+    assert meta['select-field']['compact'] == [
+        {'text': '->', 'role': 'arrow'},
+        {'arg': 'field'},
+    ]
+    assert 'full' not in meta['select-field']
     # A cmdlet without a spec carries no compact/full keys (default rendering).
     assert 'compact' not in meta['count']
     assert 'full' not in meta['count']

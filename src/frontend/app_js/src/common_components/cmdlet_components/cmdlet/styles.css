@@ -46,3 +46,9 @@
      separated them, a little less than a capital `S`. */
   margin-right: 0.3em;
 }
+
+/* The `->` leading a select-field step (compact form), so the arrow is not
+   glued to the field name it points at. */
+.apqa-cmdlet-role-arrow {
+  margin-right: 0.3em;
+}

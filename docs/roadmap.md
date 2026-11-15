@@ -4,6 +4,13 @@ This sections is to capture everything that comes to mind that should ideally be
 
 - (done — see `docs/qc-results-reporting.md`) Error visibility: a failing cmdlet now raises a `ChainError` naming the chain step (original exception chained as `__cause__`), and a *false* rule result now carries **diagnostic notes** with a data path (which field, which iteration) via `src/cmdlets/diagnostic.py` and `run_rule_with_report`; `validate-xml-compatible` records per-leaf notes.
 
+- (idea, not final) Rule-editor ergonomics for entering chains of `select-field`: autofocus the `field` input when `select-field` is chosen and let Enter append the next `select-field` (focusing its input), so a nested path (`fields -> SnifferData -> fields -> Cluster -> …`) is typed as one keyboard flow instead of re-picking `select-field` from the drop-down each step.
+
+- (idea, unclear) Auto-suggestion machinery for the cmdlet chain editor: at the root prefer `get-content-*` source readers (more common) over the equally-valid but rarer `logical-*`; let each cmdlet declare its most expected successor (object-returning cmdlets most often lead to `select-field`); pin `select-field` first in the processor drop-down. No clear answer yet — record only, implement nothing.
+
+- (idea, rejected for now) Pre-fill `select-field`'s `field` value with the actual field names of the piped object. Rejected because it would require a pre-flight run of the upstream cmdlets (filesystem read on `.mdd`/`.xlsx`, network request, …) — blocking side effects the editor must not trigger.
+
+
 - edit cmdlet ui / literal: when "unset" is clicked, the input box should turn grey, like readonly/disabled and not clickable, until "unset" is unchecked.
 
 - Not sure how to indicate in in design in `src/cmdlets`, but not show a placeholder for follow up cmdlet from a "literal value" cmdlet - it does not make sense. After the transformation of literal value, we can only get literal value, static - then, why not just enter that final value directly? We probably don't need a suggestion for next cmdlet in a chain.

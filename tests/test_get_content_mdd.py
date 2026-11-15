@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.cmdlets.get_content_mdd import (  # noqa: E402
+    _MDDReader,
     _as_int,
     _as_list,
     _category_map,
@@ -102,3 +103,24 @@ def test_category_map_indexes_leaves_and_nested_groups():
     assert mapped['A']['value'] is None
     assert mapped['Group']['value'][0]['name'] == 'B'
     assert mapped['B']['name'] == 'B'
+
+
+def test_block_field_stores_subfields_in_fields_bucket(monkeypatch):
+    subfields = {'Cluster': {'name': 'Cluster'}}
+    reader = _MDDReader.__new__(_MDDReader)
+    monkeypatch.setattr(
+        _MDDReader,
+        '_read_item_meta',
+        lambda self, item, attrs: {'name': 'SnifferData'},
+    )
+    monkeypatch.setattr(
+        _MDDReader,
+        '_read_subfields',
+        lambda self, field: subfields,
+    )
+
+    block = reader._read_block_field(_Stub(Name='SnifferData'))
+
+    assert block['name'] == 'SnifferData'
+    assert block['fields'] is subfields
+    assert block['value'] is None

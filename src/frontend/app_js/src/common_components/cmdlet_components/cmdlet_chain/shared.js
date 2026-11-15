@@ -16,10 +16,13 @@ export function makeCmdletChain(form) {
     template: `
 <code class="apqa-cmdlet-chain">
   <template v-if="chain && chain.length">
-    <template v-for="(cmdlet, index) in chain" :key="index">
-      <span v-if="index > 0" class="apqa-cmdlet-chain-pipe">|</span>
-      <component :is="cmdletComponent" :cmdlet="cmdlet" :cmdlets="cmdlets" />
-    </template>
+    <component
+      v-for="(cmdlet, index) in chain"
+      :key="index"
+      :is="cmdletComponent"
+      :cmdlet="cmdlet"
+      :cmdlets="cmdlets"
+    />
   </template>
   <span v-else class="apqa-cmdlet-chain-empty">(empty)</span>
 </code>

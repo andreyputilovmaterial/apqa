@@ -377,10 +377,12 @@ read their input from ``args``). Currently implemented:
   ``shared_lists`` (block keyed by name), ``fields`` (block keyed by name),
   ``pages`` (block keyed by name), ``routing`` (text). Every item block carries
   ``name``/``label``/``attributes``/``properties``/``translations``/``scripting``
-  plus ``value`` (``None`` for scalars, an array of iteration blocks for
-  arrays/grids, a block of subfields for classes/blocks) and, for items that own
-  categories, a ``categories`` block keyed by category name → detailed category
-  block (for a categorical scalar its keys are the available response options).
+  plus ``value`` (``None`` for scalars and classes/blocks, an array of iteration
+  blocks for arrays/grids) and, for items that own categories, a ``categories``
+  block keyed by category name → detailed category block (for a categorical
+  scalar its keys are the available response options). Blocks that contain other
+  fields (a class/block's sub-fields, and the columns of an array/grid) put them
+  in a ``fields`` block keyed by name.
 
 ## Network cmdlets
 
@@ -447,9 +449,11 @@ it, separately for the collapsed (`compact`) and expanded (`full`) views. A
 one-literal-part shorthand. For example `get-content-excel` declares
 `compact: [{ text: '[xlsx]', role: 'logo' }, { arg: 'path' }]` so it reads
 `[xlsx] /path/to/map.xlsx` (the logo's right margin provides the small gap)
-instead of `get-content-excel path=/path/to/map.xlsx`, and `cmp-eq` declares
-`compact: [{ text: '=', role: 'symbol' }]`. The frontend never emits HTML from a
-spec — it only maps roles to CSS classes (`.apqa-cmdlet-role-<role>`).
+instead of `get-content-excel path=/path/to/map.xlsx`, `cmp-eq` declares
+`compact: [{ text: '=', role: 'symbol' }]`, and `select-field` declares
+`compact: [{ text: '->', role: 'arrow' }, { arg: 'field' }]` so each field step
+reads `-> fields`. The frontend never emits HTML from a spec — it only maps
+roles to CSS classes (`.apqa-cmdlet-role-<role>`).
 
 ### Arg values: `sysmissing` vs value
 

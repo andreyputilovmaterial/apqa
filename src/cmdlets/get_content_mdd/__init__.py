@@ -41,7 +41,8 @@ depends on the item kind:
                                  ``value`` is an ordered array of iteration
                                  blocks, and ``fields`` holds the loop's subfields.
     block/class (ObjectTypeValue 3)
-                                 ``value`` is a block of subfields.
+                                 ``fields`` is a block of subfields and ``value``
+                                 is ``None``.
     shared list / page           ``value`` is an array of category/entry blocks.
 
 Items that own categories (categorical scalars, arrays, shared lists) also carry a
@@ -406,7 +407,8 @@ class _MDDReader:
         block = self._read_item_meta(
             field, {'object_type_value': 3, 'type': 'block'}
         )
-        block['value'] = self._read_subfields(field)
+        block['value'] = None
+        block['fields'] = self._read_subfields(field)
         return block
 
     def _scalar_attributes(self, field, data_type):
