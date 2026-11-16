@@ -126,7 +126,9 @@ describe('RuleRecord', () => {
     });
 
     expect(wrapper.find('.apqa-rule-edit-form').exists()).toBe(true);
-    expect(wrapper.find('.apqa-record-action').exists()).toBe(false);
+    expect(wrapper.find('.apqa-record-action-save i.ri-save-3-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-cancel i.ri-close-circle-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-edit').exists()).toBe(false);
   });
 
   it('shows a green "Passed" banner for a cached passed result', () => {

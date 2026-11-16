@@ -86,7 +86,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @reorder="onReorder" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -102,6 +102,7 @@ const QcRulesList = {
     const loadError = ref('');
     const cmdletMetadata = ref(null);
     const editingId = ref('');
+    const editingGroupId = ref('');
 
     // Per-rule run results, cached in the UI (keyed by rule id). Kept here, on
     // the page, rather than on the record objects themselves: the records filter
@@ -134,11 +135,15 @@ const QcRulesList = {
 
     const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
 
-    // Distinct tags across loaded rules, used as suggestions in the create form.
+    // Distinct tags across loaded rules and folders, used as suggestions in the
+    // create/edit forms.
     const tagSuggestions = computed(() => {
       const seen = new Set();
       for (const record of records.value) {
         for (const tag of record.tags) seen.add(tag);
+      }
+      for (const group of groups.value) {
+        for (const tag of group.tags) seen.add(tag);
       }
       return Array.from(seen).sort();
     });
@@ -353,6 +358,10 @@ const QcRulesList = {
     // time; starting another edit while one is open is blocked so unsaved
     // changes are not silently dropped.
     async function onEditRule(record) {
+      if (editingGroupId.value) {
+        window.alert('Finish or cancel editing the current folder first.');
+        return;
+      }
       if (editingId.value && editingId.value !== record.id) {
         window.alert('Finish or cancel editing the current rule first.');
         return;
@@ -479,10 +488,51 @@ const QcRulesList = {
       }
     }
 
-    async function onEditGroup(group) {
-      // Editing a folder (name/comment/tags) is a separate task; show a
-      // placeholder for now.
-      window.alert('Editing a folder is not implemented yet.');
+    // Open the inline edit form for a folder. Only one folder (or rule) can be
+    // edited at a time, mirroring the rule edit guard.
+    function onEditGroup(group) {
+      if (editingId.value) {
+        window.alert('Finish or cancel editing the current rule first.');
+        return;
+      }
+      if (editingGroupId.value && editingGroupId.value !== group.id) {
+        window.alert('Finish or cancel editing the current folder first.');
+        return;
+      }
+      editingGroupId.value = group.id;
+    }
+
+    // Persist the edits from the inline folder form. Only the fields the form
+    // manages are sent; the existing meta (order, unknown keys) and aliases are
+    // preserved because the backend merges the payload into the stored group.
+    async function onSaveGroup(group, changes) {
+      const original = groups.value.find((g) => g.id === group.id) || {};
+      const meta = { ...(original.meta || {}) };
+      if (changes.comment && changes.comment.trim()) meta.comment = changes.comment.trim();
+      else delete meta.comment;
+      if (Array.isArray(changes.tags) && changes.tags.length) meta.tags = changes.tags.slice();
+      else delete meta.tags;
+      if (Array.isArray(changes.markers) && changes.markers.length) meta.markers = changes.markers.slice();
+      else delete meta.markers;
+
+      const payload = {
+        name: changes.name,
+        parent: original.parent || '',
+        meta,
+      };
+
+      try {
+        await putJson(`/qc/groups/${encodeURIComponent(group.id)}`, payload);
+        editingGroupId.value = '';
+        await load();
+      } catch (e) {
+        window.alert(`Failed to update folder: ${e}`);
+        logError(`Failed to update folder: ${e}`);
+      }
+    }
+
+    function onCancelGroupEdit() {
+      editingGroupId.value = '';
     }
 
     async function onRunGroup(group) {
@@ -535,6 +585,7 @@ const QcRulesList = {
       loading,
       loadError,
       editingId,
+      editingGroupId,
       runResults,
       cmdlets,
       ops,
@@ -551,6 +602,8 @@ const QcRulesList = {
       onDeleteGroup,
       onSaveRule,
       onCancelEdit,
+      onSaveGroup,
+      onCancelGroupEdit,
       onReorder,
     };
   },

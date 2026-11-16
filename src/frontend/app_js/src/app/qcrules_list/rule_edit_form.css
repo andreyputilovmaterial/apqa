@@ -1,10 +1,5 @@
-/* The edit form is rendered inline inside the rule's own container, so it is
-   given a subtle top separation from the card edge and slightly lighter frame
-   than the modal create form (which reuses the same `rule_form.css` classes). */
-.apqa-rule-edit-form {
-  padding: 2px 0 0;
-}
-
+/* The edit form root reuses the same `.apqa-qcrules-entry` box as the non-edit
+   card (defined in styles.css), so no extra padding/border is added here. */
 .apqa-rule-form-input-disabled {
   background: #f4f4f4;
   color: #888;

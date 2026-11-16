@@ -1,6 +1,7 @@
 import { computed, onUnmounted, reactive, ref, watch } from 'vue';
 
 import AliasRecord from './alias_record';
+import GroupEditForm from './group_edit_form';
 import MarksBadges from './marks_badges';
 import RuleRecord from './rule_record';
 import { buildGroupNodes } from './grouping';
@@ -22,16 +23,18 @@ const RulesTree = {
     groups: { type: Array, default: () => [] },
     recordsPerPage: { type: Number, default: 25 },
     editingId: { type: String, default: '' },
+    editingGroupId: { type: String, default: '' },
     runResults: { type: Object, default: () => ({}) },
     cmdlets: { type: Array, default: () => [] },
     ops: { type: Array, default: () => [] },
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'reorder', 'edit-group', 'run-group', 'delete-group'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'reorder', 'edit-group', 'run-group', 'delete-group', 'save-group', 'cancel-group'],
 
   components: {
     'alias-record': AliasRecord,
+    'group-edit-form': GroupEditForm,
     'marks-badges': MarksBadges,
     'rule-record': RuleRecord,
   },
@@ -48,7 +51,15 @@ const RulesTree = {
           </span>
         </span>
         <div class="apqa-rules-tree-content">
-          <div class="apqa-qcrules-entry apqa-qcrules-entry-folder apqa-rules-tree-group-card">
+          <group-edit-form
+            v-if="isEditingGroup(node)"
+            :group="node"
+            :collapsed="Boolean(collapsed[node.id])"
+            :tag-suggestions="tagSuggestions"
+            @save="onSaveGroup(node, $event)"
+            @cancel="onCancelGroup(node)"
+          />
+          <div v-else class="apqa-qcrules-entry apqa-qcrules-entry-folder apqa-rules-tree-group-card">
             <div
               class="apqa-rules-tree-group-header"
               role="button"
@@ -170,7 +181,7 @@ const RulesTree = {
     watch(
       () => props.groups,
       (groups) => {
-        if (props.editingId) return;
+        if (props.editingId || props.editingGroupId) return;
         const current = new Set(groups.map((group) => group.id));
         for (const id of current) {
           if (!knownGroupIds.has(id)) collapsed[id] = true;
@@ -223,16 +234,30 @@ const RulesTree = {
       );
     }
 
+    function editingGroupNode() {
+      if (!props.editingGroupId) return null;
+      return (
+        nodes.value.find(
+          (node) => node.kind === 'group' && node.id === props.editingGroupId,
+        ) || null
+      );
+    }
+
     function warnEditing() {
-      window.alert('Finish or cancel editing the rule before changing this view.');
+      window.alert('Finish or cancel editing before changing this view.');
     }
 
     function toggle(node) {
-      // Refuse to collapse a folder while a rule inside it is being edited, so
-      // the inline form (and its unsaved changes) is not destroyed.
+      // Refuse to collapse a folder while a rule or folder inside it is being
+      // edited, so the inline form (and its unsaved changes) is not destroyed.
       if (node.kind === 'group') {
         const target = editingNode();
-        if (!collapsed[node.id] && target && target.parents.includes(node.id)) {
+        const groupTarget = editingGroupNode();
+        const hidesRule = target && target.parents.includes(node.id);
+        const hidesGroup =
+          groupTarget &&
+          (groupTarget.id === node.id || groupTarget.parents.includes(node.id));
+        if (!collapsed[node.id] && (hidesRule || hidesGroup)) {
           warnEditing();
           return;
         }
@@ -242,11 +267,15 @@ const RulesTree = {
     }
 
     function goToPage(index) {
-      if (props.editingId && index !== page.value) {
+      if ((props.editingId || props.editingGroupId) && index !== page.value) {
         warnEditing();
         return;
       }
       page.value = index;
+    }
+
+    function isEditingGroup(node) {
+      return Boolean(props.editingGroupId && props.editingGroupId === node.id);
     }
 
     function onSave(record, changes) {
@@ -255,6 +284,14 @@ const RulesTree = {
 
     function onCancel(record) {
       emit('cancel', record);
+    }
+
+    function onSaveGroup(node, changes) {
+      emit('save-group', node, changes);
+    }
+
+    function onCancelGroup(node) {
+      emit('cancel-group', node);
     }
 
     function itemClasses(node) {
@@ -286,6 +323,9 @@ const RulesTree = {
       const surface =
         target && target.closest ? target.closest(DRAG_SURFACE_SELECTOR) : null;
       if (!surface) return;
+      // The inline edit forms reuse the same header classes for a stable look,
+      // but their headers are labels, not reorder drag surfaces.
+      if (surface.closest('.apqa-rule-edit-form, .apqa-group-edit-form')) return;
       const item = target.closest('[data-node-key]');
       if (!item) return;
       const key = item.getAttribute('data-node-key');
@@ -452,8 +492,11 @@ const RulesTree = {
       itemClasses,
       toggle,
       goToPage,
+      isEditingGroup,
       onSave,
       onCancel,
+      onSaveGroup,
+      onCancelGroup,
       onHeaderPointerDown,
       onClickCapture,
     };

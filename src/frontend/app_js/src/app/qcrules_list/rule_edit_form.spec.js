@@ -94,4 +94,20 @@ describe('RuleEditForm', () => {
 
     expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
+
+  it('mirrors the rule header and shows the save/cancel icon row above the fields', () => {
+    const wrapper = mountForm();
+
+    expect(wrapper.find('.apqa-rule-card-name').text()).toBe('Wave 69');
+    expect(wrapper.find('.apqa-rule-card-comment').text()).toBe('check the count');
+    expect(wrapper.find('.apqa-record-action-save i.ri-save-3-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-cancel i.ri-close-circle-line').exists()).toBe(true);
+  });
+
+  it('shows full-size Save and Close buttons at the bottom', () => {
+    const wrapper = mountForm();
+    const buttons = wrapper.findAll('.apqa-rule-form-actions .apqa-rule-form-button');
+
+    expect(buttons.map((button) => button.text().trim())).toEqual(['Close', 'Save']);
+  });
 });

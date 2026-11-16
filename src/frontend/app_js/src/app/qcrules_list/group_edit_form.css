@@ -1,0 +1,51 @@
+/* Inline folder edit form. It reuses the same `.apqa-qcrules-entry` box and
+   `.apqa-rules-tree-group-*` header as the non-edit folder card, so switching to
+   edit mode keeps the header position stable. No padding override here — the
+   shared box padding from styles.css must win. */
+
+/* The folder header is interactive (toggle) in display mode; in edit mode it is
+   only a label, so it must not show a pointer cursor. */
+.apqa-group-edit-form .apqa-rules-tree-group-header {
+  cursor: default;
+}
+
+/* Match the rule edit form's larger gap between field sections (the create
+   folder form only has one section, so its 10px gap is irrelevant there). */
+.apqa-group-edit-form .apqa-group-form-fields {
+  gap: 28px;
+}
+
+/* Full-size bottom actions, mirroring the rule edit form's buttons. */
+.apqa-group-form-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.apqa-group-form-button {
+  padding: 6px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 7px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  transition: 500ms all ease;
+}
+
+.apqa-group-form-button:hover {
+  border-color: #999;
+}
+
+.apqa-group-form-button-primary {
+  background: #385;
+  border-color: #385;
+  color: #fff;
+}
+
+.apqa-group-form-button-primary:hover {
+  background: #1c6b3e;
+  border-color: #1c6b3e;
+}

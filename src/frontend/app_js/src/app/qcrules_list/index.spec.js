@@ -24,17 +24,20 @@ describe('QcRulesList', () => {
   });
 
   it('passes distinct tag suggestions down to the rules tree', async () => {
-    stubFetch([
-      { id: 'r1', name: 'Rule one', left: [], op: '', right: [], meta: { tags: ['counts', 'wave69'] } },
-      { id: 'r2', name: 'Rule two', left: [], op: '', right: [], meta: { tags: ['wave69'] } },
-    ]);
+    stubFetch(
+      [
+        { id: 'r1', name: 'Rule one', left: [], op: '', right: [], meta: { tags: ['counts', 'wave69'] } },
+        { id: 'r2', name: 'Rule two', left: [], op: '', right: [], meta: { tags: ['wave69'] } },
+      ],
+      [{ id: 'g1', name: 'Group', parent: '', meta: { tags: ['folder-tag'] } }],
+    );
 
     const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
     await flushPromises();
 
     const tree = wrapper.findComponent(RulesTree);
     expect(tree.exists()).toBe(true);
-    expect(tree.props('tagSuggestions')).toEqual(['counts', 'wave69']);
+    expect(tree.props('tagSuggestions')).toEqual(['counts', 'folder-tag', 'wave69']);
   });
 
   it('runs a rule on Run click and shows the cached failed result', async () => {
@@ -142,5 +145,53 @@ describe('QcRulesList', () => {
     expect(wrapper.find('.apqa-rule-run-result-error').text()).toBe(
       "cmdlet 'nope' (step 0): cmdlet not found: nope",
     );
+  });
+
+  it('edits a folder and PUTs the updated fields', async () => {
+    const group = {
+      id: 'data',
+      name: 'Data',
+      parent: '',
+      meta: { comment: 'old', tags: ['wave'] },
+    };
+    const rule = { id: 'r1', name: 'Rule one', group: 'data', left: [], op: '', right: [], meta: {} };
+
+    let putPayload = null;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url, options = {}) => {
+        const method = options.method || 'GET';
+        if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+        if (url === '/qc/groups' && method === 'GET') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
+        if (url === '/qc/groups/data' && method === 'PUT') {
+          putPayload = JSON.parse(options.body);
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        }
+        if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      }),
+    );
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    wrapper.findComponent(RulesTree).vm.$emit('edit-group', {
+      id: 'data',
+      name: 'Data',
+      comment: 'old',
+      tags: ['wave'],
+      markers: [],
+    });
+    await flushPromises();
+
+    const editForm = wrapper.find('.apqa-group-edit-form');
+    expect(editForm.exists()).toBe(true);
+
+    await editForm.find('input[name="name"]').setValue('Data v2');
+    await editForm.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(putPayload).toMatchObject({ name: 'Data v2', parent: '' });
+    expect(putPayload.meta).toEqual({ comment: 'old', tags: ['wave'] });
   });
 });

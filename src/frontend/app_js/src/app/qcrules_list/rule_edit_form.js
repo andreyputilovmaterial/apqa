@@ -30,7 +30,21 @@ const RuleEditForm = {
   },
 
   template: `
-<div class="apqa-rule-edit-form apqa-rule-form">
+<div class="apqa-qcrules-entry apqa-qcrules-entry-rule apqa-rule-card apqa-rule-edit-form apqa-rule-form">
+  <div class="apqa-rule-card-head">
+    <span class="apqa-rule-card-name">{{ name }}</span>
+    <span v-if="comment" class="apqa-rule-card-comment">{{ comment }}</span>
+  </div>
+
+  <div class="apqa-record-actions">
+    <button type="button" class="apqa-record-action apqa-record-action-save" title="Save" aria-label="Save rule" @click="submit">
+      <i class="ri-save-3-line" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="apqa-record-action apqa-record-action-cancel" title="Close" aria-label="Close editing" @click="cancel">
+      <i class="ri-close-circle-line" aria-hidden="true"></i>
+    </button>
+  </div>
+
   <form class="apqa-rule-form-inner" @submit.prevent="submit">
     <div v-if="error" class="apqa-rule-form-error">{{ error }}</div>
 
@@ -100,7 +114,7 @@ const RuleEditForm = {
     </div>
 
     <div class="apqa-rule-form-actions">
-      <button type="button" class="apqa-rule-form-button" @click="cancel">Cancel</button>
+      <button type="button" class="apqa-rule-form-button" @click="cancel">Close</button>
       <button type="submit" class="apqa-rule-form-button apqa-rule-form-button-primary">Save</button>
     </div>
   </form>

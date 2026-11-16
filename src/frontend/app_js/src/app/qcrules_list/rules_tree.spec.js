@@ -537,4 +537,61 @@ describe('RulesTree', () => {
     expect(wrapper.find('[data-node-key="r:r1"] .apqa-rule-card').exists()).toBe(true);
   });
 
+  it('renders the folder edit form when that folder is being edited', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('data')],
+        records: [rule('r1', 'data')],
+        editingGroupId: 'data',
+      },
+    });
+
+    const node = wrapper.find('[data-node-key="g:data"]');
+    expect(node.find('.apqa-group-edit-form').exists()).toBe(true);
+    expect(node.find('.apqa-record-action-edit').exists()).toBe(false);
+  });
+
+  it('forwards folder save and cancel from the inline edit form', async () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('data')],
+        records: [rule('r1', 'data')],
+        editingGroupId: 'data',
+      },
+    });
+
+    const form = wrapper.find('[data-node-key="g:data"] form');
+    await form.find('input[name="name"]').setValue('Renamed');
+    await form.trigger('submit');
+
+    expect(wrapper.emitted('save-group')).toHaveLength(1);
+    expect(wrapper.emitted('save-group')[0][0]).toMatchObject({ id: 'data' });
+    expect(wrapper.emitted('save-group')[0][1]).toMatchObject({ name: 'Renamed' });
+
+    await wrapper.find('[data-node-key="g:data"] .apqa-group-form-button').trigger('click');
+    expect(wrapper.emitted('cancel-group')).toHaveLength(1);
+    expect(wrapper.emitted('cancel-group')[0][0]).toMatchObject({ id: 'data' });
+  });
+
+  it('does not start a reorder from an inline edit form header', async () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('data')],
+        records: [rule('r1', 'data')],
+        editingGroupId: 'data',
+      },
+    });
+
+    await wrapper
+      .find('[data-node-key="g:data"] .apqa-group-edit-form .apqa-rules-tree-group-header')
+      .trigger('pointerdown');
+
+    const move = new Event('pointermove');
+    move.clientY = 100;
+    window.dispatchEvent(move);
+    window.dispatchEvent(new Event('pointerup'));
+
+    expect(wrapper.emitted('reorder')).toBeUndefined();
+  });
+
 });
