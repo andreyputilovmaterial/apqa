@@ -4,6 +4,7 @@ import AliasRecord from './alias_record';
 import MarksBadges from './marks_badges';
 import RuleRecord from './rule_record';
 import { buildGroupNodes } from './grouping';
+import { runTickFor } from './run_result';
 
 // Foldable tree of QC rules: renders folders (groups) and rules as a single
 // depth-first list, indenting by depth and hiding every descendant of a
@@ -39,7 +40,12 @@ const RulesTree = {
   <ul class="apqa-rules-tree-list">
     <template v-for="node in pagedNodes" :key="node.key">
       <li v-if="node.kind === 'group'" class="apqa-rules-tree-item apqa-rules-tree-group" :class="node.markClasses" :style="{ '--rules-tree-depth': node.depth }">
-        <span class="apqa-rules-tree-gutter" aria-hidden="true"></span>
+        <span class="apqa-rules-tree-gutter" aria-hidden="true">
+          <span v-if="node.tick" class="apqa-rule-run-tick" :class="node.tick.cls" :title="node.tick.title">
+            <i v-if="node.tick.icon" :class="node.tick.icon"></i>
+            <span v-else-if="node.tick.text" class="apqa-run-tick-text">{{ node.tick.text }}</span>
+          </span>
+        </span>
         <div class="apqa-rules-tree-content">
           <button
             type="button"
@@ -112,7 +118,7 @@ const RulesTree = {
       { immediate: true },
     );
 
-    const nodes = computed(() => buildGroupNodes(props.groups, props.records, props.cmdlets, props.ops));
+    const nodes = computed(() => buildGroupNodes(props.groups, props.records, props.cmdlets, props.ops, props.runResults));
     const visibleNodes = computed(() =>
       nodes.value.filter((node) => !node.parents.some((parent) => collapsed[parent])),
     );
@@ -131,7 +137,10 @@ const RulesTree = {
 
     const pagedNodes = computed(() => {
       const start = page.value * perPage.value;
-      return visibleNodes.value.slice(start, start + perPage.value);
+      return visibleNodes.value.slice(start, start + perPage.value).map((node) => {
+        if (node.kind !== 'group') return node;
+        return { ...node, tick: runTickFor(node.runStatus) };
+      });
     });
 
     function editingNode() {

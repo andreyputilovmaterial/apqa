@@ -234,6 +234,19 @@ describe('RuleRecord', () => {
     expect(tick.find('i.ri-close-fill').exists()).toBe(true);
   });
 
+  it('shows a spinning loader for a cached running result', () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: { 'Rule A': { status: 'running' } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-running');
+    expect(tick.find('i.ri-loader-4-line').exists()).toBe(true);
+  });
+
   it('shows a red cross for a cached errored result', () => {
     const wrapper = mountRecord({
       props: {

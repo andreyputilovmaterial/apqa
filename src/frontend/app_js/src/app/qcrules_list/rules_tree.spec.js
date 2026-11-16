@@ -255,4 +255,84 @@ describe('RulesTree', () => {
     expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
 
+  it('shows a passed folder tick when every rule inside passed', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data'), rule('r2', 'Data')],
+        runResults: { r1: { status: 'passed' }, r2: { status: 'passed' } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick');
+    expect(tick.exists()).toBe(true);
+    expect(tick.classes()).toContain('is-passed');
+    expect(tick.find('i.ri-check-double-line').exists()).toBe(true);
+  });
+
+  it('shows a blank folder tick when nothing inside has run', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data'), rule('r2', 'Data')],
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick');
+    expect(tick.exists()).toBe(true);
+    expect(tick.classes()).toContain('is-empty');
+    expect(tick.find('i').exists()).toBe(false);
+    expect(tick.find('.apqa-run-tick-text').exists()).toBe(false);
+  });
+
+  it('shows a failed folder tick when any rule inside failed', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data'), rule('r2', 'Data')],
+        runResults: { r1: { status: 'passed' }, r2: { status: 'failed' } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-failed');
+    expect(tick.find('i.ri-close-fill').exists()).toBe(true);
+  });
+
+  it('shows a running folder tick when a rule inside is running', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data')],
+        runResults: { r1: { status: 'running' } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-running');
+    expect(tick.find('i.ri-loader-4-line').exists()).toBe(true);
+  });
+
+  it('shows an indeterminate folder tick when not all rules inside passed', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data'), rule('r2', 'Data')],
+        runResults: { r1: { status: 'passed' } },
+      },
+    });
+
+    const tick = wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick');
+    expect(tick.classes()).toContain('is-indeterminate');
+    expect(tick.find('.apqa-run-tick-text').text()).toBe('±');
+  });
+
+  it('shows no folder tick for a folder with no rules inside', () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Empty')], records: [] },
+    });
+
+    expect(wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick').exists()).toBe(false);
+  });
+
 });

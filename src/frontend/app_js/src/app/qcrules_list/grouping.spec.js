@@ -336,3 +336,94 @@ describe('invalid detection (deep)', () => {
   });
 });
 
+describe('buildGroupNodes run status', () => {
+  const rules = (ids, groupId) => ids.map((id) => rule(id, groupId));
+
+  function folderStatuses(groups, records, runResults = {}) {
+    return buildGroupNodes(groups, records, [], [], runResults)
+      .filter((n) => n.kind === 'group')
+      .map((n) => ({ name: n.name, runStatus: n.runStatus }));
+  }
+
+  it('marks a folder with no rules inside as empty', () => {
+    expect(folderStatuses([group('Empty')], [])).toEqual([
+      { name: 'Empty', runStatus: 'empty' },
+    ]);
+  });
+
+  it('marks a folder whose rules were never run as blank', () => {
+    expect(folderStatuses([group('Data')], rules(['r1', 'r2'], 'Data'))).toEqual([
+      { name: 'Data', runStatus: 'blank' },
+    ]);
+  });
+
+  it('marks a folder as indeterminate when some rules passed and some are blank', () => {
+    expect(
+      folderStatuses([group('Data')], rules(['r1', 'r2'], 'Data'), {
+        r1: { status: 'passed' },
+      }),
+    ).toEqual([{ name: 'Data', runStatus: 'indeterminate' }]);
+  });
+
+  it('marks a folder as passed when every rule inside passed', () => {
+    expect(
+      folderStatuses([group('Data')], rules(['r1', 'r2'], 'Data'), {
+        r1: { status: 'passed' },
+        r2: { status: 'passed' },
+      }),
+    ).toEqual([{ name: 'Data', runStatus: 'passed' }]);
+  });
+
+  it('marks a folder as failed when any rule inside failed or errored', () => {
+    expect(
+      folderStatuses([group('Data')], rules(['r1', 'r2'], 'Data'), {
+        r1: { status: 'passed' },
+        r2: { status: 'error', message: 'boom' },
+      }),
+    ).toEqual([{ name: 'Data', runStatus: 'failed' }]);
+  });
+
+  it('marks a folder as running when a rule inside is running and none failed', () => {
+    expect(
+      folderStatuses([group('Data')], rules(['r1', 'r2'], 'Data'), {
+        r1: { status: 'passed' },
+        r2: { status: 'running' },
+      }),
+    ).toEqual([{ name: 'Data', runStatus: 'running' }]);
+  });
+
+  it('lets a failure dominate a still-running rule', () => {
+    expect(
+      folderStatuses([group('Data')], rules(['r1', 'r2'], 'Data'), {
+        r1: { status: 'running' },
+        r2: { status: 'failed' },
+      }),
+    ).toEqual([{ name: 'Data', runStatus: 'failed' }]);
+  });
+
+  it('aggregates a nested folder failure onto the parent', () => {
+    expect(
+      folderStatuses(
+        [group('Data'), group('Metadata', 'Data')],
+        [rule('r1', 'Metadata')],
+        { r1: { status: 'failed' } },
+      ),
+    ).toEqual([
+      { name: 'Data', runStatus: 'failed' },
+      { name: 'Metadata', runStatus: 'failed' },
+    ]);
+  });
+
+  it('aggregates a nested blank folder as blank for the parent', () => {
+    expect(
+      folderStatuses(
+        [group('Data'), group('Metadata', 'Data')],
+        [rule('r1', 'Metadata')],
+      ),
+    ).toEqual([
+      { name: 'Data', runStatus: 'blank' },
+      { name: 'Metadata', runStatus: 'blank' },
+    ]);
+  });
+});
+

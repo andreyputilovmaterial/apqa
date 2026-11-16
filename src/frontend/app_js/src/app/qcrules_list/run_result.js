@@ -34,3 +34,25 @@ export function formatNote(note) {
   if (path) return `${path}: ${message}`;
   return message;
 }
+
+// Map a cached run status to the gutter tick indicator shown next to a rule or
+// folder. Returns `null` for `empty` (a folder with no rules inside, so nothing
+// to show). `blank` (everything inside still un-run) and `indeterminate` (some
+// passed, some blank) are folder-only states.
+export function runTickFor(status) {
+  switch (status) {
+    case 'running':
+      return { cls: 'is-running', icon: 'ri-loader-4-line', title: 'Running...' };
+    case 'passed':
+      return { cls: 'is-passed', icon: 'ri-check-double-line', title: 'Passed' };
+    case 'failed':
+    case 'error':
+      return { cls: 'is-failed', icon: 'ri-close-fill', title: 'Failed' };
+    case 'indeterminate':
+      return { cls: 'is-indeterminate', text: '±', title: 'Indeterminate' };
+    case 'blank':
+      return { cls: 'is-empty', icon: '', text: '', title: '' };
+    default:
+      return null;
+  }
+}

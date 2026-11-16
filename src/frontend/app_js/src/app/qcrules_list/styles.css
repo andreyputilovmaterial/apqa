@@ -329,6 +329,24 @@
   color: var(--mdm-color-error);
 }
 
+/* Spinning loader shown while a rule (or a rule inside a folder) is running. */
+.apqa-rule-run-tick.is-running .ri-loader-4-line {
+  display: inline-block;
+  animation: apqa-run-tick-spin 1s linear infinite;
+}
+
+@keyframes apqa-run-tick-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* The folder "indeterminate" state: a ± glyph nudged up to sit on the box's
+   vertical center. */
+.apqa-run-tick-text {
+  display: block;
+  transform: translateY(-2px);
+}
+
 .apqa-rule-body-actions {
   display: flex;
   flex-direction: row;

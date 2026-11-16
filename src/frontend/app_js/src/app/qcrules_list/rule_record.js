@@ -2,6 +2,7 @@ import { computed, ref } from 'vue';
 
 import RuleBody from './rule_body';
 import { markClassesForRecord } from './grouping';
+import { runTickFor } from './run_result';
 
 // Outer "record" wrapper for a QC rule. It owns the expanded/condensed state and
 // toggles it when the inner rule's header is clicked. It forwards
@@ -27,8 +28,9 @@ const RuleRecord = {
   template: `
 <li :class="classes">
   <span class="apqa-rules-tree-gutter">
-    <span class="apqa-rule-run-tick" :class="tickClass" :title="tickTitle">
-      <i v-if="tickIcon" :class="tickIcon"></i>
+    <span class="apqa-rule-run-tick" :class="tick.cls" :title="tick.title">
+      <i v-if="tick.icon" :class="tick.icon"></i>
+      <span v-else-if="tick.text" class="apqa-run-tick-text">{{ tick.text }}</span>
     </span>
   </span>
   <div class="apqa-rules-tree-content">
@@ -74,26 +76,9 @@ const RuleRecord = {
 
     const runResult = computed(() => props.runResults[props.record.id] || null);
 
-    const tickIcon = computed(() => {
+    const tick = computed(() => {
       const status = runResult.value && runResult.value.status;
-      if (status === 'passed') return 'ri-check-double-line';
-      if (status === 'failed' || status === 'error') return 'ri-close-fill';
-      return '';
-    });
-
-    const tickClass = computed(() => {
-      const status = runResult.value && runResult.value.status;
-      if (status === 'passed') return 'is-passed';
-      if (status === 'failed' || status === 'error') return 'is-failed';
-      return 'is-empty';
-    });
-
-    const tickTitle = computed(() => {
-      const status = runResult.value && runResult.value.status;
-      if (status === 'passed') return 'Passed';
-      if (status === 'failed') return 'Failed';
-      if (status === 'error') return 'Run failed';
-      return '';
+      return runTickFor(status) || { cls: 'is-empty', icon: '', text: '', title: '' };
     });
 
     function onSave(record, changes) {
@@ -104,7 +89,7 @@ const RuleRecord = {
       emit('cancel', record);
     }
 
-    return { expanded, editing, classes, tickIcon, tickClass, tickTitle, onSave, onCancel };
+    return { expanded, editing, classes, tick, onSave, onCancel };
   },
 };
 

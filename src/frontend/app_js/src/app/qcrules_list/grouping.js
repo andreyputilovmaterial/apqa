@@ -198,7 +198,7 @@ export function markClassesForRecord(record, cmdlets, ops) {
   return classes;
 }
 
-export function buildGroupNodes(groups, records, cmdlets = [], ops = []) {
+export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResults = null) {
   const byId = new Map();
   groups.forEach((group) => {
     byId.set(group.id, {
@@ -274,6 +274,59 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = []) {
     return result;
   }
 
+  // Combined run status for a folder, so its tick mirrors the rules (and nested
+  // folders) inside it. Aggregates over the whole subtree, then maps to a
+  // status: `failed` (any failure), `running` (any in-flight rule, unless
+  // something already failed), `passed` (every rule passed), `indeterminate`
+  // (some passed, some still blank), `blank` (nothing run yet), or `empty` (no
+  // rules inside). Memoized per node; `seen` guards against parent cycles.
+  const groupRunAggregateCache = new Map();
+  function groupRunAggregate(node, seen = new Set()) {
+    if (groupRunAggregateCache.has(node.id)) return groupRunAggregateCache.get(node.id);
+    if (seen.has(node.id)) {
+      return { total: 0, hasFailure: false, hasRunning: false, hasPassed: false, hasBlank: false };
+    }
+    seen.add(node.id);
+
+    let total = 0;
+    let hasFailure = false;
+    let hasRunning = false;
+    let hasPassed = false;
+    let hasBlank = false;
+
+    for (const rule of node.rules) {
+      total += 1;
+      const result = runResults && runResults[rule.id];
+      const status = result && result.status ? result.status : 'blank';
+      if (status === 'failed' || status === 'error') hasFailure = true;
+      else if (status === 'running') hasRunning = true;
+      else if (status === 'passed') hasPassed = true;
+      else hasBlank = true;
+    }
+    for (const child of node.children) {
+      const agg = groupRunAggregate(child, seen);
+      total += agg.total;
+      hasFailure = hasFailure || agg.hasFailure;
+      hasRunning = hasRunning || agg.hasRunning;
+      hasPassed = hasPassed || agg.hasPassed;
+      hasBlank = hasBlank || agg.hasBlank;
+    }
+
+    const aggregate = { total, hasFailure, hasRunning, hasPassed, hasBlank };
+    groupRunAggregateCache.set(node.id, aggregate);
+    return aggregate;
+  }
+
+  function groupRunStatus(node) {
+    const agg = groupRunAggregate(node);
+    if (agg.total === 0) return 'empty';
+    if (agg.hasFailure) return 'failed';
+    if (agg.hasRunning) return 'running';
+    if (agg.hasPassed && !agg.hasBlank) return 'passed';
+    if (agg.hasPassed) return 'indeterminate';
+    return 'blank';
+  }
+
   function pushRule(rule, depth, parents) {
     nodes.push({
       kind: 'rule',
@@ -300,6 +353,7 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = []) {
       parents: parents.slice(),
       marks: groupMarks(node),
       markClasses: groupMarkClasses(node),
+      runStatus: groupRunStatus(node),
     });
     const childParents = parents.concat(node.id);
 
