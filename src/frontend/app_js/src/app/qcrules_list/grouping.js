@@ -277,45 +277,48 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResu
     return result;
   }
 
-  // Combined run status for a folder, so its tick mirrors the rules (and nested
-  // folders) inside it. Aggregates over the whole subtree, then maps to a
-  // status: `failed` (any failure), `running` (any in-flight rule, unless
-  // something already failed), `passed` (every rule passed), `indeterminate`
-  // (some passed, some still blank), `blank` (nothing run yet), or `empty` (no
-  // rules inside). Memoized per node; `seen` guards against parent cycles.
+  // Combined run summary for a folder, so its tick (and its last-run banner)
+  // mirrors the rules (and nested folders) inside it. Aggregates counts over the
+  // whole subtree and keeps the counts the "run results" section displays:
+  // `passed`/`failed`/`errored`/`running`/`blank` (blank = not run yet). `failed`
+  // counts false comparisons, `errored` counts runs that raised. Memoized per
+  // node; `seen` guards against parent cycles.
   const groupRunAggregateCache = new Map();
   function groupRunAggregate(node, seen = new Set()) {
     if (groupRunAggregateCache.has(node.id)) return groupRunAggregateCache.get(node.id);
     if (seen.has(node.id)) {
-      return { total: 0, hasFailure: false, hasRunning: false, hasPassed: false, hasBlank: false };
+      return { total: 0, passed: 0, failed: 0, errored: 0, running: 0, blank: 0 };
     }
     seen.add(node.id);
 
     let total = 0;
-    let hasFailure = false;
-    let hasRunning = false;
-    let hasPassed = false;
-    let hasBlank = false;
+    let passed = 0;
+    let failed = 0;
+    let errored = 0;
+    let running = 0;
+    let blank = 0;
 
     for (const rule of node.rules) {
       total += 1;
       const result = runResults && runResults[rule.id];
       const status = result && result.status ? result.status : 'blank';
-      if (status === 'failed' || status === 'error') hasFailure = true;
-      else if (status === 'running') hasRunning = true;
-      else if (status === 'passed') hasPassed = true;
-      else hasBlank = true;
+      if (status === 'passed') passed += 1;
+      else if (status === 'failed') failed += 1;
+      else if (status === 'error') errored += 1;
+      else if (status === 'running') running += 1;
+      else blank += 1;
     }
     for (const child of node.children) {
       const agg = groupRunAggregate(child, seen);
       total += agg.total;
-      hasFailure = hasFailure || agg.hasFailure;
-      hasRunning = hasRunning || agg.hasRunning;
-      hasPassed = hasPassed || agg.hasPassed;
-      hasBlank = hasBlank || agg.hasBlank;
+      passed += agg.passed;
+      failed += agg.failed;
+      errored += agg.errored;
+      running += agg.running;
+      blank += agg.blank;
     }
 
-    const aggregate = { total, hasFailure, hasRunning, hasPassed, hasBlank };
+    const aggregate = { total, passed, failed, errored, running, blank };
     groupRunAggregateCache.set(node.id, aggregate);
     return aggregate;
   }
@@ -323,10 +326,10 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResu
   function groupRunStatus(node) {
     const agg = groupRunAggregate(node);
     if (agg.total === 0) return 'empty';
-    if (agg.hasFailure) return 'failed';
-    if (agg.hasRunning) return 'running';
-    if (agg.hasPassed && !agg.hasBlank) return 'passed';
-    if (agg.hasPassed) return 'indeterminate';
+    if (agg.failed || agg.errored) return 'failed';
+    if (agg.running) return 'running';
+    if (agg.passed && !agg.blank) return 'passed';
+    if (agg.passed) return 'indeterminate';
     return 'blank';
   }
 
@@ -361,6 +364,7 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResu
       marks: groupMarks(node),
       markClasses: groupMarkClasses(node),
       runStatus: groupRunStatus(node),
+      runAggregate: groupRunAggregate(node),
     });
     const childParents = parents.concat(node.id);
 
@@ -387,4 +391,51 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResu
   }
 
   return nodes;
+}
+
+// All rule records that belong to one folder (including its nested sub-folders),
+// in the same depth-first order `buildGroupNodes` renders them. The page uses
+// this to run every rule in a folder sequentially (Run on a folder). Rules whose
+// group id is unknown/empty are never part of any folder, so they are excluded.
+export function rulesForGroup(groups, records, groupId) {
+  if (!groupId) return [];
+
+  const byId = new Map();
+  for (const group of groups) {
+    byId.set(group.id, {
+      id: group.id,
+      parent: group.parent || '',
+      order: orderOf(group.order),
+      children: [],
+      rules: [],
+    });
+  }
+
+  for (const node of byId.values()) {
+    if (node.parent && byId.has(node.parent)) byId.get(node.parent).children.push(node);
+  }
+
+  for (const record of records) {
+    const group = record.group;
+    if (group && byId.has(group)) byId.get(group).rules.push(record);
+  }
+
+  const result = [];
+  const walk = (node, seen = new Set()) => {
+    if (seen.has(node.id)) return;
+    seen.add(node.id);
+
+    const entries = [];
+    for (const child of node.children) entries.push({ order: child.order, group: child });
+    for (const rule of node.rules) entries.push({ order: orderOf(rule.order), rule });
+    entries.sort((a, b) => a.order - b.order);
+    for (const entry of entries) {
+      if (entry.group) walk(entry.group, seen);
+      else result.push(entry.rule);
+    }
+  };
+
+  const start = byId.get(groupId);
+  if (start) walk(start);
+  return result;
 }

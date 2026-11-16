@@ -396,6 +396,21 @@
   font-size: 0.8rem;
 }
 
+/* Folder last-run summary (rules_tree.js) — the same banner shape as a rule's
+   run-result section, but with an aggregated "N passed, M failed, …" line. */
+.apqa-rules-tree-group-run-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+/* The summary line is regular weight (unlike the rule's bold Passed/Failed
+   status word) so the pytest-like counts read as a plain report line. */
+.apqa-rules-tree-group-run-result-status {
+  font-weight: 400;
+}
+
 /* Foldable QC-rule tree (rules_tree.js). Groups are simple [+]/[-] folder
    headers that toggle their descendants; rule leaves reuse `rule-record`.
    Depth is expressed as a CSS custom property so indentation scales without

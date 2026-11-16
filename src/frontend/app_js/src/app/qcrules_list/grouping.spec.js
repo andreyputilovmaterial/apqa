@@ -9,6 +9,7 @@ import {
   markerClass,
   ruleInvalidProblems,
   ruleProblems,
+  rulesForGroup,
 } from './grouping.js';
 
 function rule(name, group = '', order = 0, extra = {}) {
@@ -148,6 +149,43 @@ describe('buildGroupNodes', () => {
   it('terminates on a parent cycle', () => {
     const nodes = buildGroupNodes([group('A', 'B'), group('B', 'A')], []);
     expect(nodes).toEqual([]);
+  });
+});
+
+describe('rulesForGroup', () => {
+  it('returns a folder own rules in tree order', () => {
+    const rules = rulesForGroup(
+      [group('Data')],
+      [rule('r2', 'Data', 2), rule('r1', 'Data', 1)],
+      'Data',
+    );
+
+    expect(rules.map((r) => r.name)).toEqual(['r1', 'r2']);
+  });
+
+  it('includes nested sub-folders depth-first', () => {
+    const rules = rulesForGroup(
+      [group('Data'), group('Metadata', 'Data', 1)],
+      [rule('r2', 'Metadata', 0), rule('r1', 'Data', 0)],
+      'Data',
+    );
+
+    expect(rules.map((r) => r.name)).toEqual(['r1', 'r2']);
+  });
+
+  it('excludes rules in sibling or unrelated folders', () => {
+    const rules = rulesForGroup(
+      [group('Data'), group('Other')],
+      [rule('r1', 'Data'), rule('r2', 'Other'), rule('r3')],
+      'Data',
+    );
+
+    expect(rules.map((r) => r.name)).toEqual(['r1']);
+  });
+
+  it('returns an empty list for an unknown group id', () => {
+    expect(rulesForGroup([group('Data')], [rule('r1', 'Data')], 'Ghost')).toEqual([]);
+    expect(rulesForGroup([group('Data')], [rule('r1', 'Data')], '')).toEqual([]);
   });
 });
 
@@ -452,6 +490,37 @@ describe('buildGroupNodes run status', () => {
       { name: 'Data', runStatus: 'blank' },
       { name: 'Metadata', runStatus: 'blank' },
     ]);
+  });
+
+  it('counts passed/failed/errored/running/blank for the run aggregate', () => {
+    const nodes = buildGroupNodes(
+      [group('Data')],
+      [
+        rule('r1', 'Data'),
+        rule('r2', 'Data'),
+        rule('r3', 'Data'),
+        rule('r4', 'Data'),
+        rule('r5', 'Data'),
+      ],
+      [],
+      [],
+      {
+        r1: { status: 'passed' },
+        r2: { status: 'failed' },
+        r3: { status: 'error' },
+        r4: { status: 'running' },
+      },
+    );
+
+    const data = nodes.find((n) => n.kind === 'group');
+    expect(data.runAggregate).toEqual({
+      total: 5,
+      passed: 1,
+      failed: 1,
+      errored: 1,
+      running: 1,
+      blank: 1,
+    });
   });
 });
 

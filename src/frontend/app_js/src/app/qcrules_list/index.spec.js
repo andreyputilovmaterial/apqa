@@ -80,6 +80,35 @@ describe('QcRulesList', () => {
     );
   });
 
+  it('runs every rule in a folder sequentially when run-group fires', async () => {
+    const rules = [
+      { id: 'r1', name: 'Rule one', group: 'data', left: [], op: 'eq', op_args: {}, right: [], meta: { order: 1 } },
+      { id: 'r2', name: 'Rule two', group: 'data', left: [], op: 'eq', op_args: {}, right: [], meta: { order: 2 } },
+    ];
+    const group = { id: 'data', name: 'Data', parent: '', meta: {} };
+
+    const runOrder = [];
+    vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
+      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/functionality/run-rule') {
+        runOrder.push(JSON.parse(options.body).id);
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: true }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    wrapper.findComponent(RulesTree).vm.$emit('run-group', { id: 'data', name: 'Data' });
+
+    await vi.waitFor(() => {
+      expect(runOrder).toEqual(['r1', 'r2']);
+    });
+  });
+
   it('keeps a folder expanded across a reorder reload', async () => {
     const rule = { id: 'r1', name: 'Rule one', group: 'data', left: [], op: '', right: [], meta: {} };
     const group = { id: 'data', name: 'Data', parent: '', meta: {} };

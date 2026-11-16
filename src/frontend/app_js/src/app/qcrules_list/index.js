@@ -9,6 +9,7 @@ import RulesTree from './rules_tree';
 import RuleForm from './rule_form';
 import GroupForm from './group_form';
 import RuleDeleteConfirm from './rule_delete_confirm';
+import { rulesForGroup } from './grouping';
 
 import './styles.css';
 
@@ -376,7 +377,10 @@ const QcRulesList = {
       editingId.value = record.id;
     }
 
-    async function onRunRule(record) {
+    // Run one QC rule against the backend and cache the result on `runResults`,
+    // keyed by rule id. The same runner is used for a single rule and for each
+    // rule inside a folder (which runs them one at a time, in tree order).
+    async function runRuleRecord(record) {
       runResults[record.id] = { status: 'running' };
 
       // Run the rule exactly like the backend's "run QC tests" mode does:
@@ -424,6 +428,10 @@ const QcRulesList = {
       } catch (e) {
         runResults[record.id] = { status: 'error', message: `${e}` };
       }
+    }
+
+    async function onRunRule(record) {
+      await runRuleRecord(record);
     }
 
     // Persist the edits from the inline form. Only the fields the form manages
@@ -536,9 +544,19 @@ const QcRulesList = {
     }
 
     async function onRunGroup(group) {
-      // Running a whole folder in sequence is a separate task; show a
-      // placeholder for now.
-      window.alert('Running a whole folder is not implemented yet.');
+      const rules = rulesForGroup(groups.value, records.value, group.id);
+      if (rules.length === 0) {
+        window.alert('This folder contains no QC rules to run.');
+        return;
+      }
+
+      // Run the folder's rules one at a time, in the same depth-first order the
+      // tree renders them (nested sub-folders included). Each rule updates its
+      // own cached result, and the folder tick re-aggregates from those results,
+      // so it stays "Running..." until the last rule finishes.
+      for (const record of rules) {
+        await runRuleRecord(record);
+      }
     }
 
     async function onDeleteGroup(group) {

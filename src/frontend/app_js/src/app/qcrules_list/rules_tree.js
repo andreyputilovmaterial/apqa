@@ -6,7 +6,7 @@ import MarksBadges from './marks_badges';
 import RuleRecord from './rule_record';
 import { buildGroupNodes } from './grouping';
 import { moveDescriptor } from './reorder';
-import { runTickFor } from './run_result';
+import { runTickFor, groupRunSummary } from './run_result';
 
 // Foldable tree of QC rules: renders folders (groups) and rules as a single
 // depth-first list, indenting by depth and hiding every descendant of a
@@ -85,6 +85,10 @@ const RulesTree = {
               <button type="button" class="apqa-record-action apqa-record-action-delete" title="Delete" aria-label="Delete folder" @click="$emit('delete-group', node)">
                 <i class="ri-delete-bin-6-line" aria-hidden="true"></i>
               </button>
+            </div>
+
+            <div v-if="hasRunSummary(node)" class="apqa-rules-tree-group-run-result">
+              <div class="apqa-rules-tree-group-run-result-status" :class="runSummaryClass(node)">{{ runSummaryText(node) }}</div>
             </div>
 
             <div v-if="(node.tags && node.tags.length) || node.markers.length || node.marks.length" class="apqa-record-meta">
@@ -241,6 +245,32 @@ const RulesTree = {
           (node) => node.kind === 'group' && node.id === props.editingGroupId,
         ) || null
       );
+    }
+
+    // Folder "last run" summary, mirroring a rule's cached run-result banner. It
+    // is shown once at least one rule inside has a result (passed/failed/errored/
+    // running); a folder whose rules were never run stays blank, and an empty
+    // folder shows nothing.
+    function hasRunSummary(node) {
+      const agg = node.runAggregate;
+      return Boolean(
+        agg && agg.total > 0 && agg.passed + agg.failed + agg.errored + agg.running > 0,
+      );
+    }
+
+    function runSummaryText(node) {
+      return groupRunSummary(node.runAggregate);
+    }
+
+    function runSummaryClass(node) {
+      switch (node.runStatus) {
+        case 'passed':
+          return 'apqa-rule-run-result-passed';
+        case 'failed':
+          return 'apqa-rule-run-result-failed';
+        default:
+          return 'apqa-rule-run-result-running';
+      }
     }
 
     function warnEditing() {
@@ -497,6 +527,9 @@ const RulesTree = {
       onCancel,
       onSaveGroup,
       onCancelGroup,
+      hasRunSummary,
+      runSummaryText,
+      runSummaryClass,
       onHeaderPointerDown,
       onClickCapture,
     };

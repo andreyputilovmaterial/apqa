@@ -398,6 +398,34 @@ describe('RulesTree', () => {
     expect(tick.find('i.ri-check-double-line').exists()).toBe(true);
   });
 
+  it('shows a folder last-run summary with passed/failed/errored counts', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [rule('r1', 'Data'), rule('r2', 'Data'), rule('r3', 'Data')],
+        runResults: {
+          r1: { status: 'passed' },
+          r2: { status: 'failed' },
+          r3: { status: 'error' },
+        },
+      },
+    });
+
+    const summary = wrapper.find('.apqa-rules-tree-group-run-result');
+    expect(summary.exists()).toBe(true);
+    const status = summary.find('.apqa-rules-tree-group-run-result-status');
+    expect(status.text()).toBe('1 passed, 1 failed, 1 errored');
+    expect(status.classes()).toContain('apqa-rule-run-result-failed');
+  });
+
+  it('hides the folder last-run summary when nothing inside has run', () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [rule('r1', 'Data')] },
+    });
+
+    expect(wrapper.find('.apqa-rules-tree-group-run-result').exists()).toBe(false);
+  });
+
   it('shows a blank folder tick when nothing inside has run', () => {
     const wrapper = mountTree({
       props: {
