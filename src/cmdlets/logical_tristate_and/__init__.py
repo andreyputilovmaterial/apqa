@@ -19,6 +19,11 @@ from ..value_types import Boolean, PipeValue
             'description': 'Cmdlet chains combined with three-valued logical AND.',
         },
     ],
+    compact=[
+        {'text': 'AND('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def logical_tristate_and(value: PipeValue, args: dict) -> Optional[Boolean]:
     """Return the SQL-style three-valued AND over operand chain results.

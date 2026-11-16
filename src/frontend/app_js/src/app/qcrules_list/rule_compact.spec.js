@@ -63,6 +63,44 @@ describe('RuleCompact', () => {
     expect(text).not.toContain('get-content-excel');
   });
 
+  it('renders a logical short form with nested operand chains', () => {
+    const record = makeRecord({
+      left: [
+        {
+          cmdlet: 'logical-and',
+          args: {
+            operands: [
+              [{ cmdlet: 'get-content', args: { path: 'a.sav' } }],
+              [{ cmdlet: 'get-content', args: { path: 'b.sav' } }],
+            ],
+          },
+        },
+      ],
+      right: [{ cmdlet: 'count' }],
+    });
+    const cmdlets = [
+      {
+        name: 'logical-and',
+        kind: 'source',
+        args: [{ name: 'operands', type: 'cmdlet-chains', required: true }],
+        compact: [
+          { text: 'AND(' },
+          { arg: 'operands', role: 'operands' },
+          { text: ')' },
+        ],
+      },
+      { name: 'get-content', kind: 'source', args: [{ name: 'path', type: 'path' }] },
+    ];
+    const wrapper = mountCompact({ record, cmdlets, ops: OPS });
+    const text = wrapper.text();
+
+    expect(text).toContain('AND(');
+    expect(text).toContain('get-content path=a.sav');
+    expect(text).toContain(', ');
+    expect(text).toContain('get-content path=b.sav');
+    expect(text).toContain(')');
+  });
+
   it('shows a down-double arrow on the name hinting it expands', () => {
     const wrapper = mountCompact({ record: makeRecord() });
     expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(true);

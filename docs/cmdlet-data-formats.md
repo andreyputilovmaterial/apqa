@@ -485,6 +485,19 @@ instead of `get-content-excel path=/path/to/map.xlsx`, `cmp-eq` declares
 reads `-> fields`. The frontend never emits HTML from a spec — it only maps
 roles to CSS classes (`.apqa-cmdlet-role-<role>`).
 
+The operand-combining logical/bitwise cmdlets (`logical-and`, `logical-or`,
+`logical-tristate-and`, `logical-tristate-or`, `bitwise-and`, `bitwise-or`,
+`bitwise-xor`, `bitwise-lshift`, `bitwise-rshift`) declare a compact spec of the
+form `[{'text': 'AND('}, {'arg': 'operands', 'role': 'operands'}, {'text': ')'}]`,
+so an operand list reads `AND( chain1, chain2 )`; `logical-and` and
+`logical-tristate-and` share the word `AND`, and the bitwise variants use
+`BITAND` / `BITOR` / `BITXOR` / `BITLSHIFT` / `BITRSHIFT`. The `operands` role
+does the spacing and layout work: it is `display: inline` (so the nested chains
+flow and wrap as plain inline text with the surrounding keyword/paren text) with
+a small horizontal margin for the space after `(` and before `)` (literal spaces
+in spec text are not rendered), and it unboxes and baseline-aligns the nested
+operand chips so every piece shares one text baseline.
+
 ### Arg values: `sysmissing` vs value
 
 An argument is either a value of its declared type, or `sysmissing` (`null` in

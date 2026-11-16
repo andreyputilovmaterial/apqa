@@ -150,6 +150,28 @@ def test_cmdlet_display_specs():
     assert 'full' not in meta['count']
 
 
+def test_logical_bitwise_short_forms():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+
+    def assert_short_form(name, keyword):
+        assert meta[name]['compact'] == [
+            {'text': f'{keyword}('},
+            {'arg': 'operands', 'role': 'operands'},
+            {'text': ')'},
+        ]
+        assert 'full' not in meta[name]
+
+    assert_short_form('logical-and', 'AND')
+    assert_short_form('logical-or', 'OR')
+    assert_short_form('logical-tristate-and', 'AND')
+    assert_short_form('logical-tristate-or', 'OR')
+    assert_short_form('bitwise-and', 'BITAND')
+    assert_short_form('bitwise-or', 'BITOR')
+    assert_short_form('bitwise-xor', 'BITXOR')
+    assert_short_form('bitwise-lshift', 'BITLSHIFT')
+    assert_short_form('bitwise-rshift', 'BITRSHIFT')
+
+
 def test_filter_ignorelist_arg_is_strings_list():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
     ignorelist = {a['name']: a for a in meta['filter']['args']}['ignorelist']

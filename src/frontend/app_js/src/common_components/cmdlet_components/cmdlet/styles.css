@@ -32,7 +32,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  vertical-align: bottom;
+  /* Baseline (not bottom/top) so text parts share one text baseline — this is
+     what keeps the `AND(` / `)` keyword text on the same line as the nested
+     operand chip text. For single-line text parts of the same font it is
+     visually identical to `bottom` (the descent is constant). */
+  vertical-align: baseline;
 }
 
 /* Display-spec part roles. A spec part carries a semantic role (declared in the
@@ -51,4 +55,26 @@
    glued to the field name it points at. */
 .apqa-cmdlet-role-arrow {
   margin-right: 0.3em;
+}
+
+/* The operand list inside a logical/bitwise short form (e.g. `AND( … )`).
+   `display: inline` lets the nested chains flow as plain inline content with the
+   surrounding keyword/paren text — so they all share one text baseline and wrap
+   naturally — and the horizontal margin supplies the space after `(` and before
+   `)` (literal spaces in the display-spec text are not rendered). */
+.apqa-cmdlet-role-operands {
+  display: inline;
+  white-space: normal;
+  margin: 0 0.6em;
+}
+
+/* Nested operand chips render as plain text (no border/padding) and sit on the
+   same baseline as the surrounding text. Removing the box is what lets the
+   whole `AND( arg1, arg2 )` short form share one text baseline with the other
+   chips on the definition line — a boxed chip's border+padding would otherwise
+   add ~4px of overhang above its text and push the baseline down. */
+.apqa-cmdlet-role-operands .apqa-cmdlet {
+  vertical-align: baseline;
+  border: none;
+  padding: 0;
 }

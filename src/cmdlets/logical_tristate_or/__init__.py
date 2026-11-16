@@ -19,6 +19,11 @@ from ..value_types import Boolean, PipeValue
             'description': 'Cmdlet chains combined with three-valued logical OR.',
         },
     ],
+    compact=[
+        {'text': 'OR('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def logical_tristate_or(value: PipeValue, args: dict) -> Optional[Boolean]:
     """Return the SQL-style three-valued OR over operand chain results.

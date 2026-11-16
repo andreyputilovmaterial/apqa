@@ -19,6 +19,11 @@ from ..value_types import Integer, PipeValue
             'description': 'Integer cmdlet chains combined with bitwise XOR.',
         },
     ],
+    compact=[
+        {'text': 'BITXOR('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def bitwise_xor(value: PipeValue, args: dict) -> Integer:
     """Return the bitwise XOR of the integer operand chains.

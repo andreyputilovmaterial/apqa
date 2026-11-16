@@ -19,6 +19,11 @@ from ..value_types import Integer, PipeValue
             'description': 'Integer cmdlet chains left-shifted left-to-right.',
         },
     ],
+    compact=[
+        {'text': 'BITLSHIFT('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def bitwise_lshift(value: PipeValue, args: dict) -> Integer:
     """Return the integer operands left-shifted left-to-right (``a << b``).

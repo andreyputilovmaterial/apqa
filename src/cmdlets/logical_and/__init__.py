@@ -16,6 +16,11 @@ from ..value_types import Boolean, PipeValue
             'description': 'Cmdlet chains combined with logical AND.',
         },
     ],
+    compact=[
+        {'text': 'AND('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def logical_and(value: PipeValue, args: dict) -> Boolean:
     """Return ``True`` iff every operand chain's value is truthy.

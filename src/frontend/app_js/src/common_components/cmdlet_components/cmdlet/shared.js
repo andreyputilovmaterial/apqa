@@ -80,7 +80,17 @@ export function makeCmdlet(form) {
         return `component-cmdlet-arg-${argType(meta.value, argName)}-${form}`;
       }
 
-      return { name, spec, argEntries, argValue, valueComponentFor, argComponent, partClasses };
+      // Props for one display-spec arg part. Chain-valued args (nested cmdlet
+      // chains) need the cmdlet metadata so they can render their own chains.
+      function valueComponentProps(argName) {
+        const result = { value: argValue(argName) };
+        if (argType(meta.value, argName) === 'cmdlet-chains') {
+          result.cmdlets = props.cmdlets;
+        }
+        return result;
+      }
+
+      return { name, spec, argEntries, argValue, valueComponentFor, valueComponentProps, argComponent, partClasses };
     },
 
     template: `
@@ -89,7 +99,7 @@ export function makeCmdlet(form) {
     <template v-for="(part, index) in spec" :key="index">
       <span v-if="'text' in part" :class="partClasses(part)">{{ part.text }}</span>
       <span v-else :class="partClasses(part)">
-        <component :is="valueComponentFor(part.arg)" :value="argValue(part.arg)" />
+        <component :is="valueComponentFor(part.arg)" v-bind="valueComponentProps(part.arg)" />
       </span>
     </template>
   </template>

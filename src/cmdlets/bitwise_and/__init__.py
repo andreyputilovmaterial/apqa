@@ -19,6 +19,11 @@ from ..value_types import Integer, PipeValue
             'description': 'Integer cmdlet chains combined with bitwise AND.',
         },
     ],
+    compact=[
+        {'text': 'BITAND('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def bitwise_and(value: PipeValue, args: dict) -> Integer:
     """Return the bitwise AND of the integer operand chains.

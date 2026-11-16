@@ -16,6 +16,11 @@ from ..value_types import Boolean, PipeValue
             'description': 'Cmdlet chains combined with logical OR.',
         },
     ],
+    compact=[
+        {'text': 'OR('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def logical_or(value: PipeValue, args: dict) -> Boolean:
     """Return ``True`` iff any operand chain's value is truthy.

@@ -19,6 +19,11 @@ from ..value_types import Integer, PipeValue
             'description': 'Integer cmdlet chains combined with bitwise OR.',
         },
     ],
+    compact=[
+        {'text': 'BITOR('},
+        {'arg': 'operands', 'role': 'operands'},
+        {'text': ')'},
+    ],
 )
 def bitwise_or(value: PipeValue, args: dict) -> Integer:
     """Return the bitwise OR of the integer operand chains.
