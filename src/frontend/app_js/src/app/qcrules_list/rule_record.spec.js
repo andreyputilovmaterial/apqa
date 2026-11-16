@@ -35,49 +35,29 @@ function mountRecord(options = {}) {
 }
 
 describe('RuleRecord', () => {
-  it('starts collapsed (compact view, no actions)', () => {
+  it('renders the always-shown card with name, comment and definition', () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
-    expect(wrapper.find('.apqa-rule-compact').exists()).toBe(true);
-    expect(wrapper.find('.apqa-rule-body-action').exists()).toBe(false);
+
+    expect(wrapper.find('.apqa-rule-card').exists()).toBe(true);
+    expect(wrapper.find('.apqa-rule-card-name').text()).toBe('Rule A');
+    expect(wrapper.find('.apqa-rule-card-comment').text()).toBe('check the count');
+    expect(wrapper.find('.apqa-rule-card-definition').exists()).toBe(true);
   });
 
-  it('expands to the full view on header click and shows actions', async () => {
+  it('shows the three icon action buttons', () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
-    expect(wrapper.find('.apqa-qcrules-list-item').exists()).toBe(true);
-    const actions = wrapper.findAll('.apqa-rule-body-action');
-    expect(actions.map((a) => a.text())).toEqual(['Edit', 'Run', 'Delete']);
-  });
-
-  it('shows a down arrow when compact and an up arrow when expanded', async () => {
-    const wrapper = mountRecord({ props: { record: makeRecord() } });
-    expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(true);
-    expect(wrapper.find('.apqa-qcrules-list-item-name .ri-arrow-up-double-fill').exists()).toBe(false);
-
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
-    expect(wrapper.find('.apqa-qcrules-list-item-name .ri-arrow-up-double-fill').exists()).toBe(true);
-    expect(wrapper.find('.apqa-rule-compact-name .ri-arrow-down-double-fill').exists()).toBe(false);
-  });
-
-  it('collapses back to compact view on a second header click', async () => {
-    const wrapper = mountRecord({ props: { record: makeRecord() } });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
-    expect(wrapper.find('.apqa-qcrules-list-item').exists()).toBe(true);
-
-    await wrapper.find('.apqa-qcrules-list-item-head').trigger('click');
-    expect(wrapper.find('.apqa-rule-compact').exists()).toBe(true);
-    expect(wrapper.find('.apqa-rule-body-action').exists()).toBe(false);
+    expect(wrapper.find('.apqa-record-action-edit i.ri-edit-box-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-run i.ri-play-large-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-delete i.ri-delete-bin-6-line').exists()).toBe(true);
   });
 
   it('forwards edit, run and delete actions with the record', async () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
-    const buttons = wrapper.findAll('.apqa-rule-body-action');
-    await buttons[0].trigger('click');
-    await buttons[1].trigger('click');
-    await buttons[2].trigger('click');
+    await wrapper.find('.apqa-record-action-edit').trigger('click');
+    await wrapper.find('.apqa-record-action-run').trigger('click');
+    await wrapper.find('.apqa-record-action-delete').trigger('click');
 
     expect(wrapper.emitted('edit')).toHaveLength(1);
     expect(wrapper.emitted('edit')[0][0]).toMatchObject({ name: 'Rule A' });
@@ -85,6 +65,17 @@ describe('RuleRecord', () => {
     expect(wrapper.emitted('run')[0][0]).toMatchObject({ name: 'Rule A' });
     expect(wrapper.emitted('delete')).toHaveLength(1);
     expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'Rule A' });
+  });
+
+  it('has no expand/collapse arrow or toggle for rules', async () => {
+    const wrapper = mountRecord({ props: { record: makeRecord() } });
+
+    expect(wrapper.find('.apqa-rule-card .ri-arrow-down-double-fill').exists()).toBe(false);
+    expect(wrapper.find('.apqa-rule-card .ri-arrow-up-double-fill').exists()).toBe(false);
+
+    await wrapper.find('.apqa-rule-card-head').trigger('click');
+    expect(wrapper.find('.apqa-rule-card').exists()).toBe(true);
+    expect(wrapper.emitted('toggle')).toBeUndefined();
   });
 
   it('adds the shared base, rule kind and mark classes to the <li>', () => {
@@ -135,24 +126,23 @@ describe('RuleRecord', () => {
     });
 
     expect(wrapper.find('.apqa-rule-edit-form').exists()).toBe(true);
-    expect(wrapper.find('.apqa-rule-body-action').exists()).toBe(false);
+    expect(wrapper.find('.apqa-record-action').exists()).toBe(false);
   });
 
-  it('shows a green "Passed" banner for a cached passed result', async () => {
+  it('shows a green "Passed" banner for a cached passed result', () => {
     const wrapper = mountRecord({
       props: {
         record: makeRecord(),
         runResults: { 'Rule A': { status: 'passed', notes: [] } },
       },
     });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
     const banner = wrapper.find('.apqa-rule-run-result-passed');
     expect(banner.exists()).toBe(true);
     expect(banner.text()).toBe('Passed');
   });
 
-  it('shows a red "Failed" banner with notes for a cached failed result', async () => {
+  it('shows a red "Failed" banner with notes for a cached failed result', () => {
     const wrapper = mountRecord({
       props: {
         record: makeRecord(),
@@ -164,7 +154,6 @@ describe('RuleRecord', () => {
         },
       },
     });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
     expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
     expect(wrapper.find('.apqa-rule-run-result-notes li').text()).toContain(
@@ -172,7 +161,7 @@ describe('RuleRecord', () => {
     );
   });
 
-  it('shows a red exception snippet for a cached error result', async () => {
+  it('shows a red exception snippet for a cached error result', () => {
     const wrapper = mountRecord({
       props: {
         record: makeRecord(),
@@ -184,16 +173,14 @@ describe('RuleRecord', () => {
         },
       },
     });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
     const error = wrapper.find('.apqa-rule-run-result-error');
     expect(error.exists()).toBe(true);
     expect(error.text()).toBe("cmdlet 'nope' (step 0): cmdlet not found: nope");
   });
 
-  it('shows no banner when there is no cached result', async () => {
+  it('shows no run-result banner when there is no cached result', () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
 
     expect(wrapper.find('.apqa-rule-run-result').exists()).toBe(false);
   });
@@ -275,5 +262,4 @@ describe('RuleRecord', () => {
     await wrapper.find('.apqa-rule-form-button').trigger('click');
     expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
-
 });

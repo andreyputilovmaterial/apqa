@@ -68,8 +68,7 @@ describe('QcRulesList', () => {
     const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
     await flushPromises();
 
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
-    await wrapper.find('.apqa-rule-body-action-run').trigger('click');
+    await wrapper.find('.apqa-record-action-run').trigger('click');
     await flushPromises();
 
     expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
@@ -137,8 +136,7 @@ describe('QcRulesList', () => {
     const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
     await flushPromises();
 
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
-    await wrapper.find('.apqa-rule-body-action-run').trigger('click');
+    await wrapper.find('.apqa-record-action-run').trigger('click');
     await flushPromises();
 
     expect(wrapper.find('.apqa-rule-run-result-error').text()).toBe(

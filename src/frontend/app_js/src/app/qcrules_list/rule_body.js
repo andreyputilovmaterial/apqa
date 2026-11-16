@@ -1,18 +1,24 @@
 import { computed } from 'vue';
 
-import Rule from './rule';
-import RuleCompact from './rule_compact';
+import ComponentFormatDatetime from '@/common_components/display/format_datetime/index';
+import MarksBadges, { INVALID_MESSAGE, UNFINISHED_MESSAGE } from './marks_badges';
+import { isInvalid, isUnfinished, markNamesForRecord } from './grouping';
 import RuleEditForm from './rule_edit_form';
 import { formatNote } from './run_result';
 
-// Inner wrapper of a rule record. When not editing it holds the rendered rule
-// (compact or full, chosen by `expanded`) plus a row of action buttons
-// (Edit/Run/Delete). When `editing` is true the rule display is replaced by the
-// inline edit form, whose save/cancel are forwarded up with the record.
+// Renders one QC rule as a single, always-visible card. When `editing` is true
+// the card is replaced by the inline edit form; otherwise it shows, in order:
+//   1. name + optional comment (the rule header, which is also the reorder drag
+//      surface),
+//   2. an icon-only action row (Edit / Run / Delete),
+//   3. the cached last-run result (only when one exists),
+//   4. the rule content (left chain, comparison, right chain),
+//   5. meta (tags, markers, created timestamp).
+// Rules no longer expand/collapse — the whole card is always shown. (Folders in
+// the rules tree keep their own [+]/[-] toggle.)
 const RuleBody = {
   props: {
     record: { type: Object, required: true },
-    expanded: { type: Boolean, default: false },
     editing: { type: Boolean, default: false },
     runResults: { type: Object, default: () => ({}) },
     cmdlets: { type: Array, default: () => [] },
@@ -20,12 +26,12 @@ const RuleBody = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['toggle', 'edit', 'run', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
 
   components: {
-    'rule': Rule,
-    'rule-compact': RuleCompact,
     'rule-edit-form': RuleEditForm,
+    'component-format-datetime': ComponentFormatDatetime,
+    'marks-badges': MarksBadges,
   },
 
   template: `
@@ -39,11 +45,27 @@ const RuleBody = {
     @save="$emit('save', record, $event)"
     @cancel="$emit('cancel', record)"
   />
-  <template v-else>
-    <rule-compact v-if="!expanded" :record="record" :cmdlets="cmdlets" :ops="ops" @toggle="$emit('toggle')" />
-    <rule v-else :record="record" :cmdlets="cmdlets" :ops="ops" @toggle="$emit('toggle')" />
+  <div v-else class="apqa-qcrules-entry apqa-qcrules-entry-rule apqa-rule-card">
+    <div class="apqa-rule-card-head">
+      <span class="apqa-rule-card-name">{{ record.name }}</span>
+      <span v-if="record.comment" class="apqa-rule-card-comment">{{ record.comment }}</span>
+      <span v-if="unfinished" class="apqa-rule-unfinished-note">{{ UNFINISHED_MESSAGE }}</span>
+      <span v-if="invalid" class="apqa-rule-invalid-note">{{ INVALID_MESSAGE }}</span>
+    </div>
 
-    <div v-if="expanded && runResult" class="apqa-rule-run-result">
+    <div class="apqa-record-actions">
+      <button type="button" class="apqa-record-action apqa-record-action-edit" title="Edit" aria-label="Edit rule" @click="$emit('edit', record)">
+        <i class="ri-edit-box-line" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="apqa-record-action apqa-record-action-run" title="Run" aria-label="Run rule" @click="$emit('run', record)">
+        <i class="ri-play-large-line" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="apqa-record-action apqa-record-action-delete" title="Delete" aria-label="Delete rule" @click="$emit('delete', record)">
+        <i class="ri-delete-bin-6-line" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div v-if="runResult" class="apqa-rule-run-result">
       <div v-if="runResult.status === 'running'" class="apqa-rule-run-result-status apqa-rule-run-result-running">Running...</div>
       <template v-else>
         <div v-if="runResult.status === 'error'" class="apqa-rule-run-result-error">{{ runResult.message }}</div>
@@ -54,19 +76,28 @@ const RuleBody = {
       </template>
     </div>
 
-    <div v-if="expanded" class="apqa-rule-body-actions">
-      <button type="button" class="apqa-rule-body-action apqa-rule-body-action-edit" @click="$emit('edit', record)">Edit</button>
-      <button type="button" class="apqa-rule-body-action apqa-rule-body-action-run" @click="$emit('run', record)">Run</button>
-      <button type="button" class="apqa-rule-body-action apqa-rule-body-action-delete" @click="$emit('delete', record)">Delete</button>
+    <div class="apqa-rule-card-definition">
+      <component-cmdlet-chain-compact :chain="record.left" :cmdlets="cmdlets" />
+      <component-comparison-op-compact :op="record.op" :ops="ops" />
+      <component-cmdlet-chain-compact :chain="record.right" :cmdlets="cmdlets" />
     </div>
-  </template>
+
+    <div v-if="(record.tags && record.tags.length) || marks.length || record.created_at" class="apqa-record-meta">
+      <span v-if="record.tags && record.tags.length" class="apqa-record-tags">{{ record.tags.join(', ') }}</span>
+      <marks-badges :marks="marks" />
+      <span v-if="record.created_at" class="apqa-record-created">created <component-format-datetime :dt="record.created_at" /></span>
+    </div>
+  </div>
 </div>
 `,
 
   setup(props) {
     const runResult = computed(() => props.runResults[props.record.id] || null);
+    const unfinished = computed(() => isUnfinished(props.record, props.cmdlets, props.ops));
+    const invalid = computed(() => isInvalid(props.record, props.cmdlets, props.ops));
+    const marks = computed(() => markNamesForRecord(props.record, props.cmdlets, props.ops));
 
-    return { runResult, formatNote };
+    return { UNFINISHED_MESSAGE, INVALID_MESSAGE, runResult, unfinished, invalid, marks, formatNote };
   },
 };
 

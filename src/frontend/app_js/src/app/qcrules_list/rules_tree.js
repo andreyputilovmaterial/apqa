@@ -9,9 +9,9 @@ import { runTickFor } from './run_result';
 
 // Foldable tree of QC rules: renders folders (groups) and rules as a single
 // depth-first list, indenting by depth and hiding every descendant of a
-// collapsed folder. Rules reuse the existing `rule-record` component, so each
-// rule still expands/collapses and emits its edit/run/delete/save/cancel
-// actions up to the page.
+// collapsed folder. Rules are always-shown cards (no expand/collapse); folders
+// keep a [+]/[-] toggle. Both kinds emit their edit/run/delete actions up to
+// the page (rules via `edit`/`run`/`delete`, folders via the `-group` events).
 //
 // While a rule is being edited (`editingId` is set), the tree refuses to
 // collapse the folder that contains it (or change pagination), so the inline
@@ -28,7 +28,7 @@ const RulesTree = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'reorder'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'reorder', 'edit-group', 'run-group', 'delete-group'],
 
   components: {
     'alias-record': AliasRecord,
@@ -48,22 +48,43 @@ const RulesTree = {
           </span>
         </span>
         <div class="apqa-rules-tree-content">
-          <button
-            type="button"
-            class="apqa-qcrules-entry apqa-qcrules-entry-folder apqa-rules-tree-group-header"
-            :aria-expanded="String(!collapsed[node.id])"
-            @click="toggle(node)"
-          >
-            <span class="apqa-rules-tree-group-header-row">
-              <span class="apqa-rules-tree-group-toggle" aria-hidden="true">{{ collapsed[node.id] ? '[+]' : '[-]' }}</span>
-              <span class="apqa-rules-tree-group-name">{{ node.name }}</span>
-              <span v-if="node.comment" class="apqa-rules-tree-group-comment">{{ node.comment }}</span>
-            </span>
-            <span v-if="node.marks.length" class="apqa-rules-tree-group-marks">
-              <span class="apqa-rules-tree-group-marks-label">includes rules marked</span>
-              <marks-badges :marks="node.marks" />
-            </span>
-          </button>
+          <div class="apqa-qcrules-entry apqa-qcrules-entry-folder apqa-rules-tree-group-card">
+            <div
+              class="apqa-rules-tree-group-header"
+              role="button"
+              tabindex="0"
+              :aria-expanded="String(!collapsed[node.id])"
+              @click="toggle(node)"
+              @keydown.enter.prevent="toggle(node)"
+            >
+              <span class="apqa-rules-tree-group-header-row">
+                <span class="apqa-rules-tree-group-toggle" aria-hidden="true">{{ collapsed[node.id] ? '[+]' : '[-]' }}</span>
+                <span class="apqa-rules-tree-group-name">{{ node.name }}</span>
+                <span v-if="node.comment" class="apqa-rules-tree-group-comment">{{ node.comment }}</span>
+              </span>
+            </div>
+
+            <div class="apqa-record-actions">
+              <button type="button" class="apqa-record-action apqa-record-action-edit" title="Edit" aria-label="Edit folder" @click="$emit('edit-group', node)">
+                <i class="ri-edit-box-line" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apqa-record-action apqa-record-action-run" title="Run" aria-label="Run folder" @click="$emit('run-group', node)">
+                <i class="ri-play-large-line" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apqa-record-action apqa-record-action-delete" title="Delete" aria-label="Delete folder" @click="$emit('delete-group', node)">
+                <i class="ri-delete-bin-6-line" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div v-if="(node.tags && node.tags.length) || node.markers.length || node.marks.length" class="apqa-record-meta">
+              <span v-if="node.tags && node.tags.length" class="apqa-record-tags">{{ node.tags.join(', ') }}</span>
+              <marks-badges v-if="node.markers.length" :marks="node.markers" />
+              <span v-if="node.marks.length" class="apqa-rules-tree-group-marks">
+                <span class="apqa-rules-tree-group-marks-label">includes rules marked</span>
+                <marks-badges :marks="node.marks" />
+              </span>
+            </div>
+          </div>
           <ul v-if="!collapsed[node.id] && node.aliases.length" class="apqa-rules-tree-aliases">
             <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" :cmdlets="cmdlets" />
           </ul>
@@ -134,7 +155,7 @@ const RulesTree = {
     // A drag may start only from a rule/folder header — not from the inline edit
     // form, the action buttons, the definition chips, or the mark badges.
     const DRAG_SURFACE_SELECTOR =
-      '.apqa-rules-tree-group-header, .apqa-rule-compact-description, .apqa-qcrules-list-item-head';
+      '.apqa-rules-tree-group-header, .apqa-rule-card-head';
     const MOUSE_DRAG_THRESHOLD = 8;
     const TOUCH_HOLD_MS = 400;
     const TOUCH_SLOP = 10;

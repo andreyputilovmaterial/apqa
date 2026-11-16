@@ -5,12 +5,12 @@ import './rule_delete_confirm.css';
 // `record` to delete. "Delete" resolves `true`; Cancel (and the backdrop close)
 // reject, mirroring the RuleForm contract.
 const RuleDeleteConfirm = {
-  props: ['resolve', 'reject', 'record'],
+  props: ['resolve', 'reject', 'record', 'kind'],
 
   template: `
 <div class="apqa-modal-form apqa-rule-delete-confirm">
   <p class="apqa-rule-delete-confirm-text">
-    Delete rule <span class="apqa-rule-delete-confirm-name">{{ record.name }}</span>?
+    Delete {{ kind }} <span class="apqa-rule-delete-confirm-name">{{ record.name }}</span>?
     This cannot be undone.
   </p>
   <div class="apqa-modal-actions">
@@ -21,6 +21,8 @@ const RuleDeleteConfirm = {
 `,
 
   setup(props) {
+    const kind = props.kind || 'rule';
+
     function confirm() {
       props.resolve(true);
     }
@@ -29,7 +31,7 @@ const RuleDeleteConfirm = {
       props.reject();
     }
 
-    return { confirm, cancel };
+    return { kind, confirm, cancel };
   },
 };
 

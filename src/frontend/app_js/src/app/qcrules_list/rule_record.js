@@ -1,14 +1,14 @@
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 import RuleBody from './rule_body';
 import { markClassesForRecord } from './grouping';
 import { runTickFor } from './run_result';
 
-// Outer "record" wrapper for a QC rule. It owns the expanded/condensed state and
-// toggles it when the inner rule's header is clicked. It forwards
-// `edit`/`run`/`delete` actions to the page and, when the rule is the one being
-// edited (`editingId`), renders the inline edit form and forwards its
-// save/cancel. This is the `<li>` unit rendered inside the rules list.
+// Outer "record" wrapper for a QC rule. It owns the gutter run-status tick and
+// renders the rule card (or the inline edit form when it is the one being
+// edited) via `rule-body`. It forwards edit/run/delete/save/cancel actions to
+// the page. Rules have no expand/collapse state — the whole card is always
+// visible. This is the `<li>` unit rendered inside the rules list.
 const RuleRecord = {
   props: {
     record: { type: Object, required: true },
@@ -40,13 +40,11 @@ const RuleRecord = {
   <div class="apqa-rules-tree-content">
     <rule-body
       :record="record"
-      :expanded="expanded"
       :editing="editing"
       :run-results="runResults"
       :cmdlets="cmdlets"
       :ops="ops"
       :tag-suggestions="tagSuggestions"
-      @toggle="expanded = !expanded"
       @edit="$emit('edit', record)"
       @run="$emit('run', record)"
       @delete="$emit('delete', record)"
@@ -58,8 +56,6 @@ const RuleRecord = {
 `,
 
   setup(props, { emit }) {
-    const expanded = ref(false);
-
     const editing = computed(() =>
       Boolean(props.editingId && props.editingId === props.record.id),
     );
@@ -100,7 +96,7 @@ const RuleRecord = {
       emit('cancel', record);
     }
 
-    return { expanded, editing, classes, tick, onSave, onCancel };
+    return { editing, classes, tick, onSave, onCancel };
   },
 };
 

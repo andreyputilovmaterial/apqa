@@ -33,4 +33,10 @@ describe('RuleDeleteConfirm', () => {
     await wrapper.find('.apqa-button-close:not(.apqa-button-danger)').trigger('click');
     expect(reject).toHaveBeenCalled();
   });
+
+  it('uses "folder" as the kind when deleting a folder', () => {
+    const wrapper = mountConfirm({ record: { id: 'data', name: 'Data' }, kind: 'folder' });
+    expect(wrapper.text()).toContain('Delete folder');
+    expect(wrapper.text()).toContain('Data');
+  });
 });

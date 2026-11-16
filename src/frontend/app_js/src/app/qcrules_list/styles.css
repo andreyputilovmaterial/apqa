@@ -93,43 +93,98 @@
 .apqa-qcrules-entry-folder {
 }
 
-.apqa-qcrules-list-item {
+/* Rule card layout (rule_body.js). The card is the always-visible body inside
+   the `.apqa-qcrules-entry` box; the head is also the reorder drag surface. */
+.apqa-rule-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  /* Match the shared `.apqa-qcrules-entry` padding so the title and comment
-     stay at the same indent as the compact view and don't jump on expand. */
-  padding: 6px 8px;
 }
 
-.apqa-qcrules-list-item-head {
+.apqa-rule-card-head {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  /* No gap: the compact header also puts its note flush under the name, so a
-     gap here would make the title's first line jump down on expand. */
-  cursor: pointer;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  min-width: 0;
+  /* A touch swipe on the head stays a normal scroll; press-and-hold (see
+     rules_tree.js) starts a reorder. */
   touch-action: pan-y;
 }
 
-.apqa-qcrules-list-item-name {
+.apqa-rule-card-name {
   font-weight: 600;
   color: #333;
 }
 
-.apqa-qcrules-list-item-comment {
+.apqa-rule-card-comment {
   color: #888;
 }
 
-.apqa-qcrules-list-item-definition {
+.apqa-rule-card-comment::before {
+  content: "—";
+  margin: 0 6px;
+  color: #bbb;
+}
+
+/* Icon-only action row shared by rules and folders. */
+.apqa-record-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.apqa-record-action {
+  appearance: none;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  color: #555;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: 500ms all ease;
+}
+
+.apqa-record-action:hover {
+  color: var(--mdm-color-primary);
+}
+
+/* Delete is destructive: fade to red instead of the primary green. */
+.apqa-record-action-delete:hover {
+  color: var(--mdm-color-error);
+}
+
+/* Rule content: left chain, comparison op, right chain. */
+.apqa-rule-card-definition {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 0;
+  column-gap: 8px;
+  min-width: 0;
+}
+
+/* Shared meta row (tags + badges + created timestamp). */
+.apqa-record-meta {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  padding: 12px;
-  background: #f6f6f6;
-  border-radius: 7px;
-  margin-top: 0;
-  margin-bottom: 0;
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.apqa-record-tags {
+  color: #888;
+}
+
+.apqa-record-created {
+  color: #888;
 }
 
 
@@ -156,89 +211,16 @@
   font-size: 0.8rem;
 }
 
-/* In the compact header (a wrapping row) force the note onto its own line,
-   directly under the name/comment, without a gap above it. */
-.apqa-rule-compact-description .apqa-rule-unfinished-note,
-.apqa-rule-compact-description .apqa-rule-invalid-note {
+/* In the rule card head (a wrapping row) force the derived-mark note onto its
+   own line, directly under the name/comment, without a gap above it. */
+.apqa-rule-card-head .apqa-rule-unfinished-note,
+.apqa-rule-card-head .apqa-rule-invalid-note {
   flex-basis: 100%;
 }
 
-.apqa-qcrules-list-item-meta {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 10px;
-  color: #888;
-  font-size: 0.8rem;
-}
 
-@media all and (min-width: 900px) {
-  .apqa-qcrules-list-item-definition {
-    display: grid;
-    grid-template-columns: 1fr max-content 1fr;
-    align-items: start;
-    gap: 12px;
-  }
-}
 
-/* Compact QC-rule representation (rule_compact.js):
-   a single description line + a single definition line. */
-.apqa-rule-compact {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 
-.apqa-rule-compact-description {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: baseline;
-  min-width: 0;
-  cursor: pointer;
-  /* Keeps a touch swipe on the header a normal scroll; a press-and-hold (see
-     rules_tree.js) is what starts a reorder on touch. */
-  touch-action: pan-y;
-}
-
-.apqa-rule-compact-name {
-  font-weight: 600;
-  color: #333;
-}
-
-/* Arrow glyph next to the rule name in both the compact and the full view.
-   Down = collapsed (click to expand), up = expanded (click to collapse). */
-.apqa-rule-expand-icon {
-  margin-right: 6px;
-  color: #999;
-  font-weight: normal;
-  font-size: 0.9em;
-}
-
-.apqa-rule-compact-comment {
-  color: #888;
-}
-
-.apqa-rule-compact-comment::before {
-  content: "—";
-  margin: 0 6px;
-  color: #bbb;
-}
-
-.apqa-rule-compact-definition {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  /* Top-align the chip boxes (left chain, cmp op, right chain) so the cmp op
-     chip sits on the same visual line as the cmdlet chips — `baseline` left the
-     cmp op floating a few px above the cmdlet boxes. Row gap is 0: the chips'
-     own 3px bottom margin is the only vertical spacing between wrapped rows, so
-     it matches the 3px gap between chips that wrap inside a chain. */
-  align-items: flex-start;
-  row-gap: 0;
-  column-gap: 8px;
-  min-width: 0;
-}
 
 /* Folder aliases (alias_record.js) — plain "name: chain" rows shown inside an
    expanded folder in the rules tree. No borders/boxes: just a few tight lines
@@ -374,34 +356,7 @@
   transform: translateY(-2px);
 }
 
-.apqa-rule-body-actions {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 
-.apqa-rule-body-action {
-  padding: 4px 10px;
-  border: 1px solid #d0d0d0;
-  border-radius: 7px;
-  background: #fff;
-  color: #333;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.85rem;
-}
-
-.apqa-rule-body-action:hover {
-  border-color: #999;
-}
-
-/* Delete stays neutral by default and only turns red on hover, so it is not
-   inviting to click (an explicit, destructive action). */
-.apqa-rule-body-action-delete:hover {
-  border-color: #990000;
-  color: #990000;
-}
 
 /* Run-result banner shown above the Edit/Run/Delete actions after a rule has
    been run (results are cached in the page, keyed by rule id). Passed is green,
@@ -466,14 +421,18 @@
 /* A folder is the same box as a QC rule (it also carries `.apqa-qcrules-entry`);
    only its layout and the expand toggle differ. Mark/color highlighting is
    applied via the shared `.apqa-rules-tree-item` base + short mark classes. */
+.apqa-rules-tree-group-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .apqa-rules-tree-group-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  width: 100%;
   margin: 0;
-  appearance: none;
   color: #333;
   cursor: pointer;
   font: inherit;
@@ -488,10 +447,6 @@
   align-items: center;
   gap: 5px; /* reduced from 8px so that text in folder title after the [+] toggle is better aligned with rules below */
   min-width: 0;
-}
-
-.apqa-rules-tree-group-header:hover {
-  border-color: #999;
 }
 
 /* Mark highlights. The short, non-prefixed classes below (`xfail`, `skip`,

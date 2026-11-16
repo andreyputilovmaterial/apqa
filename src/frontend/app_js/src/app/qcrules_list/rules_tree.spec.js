@@ -22,8 +22,8 @@ function rule(name, group = '', extra = {}) {
   };
 }
 
-function group(name, parent = '', aliases = [], comment = '') {
-  return { id: name, name, parent, aliases, comment };
+function group(name, parent = '', aliases = [], comment = '', extra = {}) {
+  return { id: name, name, parent, aliases, comment, tags: [], markers: [], ...extra };
 }
 
 // `rules_tree` renders cmdlets through the globally-registered display
@@ -104,17 +104,16 @@ describe('RulesTree', () => {
     expect(wrapper.find('[data-node-key="g:extra"] .apqa-rules-tree-group-toggle').text()).toBe('[+]');
   });
 
-  it('keeps a rule expanded when the records prop reloads with the same id', async () => {
+  it('keeps the rule card rendered when the records prop reloads with the same id', async () => {
     const wrapper = mountTree({
       props: { groups: [], records: [rule('r1')] },
     });
 
-    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('click');
-    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(true);
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-rule-card').exists()).toBe(true);
 
     await wrapper.setProps({ records: [rule('r1')] });
 
-    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(true);
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-rule-card').exists()).toBe(true);
   });
 
   it('renders ungrouped rules directly, without a folder heading', () => {
@@ -199,15 +198,44 @@ describe('RulesTree', () => {
     expect(wrapper.text()).not.toContain('r1');
   });
 
-  it('forwards delete actions from an expanded rule', async () => {
+  it('forwards delete actions from a rule', async () => {
     const wrapper = mountTree({
       props: { groups: [], records: [rule('r1')] },
     });
-    await wrapper.find('.apqa-rule-compact-description').trigger('click');
-    await wrapper.find('.apqa-rule-body-action-delete').trigger('click');
+    await wrapper.find('.apqa-record-action-delete').trigger('click');
 
     expect(wrapper.emitted('delete')).toHaveLength(1);
     expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'r1' });
+  });
+
+  it('forwards edit-group, run-group and delete-group actions from a folder', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [] },
+    });
+
+    await wrapper.find('.apqa-record-action-edit').trigger('click');
+    await wrapper.find('.apqa-record-action-run').trigger('click');
+    await wrapper.find('.apqa-record-action-delete').trigger('click');
+
+    expect(wrapper.emitted('edit-group')).toHaveLength(1);
+    expect(wrapper.emitted('edit-group')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
+    expect(wrapper.emitted('run-group')).toHaveLength(1);
+    expect(wrapper.emitted('run-group')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
+    expect(wrapper.emitted('delete-group')).toHaveLength(1);
+    expect(wrapper.emitted('delete-group')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
+  });
+
+  it("shows a folder's own tags and markers in its meta row", () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data', '', [], '', { tags: ['counts'], markers: ['skip'] })],
+        records: [],
+      },
+    });
+
+    const meta = wrapper.find('.apqa-rules-tree-group .apqa-record-meta');
+    expect(meta.find('.apqa-record-tags').text()).toBe('counts');
+    expect(meta.find('.apqa-mark-badge').text()).toBe('skip');
   });
 
   it('assigns mark classes to rule leaves', () => {
@@ -398,7 +426,7 @@ describe('RulesTree', () => {
     });
 
     // Start dragging r1 from its header (desktop pointer: drag starts on move).
-    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('pointerdown');
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-card-head').trigger('pointerdown');
 
     // Move below every row, then release on the window (the tree listens globally).
     const move = new Event('pointermove');
@@ -436,34 +464,34 @@ describe('RulesTree', () => {
     });
   });
 
-  it('expands a rule on a plain header click (no drag)', async () => {
+  it('does not emit reorder on a plain rule-header click (no drag)', async () => {
     const wrapper = mountTree({
       props: { groups: [], records: [rule('r1')] },
     });
 
-    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('click');
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-card-head').trigger('click');
 
-    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(true);
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-rule-card').exists()).toBe(true);
     expect(wrapper.emitted('reorder')).toBeUndefined();
   });
 
-  it('does not toggle a rule after its header was dragged', async () => {
+  it('swallows the click after a rule header drag', async () => {
     const wrapper = mountTree({
       props: { groups: [], records: [rule('r1'), rule('r2')] },
     });
 
-    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('pointerdown');
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-card-head').trigger('pointerdown');
 
     const move = new Event('pointermove');
     move.clientY = 100;
     window.dispatchEvent(move);
     window.dispatchEvent(new Event('pointerup'));
 
-    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('click');
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-card-head').trigger('click');
 
     expect(wrapper.emitted('reorder')).toHaveLength(1);
-    // The swallowed click must not have expanded r1.
-    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(false);
+    // The swallowed click must not have changed the rule card.
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-rule-card').exists()).toBe(true);
   });
 
 });

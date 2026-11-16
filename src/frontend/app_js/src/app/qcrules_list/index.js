@@ -57,6 +57,8 @@ function toGroupRecord(group) {
     parent: group.parent || '',
     order: meta.order ?? 0,
     comment: meta.comment || '',
+    tags: Array.isArray(meta.tags) ? meta.tags.slice() : [],
+    markers: Array.isArray(meta.markers) ? meta.markers : [],
     aliases: Array.isArray(group.aliases) ? group.aliases.map(toAlias) : [],
     meta,
   };
@@ -84,7 +86,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @save="onSaveRule" @cancel="onCancelEdit" @reorder="onReorder" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @reorder="onReorder" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -477,6 +479,43 @@ const QcRulesList = {
       }
     }
 
+    async function onEditGroup(group) {
+      // Editing a folder (name/comment/tags) is a separate task; show a
+      // placeholder for now.
+      window.alert('Editing a folder is not implemented yet.');
+    }
+
+    async function onRunGroup(group) {
+      // Running a whole folder in sequence is a separate task; show a
+      // placeholder for now.
+      window.alert('Running a whole folder is not implemented yet.');
+    }
+
+    async function onDeleteGroup(group) {
+      const Confirm = defineComponent({
+        setup: (_, { attrs }) => () =>
+          h(RuleDeleteConfirm, { ...attrs, record: group, kind: 'folder' }),
+      });
+
+      let confirmed;
+      try {
+        confirmed = await createModal(Confirm);
+      } catch (e) {
+        // Modal dismissed — nothing to delete.
+        return;
+      }
+
+      if (!confirmed) return;
+
+      try {
+        await deleteJson(`/qc/groups/${encodeURIComponent(group.id)}`);
+        await load();
+      } catch (e) {
+        window.alert(`Failed to delete folder: ${e}`);
+        logError(`Failed to delete folder: ${e}`);
+      }
+    }
+
     async function onReorder(descriptor) {
       try {
         await postJson('/qc/reorder', descriptor);
@@ -507,6 +546,9 @@ const QcRulesList = {
       onEditRule,
       onRunRule,
       onDeleteRule,
+      onEditGroup,
+      onRunGroup,
+      onDeleteGroup,
       onSaveRule,
       onCancelEdit,
       onReorder,
