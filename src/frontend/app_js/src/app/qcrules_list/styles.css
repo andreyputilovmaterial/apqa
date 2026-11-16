@@ -231,6 +231,14 @@
   padding: 0;
 }
 
+/* Placeholder shown under an expanded folder that has no rules or sub-folders
+   (below its aliases, if any): same left indent as a real child would take. */
+.apqa-rules-tree-group-empty {
+  margin: var(--mdm-space-0-125x) 0 0 var(--mdm-space);
+  color: var(--mdm-color-muted);
+  font-size: 0.85rem;
+}
+
 .apqa-alias-record {
   display: flex;
   flex-direction: row;

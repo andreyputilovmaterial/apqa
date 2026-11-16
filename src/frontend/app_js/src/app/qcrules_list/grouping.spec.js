@@ -77,6 +77,18 @@ describe('buildGroupNodes', () => {
     expect(nodes.map((n) => n.name)).toEqual(['Empty']);
   });
 
+  it('marks whether a group node has children', () => {
+    const empty = buildGroupNodes([group('Empty')], []);
+    expect(empty.find((n) => n.kind === 'group').hasChildren).toBe(false);
+
+    const withRule = buildGroupNodes([group('Data')], [rule('r1', 'Data')]);
+    expect(withRule.find((n) => n.kind === 'group').hasChildren).toBe(true);
+
+    const withChild = buildGroupNodes([group('Data'), group('Metadata', 'Data')], []);
+    const data = withChild.find((n) => n.kind === 'group' && n.name === 'Data');
+    expect(data.hasChildren).toBe(true);
+  });
+
   it('carries folder aliases onto group nodes', () => {
     const aliases = [
       { name: 'survey_mdd', chain: [{ cmdlet: 'get-content-mdd', args: { path: 'x' } }] },

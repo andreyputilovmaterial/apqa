@@ -146,6 +146,49 @@ describe('RulesTree', () => {
     expect(wrapper.text()).toContain('path=x');
   });
 
+  it('shows a placeholder under an expanded folder with no children or aliases', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Empty')], records: [] },
+    });
+
+    expect(wrapper.text()).not.toContain('Nothing to show');
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+
+    expect(wrapper.text()).toContain('Nothing to show');
+    expect(wrapper.find('.apqa-rules-tree-group-empty').exists()).toBe(true);
+  });
+
+  it('does not show the empty placeholder for a folder with rules', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [rule('r1', 'Data')] },
+    });
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+
+    expect(wrapper.text()).toContain('r1');
+    expect(wrapper.find('.apqa-rules-tree-group-empty').exists()).toBe(false);
+  });
+
+  it('shows the empty placeholder below aliases for a folder with no children', async () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [
+          group('Data', '', [
+            { name: 'survey_mdd', chain: [{ cmdlet: 'get-content-mdd', args: { path: 'x' } }] },
+          ]),
+        ],
+        records: [],
+      },
+    });
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+
+    expect(wrapper.text()).toContain('survey_mdd');
+    expect(wrapper.text()).toContain('Nothing to show');
+    expect(wrapper.find('.apqa-rules-tree-group-empty').exists()).toBe(true);
+  });
+
   it('renders the folder comment next to the name', async () => {
     const wrapper = mountTree({
       props: { groups: [group('Data', '', [], 'Wave 69 checks')], records: [] },

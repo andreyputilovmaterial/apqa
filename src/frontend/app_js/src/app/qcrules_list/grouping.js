@@ -355,6 +355,7 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResu
       tags: node.tags || [],
       markers: node.markers || [],
       aliases: node.aliases || [],
+      hasChildren: node.children.length > 0 || node.rules.length > 0,
       depth,
       parents: parents.slice(),
       marks: groupMarks(node),

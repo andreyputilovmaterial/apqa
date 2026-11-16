@@ -88,6 +88,7 @@ const RulesTree = {
           <ul v-if="!collapsed[node.id] && node.aliases.length" class="apqa-rules-tree-aliases">
             <alias-record v-for="alias in node.aliases" :key="alias.name" :alias="alias" :cmdlets="cmdlets" />
           </ul>
+          <p v-if="!collapsed[node.id] && !node.hasChildren" class="apqa-rules-tree-group-empty">Nothing to show</p>
         </div>
       </li>
       <rule-record
