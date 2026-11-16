@@ -536,8 +536,10 @@ is declared **next to each registration** (never hardcoded in the frontend):
 - `src/cmdlets/registry.py` — `@cmdlets.register(name, kind=..., args=[...],
   help=..., permissions=[...])` stores a per-cmdlet entry. `permissions` is a
   list of permission-group names the cmdlet requires (usually empty; `filesystem`
-  for file readers, `network` for network requests) — currently declarative, not
-  enforced. `kind` is `'source'` (the cmdlet can be
+  for file readers, `network` for network requests); it is enforced at run time
+  by `src/cmdlets/chain_runner.py` against the session's in-memory
+  `src/user_settings.py` `UserSettings` allow-list (by default every group is
+  granted). `kind` is `'source'` (the cmdlet can be
   the first in a chain — it needs no piped value), `'processor'` (it transforms
   the piped value), or `'terminal'` (a validation/predicate cmdlet that answers
   a question about the piped value). `help` defaults to the function docstring.

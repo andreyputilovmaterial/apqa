@@ -2,6 +2,7 @@
 
 from .navigation import navigation_scope
 from .registry import cmdlets
+from ..user_settings import current_user_settings, user_settings_scope
 
 
 class ChainError(Exception):
@@ -19,12 +20,38 @@ class ChainError(Exception):
         super().__init__(message)
 
 
-def run_chain(chain, initial=None):
+class PermissionDeniedError(Exception):
+    """A cmdlet requires a permission group the session has not granted.
+
+    Carries the cmdlet name and the sorted list of required groups. Raised from
+    :func:`run_chain` before the cmdlet body executes, and wrapped in a
+    ``ChainError`` (with this as ``__cause__``) so the failing step stays
+    identifiable.
+    """
+
+    def __init__(self, cmdlet, required_groups):
+        self.cmdlet = cmdlet
+        self.required_groups = sorted(set(required_groups or ()))
+        super().__init__(
+            f'cmdlet {cmdlet!r} requires permission group(s): '
+            f'{", ".join(self.required_groups)}'
+        )
+
+
+def run_chain(chain, initial=None, settings=None):
     """Run a chain of cmdlets, threading each output into the next.
 
     ``chain`` is a list of cmdlet mappings ``{'cmdlet': <name>, 'args': {...}}``.
     The first cmdlet receives ``initial`` (``None`` by default, since source
     readers take their input from their own ``args``).
+
+    ``settings`` is the session's ``UserSettings`` allow-list (see
+    ``src/user_settings.py``), or ``None`` to grant every permission group (the
+    default). When omitted, the settings are inherited from the enclosing chain
+    run, so nested chains (``map``'s transform, ``where``'s predicate, operand
+    chains) are gated identically. A cmdlet whose declared permission groups
+    are not granted by ``settings`` does not run: a ``PermissionDeniedError`` is
+    raised and wrapped in a ``ChainError`` identifying the step.
 
     A failing cmdlet (including an unknown cmdlet name) raises `ChainError`
     identifying the step, with the original exception chained as ``__cause__``.
@@ -33,8 +60,10 @@ def run_chain(chain, initial=None):
     ``src/cmdlets/navigation.py``) so navigating cmdlets can record their step
     and a downstream ``filter`` can read the path that led to its input.
     """
+    if settings is None:
+        settings = current_user_settings()
     value = initial
-    with navigation_scope():
+    with navigation_scope(), user_settings_scope(settings):
         for index, step in enumerate(chain):
             if not isinstance(step, dict):
                 raise ValueError(
@@ -48,6 +77,7 @@ def run_chain(chain, initial=None):
             if not isinstance(args, dict):
                 raise ValueError(f"cmdlet {name!r}: args must be a mapping")
             try:
+                _check_permissions(name, settings)
                 value = cmdlets.get(name)(value, args)
             except ChainError:
                 raise
@@ -59,3 +89,12 @@ def run_chain(chain, initial=None):
                     message=f'cmdlet {name!r} (step {index}): {error}',
                 ) from error
     return value
+
+
+def _check_permissions(name, settings):
+    """Refuse to run ``name`` when its required groups are not granted."""
+    if settings is None:
+        return
+    required = (cmdlets.describe(name) or {}).get('permissions') or []
+    if not settings.is_permitted(required):
+        raise PermissionDeniedError(name, required)

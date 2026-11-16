@@ -23,8 +23,10 @@ The result is a block with exactly three fields:
                 header values are joined with ``", "``).
 
 Only ``http``/``https`` URLs are accepted (a minimal safety guard against
-``file://`` and other schemes; a full permission model is tracked in
-``docs/roadmap.md``). ``urllib.request`` is part of the Python standard library.
+``file://`` and other schemes). The broader permission model — the ``network``
+permission group declared on this cmdlet — is enforced by the chain runner
+against the session's ``UserSettings`` (see ``src/user_settings.py``).
+``urllib.request`` is part of the Python standard library.
 """
 
 from urllib.error import HTTPError, URLError

@@ -2,6 +2,8 @@
 
 This sections is to capture everything that comes to mind that should ideally be updated. Tasks listed here are not necessarily the highest priority.
 
+- (open question) User settings storage/scope: `src/user_settings.py` `UserSettings` is currently an in-memory placeholder held on the session `config` (`config['user_settings']`) — nothing is persisted yet. Undecided whether it belongs to the user globally, to the project, or to a user x project combination, and where it lives (database, local file, json). Until decided, it only carries the permission-group allow-list gating cmdlet execution.
+
 - (done — see `docs/qc-results-reporting.md`) Error visibility: a failing cmdlet now raises a `ChainError` naming the chain step (original exception chained as `__cause__`), and a *false* rule result now carries **diagnostic notes** with a data path (which field, which iteration) via `src/cmdlets/diagnostic.py` and `run_rule_with_report`; `validate-xml-compatible` records per-leaf notes.
 
 - (idea, not final) Rule-editor ergonomics for entering chains of `select-field`: autofocus the `field` input when `select-field` is chosen and let Enter append the next `select-field` (focusing its input), so a nested path (`fields -> SnifferData -> fields -> Cluster -> …`) is typed as one keyboard flow instead of re-picking `select-field` from the drop-down each step.

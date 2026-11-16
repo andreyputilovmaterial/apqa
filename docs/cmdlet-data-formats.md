@@ -441,9 +441,10 @@ served to the frontend by `GET /functionality/cmdlet-metadata` (see
 - a cmdlet also carries a `permissions` list — the permission groups it requires,
   sorted and de-duplicated, usually empty. The two groups defined today are
   `filesystem` (reads/touches physical files) and `network` (makes a network
-  request). This is currently **declarative only**: run-time enforcement against
-  a user-configured allow-list of granted groups is tracked in
-  `docs/roadmap.md`.
+  request). It is enforced at run time by the chain runner against the session's
+  in-memory `UserSettings` allow-list (`src/user_settings.py`): a cmdlet whose
+  groups are not granted does not run. By default every group is granted, so all
+  cmdlets run.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
 `strings` (a list of strings with add/remove rows), `json`, `literal-value` (the

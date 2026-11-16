@@ -34,6 +34,7 @@ if __package__:
     from .endpoints import endpoints
     from .rule_runner import run_rule, run_rule_with_report
     from .cmdlets.meta import get_cmdlet_metadata
+    from .user_settings import UserSettings
 else:
     # flat context: inlined with no parent package.
     from webserver_engine.webserve.src.webserver import Webserver
@@ -60,6 +61,7 @@ else:
     from endpoints import endpoints
     from rule_runner import run_rule, run_rule_with_report
     from cmdlets.meta import get_cmdlet_metadata
+    from user_settings import UserSettings
 
 if is_in_pinliner():
     from .GENERATED.HARDCODED import _CREDENTIALS_STR as credentials_str
@@ -141,6 +143,18 @@ def main(*argcs,**kwargs):
         )
 
     logger.info(f'{STDOUT_COLOR_GREEN}starting {script_name} at {time_start}{STDOUT_COLOR_RESET}')
+
+    # In-memory user settings for this session. Not persisted anywhere yet —
+    # a placeholder until it is decided whether settings belong to the user
+    # globally, to the project, or to a user x project combination.
+    user_settings = UserSettings()
+
+    def run_rule_for_session(rule):
+        return run_rule(rule, settings=user_settings)
+
+    def run_rule_with_report_for_session(rule):
+        return run_rule_with_report(rule, settings=user_settings)
+
     config = {
         'time_start': time_start,
         'script_name': script_name,
@@ -159,6 +173,8 @@ def main(*argcs,**kwargs):
             'is_webserver_multithreaded': CONFIG_WEBSERVER_MULTITHREADED,
         },
 
+        'user_settings': user_settings,
+
         'info': {},
         'warnings': [],
 
@@ -167,8 +183,8 @@ def main(*argcs,**kwargs):
             'HTTP403': HTTP403,
             'HTTP404': HTTP404,
             'get_help_pages': get_help_pages,
-            'run_rule': run_rule,
-            'run_rule_with_report': run_rule_with_report,
+            'run_rule': run_rule_for_session,
+            'run_rule_with_report': run_rule_with_report_for_session,
             'get_cmdlet_metadata': get_cmdlet_metadata,
         },
     }

@@ -83,8 +83,9 @@ def normalize_permissions(permissions):
 
     Group names are free-form strings; the two groups defined today are
     ``'filesystem'`` (reads/touches physical files) and ``'network'`` (makes a
-    network request). Enforcement is not wired yet — this is declarative
-    metadata for a future allow-list of granted groups.
+    network request). Enforcement happens at run time in
+    ``chain_runner.run_chain`` against the session's ``UserSettings`` (see
+    ``src/user_settings.py``).
     """
     if permissions is None:
         return []
@@ -121,8 +122,9 @@ class CmdletRegistry:
     - ``help`` — a short description shown in the editor; defaults to the
       function's docstring.
     - ``permissions`` — an optional list of permission-group names the cmdlet
-      requires (see :func:`normalize_permissions`); empty by default. Currently
-      declarative only — enforcement is future work.
+      requires (see :func:`normalize_permissions`); empty by default. Enforced
+      at run time by the chain runner against the session's ``UserSettings``
+      allow-list (see ``src/user_settings.py``).
     - ``compact`` / ``full`` — optional display specs (an ordered list of parts,
       see :func:`normalize_display`) describing how the cmdlet is rendered in the
       compact and full views; absent means the default ``name args`` rendering.
