@@ -57,6 +57,7 @@ def test_source_readers_are_marked_as_sources():
     assert kinds['get-content-mdd'] == 'source'
     assert kinds['get-content-text'] == 'source'
     assert kinds['get-content'] == 'source'
+    assert kinds['get-filesystem-obj-info'] == 'source'
     assert kinds['literal'] == 'source'
     # Processors cannot be the first cmdlet in a chain.
     assert kinds['as-date'] == 'processor'
@@ -84,6 +85,7 @@ def test_cmdlet_permission_groups():
         'get-content-text',
         'get-content-excel',
         'get-content-mdd',
+        'get-filesystem-obj-info',
     )
     for name in filesystem_readers:
         assert perms[name] == ['filesystem']
@@ -136,6 +138,11 @@ def test_cmdlet_display_specs():
         {'arg': 'path'},
     ]
     assert 'full' not in meta['get-content-excel']
+    assert meta['get-filesystem-obj-info']['compact'] == [
+        {'text': '[file]', 'role': 'logo'},
+        {'arg': 'path'},
+    ]
+    assert 'full' not in meta['get-filesystem-obj-info']
     # literal renders as its value only, in both forms.
     assert meta['literal']['compact'] == [{'arg': 'value'}]
     assert meta['literal']['full'] == [{'arg': 'value'}]

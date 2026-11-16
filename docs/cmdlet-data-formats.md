@@ -394,6 +394,13 @@ read their input from ``args``). Currently implemented:
 - **`get-content`** — a proxy/alias for `get-content-text`: same args, same
   result, kept so the familiar ``get-content`` name works for plain text files.
 
+- **`get-filesystem-obj-info`** — stats a filesystem object into a small block;
+  returns `sysmissing` when the path does not exist. Args: ``path`` (required).
+  Fields: ``type`` (`"file"`, `"directory"`, or `"other"`), ``size`` (bytes), and
+  ``mtime``/``ctime``/``birthtime`` (timezone-aware UTC date/times mapping
+  one-to-one onto ``os.stat_result``; ``birthtime`` is `sysmissing` where the
+  platform does not expose ``st_birthtime``). Stdlib only; no pip dependency.
+
 - **`get-content-mdd`** — reads an MDD metadata document into a hierarchical
   block. Args: ``path`` (required), ``open_method`` (``"open"`` or ``"join"``),
   ``context`` (label context name, a single string, default ``"Analysis"``;

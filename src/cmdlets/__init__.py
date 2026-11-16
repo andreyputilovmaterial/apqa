@@ -28,6 +28,7 @@ from . import get_content  # noqa: F401 - import registers the proxy for get-con
 from . import get_content_excel  # noqa: F401 - import registers the optional-dep cmdlet
 from . import get_content_mdd  # noqa: F401 - import registers the optional-dep cmdlet
 from . import get_content_network_fetch  # noqa: F401 - import registers the cmdlet
+from . import get_filesystem_obj_info  # noqa: F401 - import registers the cmdlet
 from . import is_sysmissing  # noqa: F401 - import registers the cmdlet
 from . import length  # noqa: F401 - import registers the cmdlet
 from . import literal  # noqa: F401 - import registers the cmdlet
