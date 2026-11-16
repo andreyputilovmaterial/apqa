@@ -27,3 +27,6 @@ from .endpoints_project import (
 from .endpoints_health import (
     handle_health,
 )
+from .endpoints_reorder import (
+    handle_reorder,
+)

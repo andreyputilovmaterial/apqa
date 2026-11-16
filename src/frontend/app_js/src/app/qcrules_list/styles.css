@@ -275,13 +275,45 @@
   align-items: flex-start;
 }
 
-/* Fixed left gutter (one column for the per-rule run tick) + the indented
-   content cell. Depth indentation lives on `.apqa-rules-tree-content`, not on
-   the `<li>`, so the gutter cell stays at the same x for every nesting depth
+/* Fixed left gutter (one column for the drag handle + the per-rule run tick) plus
+   the indented content cell. Depth indentation lives on `.apqa-rules-tree-content`,
+   not on the `<li>`, so the gutter cell stays at the same x for every nesting depth
    and all ticks line up in a single column. */
 .apqa-rules-tree-gutter {
-  flex: 0 0 var(--mdm-space);
-  min-width: var(--mdm-space);
+  flex: 0 0 auto;
+  min-width: calc(var(--mdm-space) + 18px);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* Drag handle: the only element that starts a drag. `touch-action: none` is
+   required so a touch drag fires pointermove instead of scrolling the page. */
+.apqa-rules-tree-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 21px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: #b6b6b6;
+  cursor: grab;
+  touch-action: none;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.apqa-rules-tree-handle:hover {
+  color: #666;
+}
+
+.apqa-rules-tree-handle:active {
+  cursor: grabbing;
 }
 
 .apqa-rules-tree-content {
@@ -297,6 +329,28 @@
 }
 
 .apqa-rules-tree-group {
+}
+
+/* Drag & drop feedback. The dragged row fades; the drop target shows a primary
+   accent on the edge (before/after) or a full outline (inside a folder). */
+.apqa-rules-tree-item.apqa-is-dragging {
+  opacity: 0.45;
+}
+
+.apqa-rules-tree-item.apqa-is-dragging .apqa-rules-tree-handle {
+  cursor: grabbing;
+}
+
+.apqa-rules-tree-item.apqa-is-drop-before {
+  box-shadow: inset 0 3px 0 0 var(--mdm-color-primary);
+}
+
+.apqa-rules-tree-item.apqa-is-drop-after {
+  box-shadow: inset 0 -3px 0 0 var(--mdm-color-primary);
+}
+
+.apqa-rules-tree-item.apqa-is-drop-inside {
+  box-shadow: inset 0 0 0 2px var(--mdm-color-primary);
 }
 
 .apqa-rule-body {

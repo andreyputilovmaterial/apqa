@@ -147,6 +147,117 @@ class DBFile:
             raise ValueError(f'rule with id already exists: {rule.id}')
         return rule
 
+    def reorder(self, kind, item_id, parent='', before=None):
+        """Move a rule or a group to a new position in the tree.
+
+        ``kind`` is ``'rule'`` or ``'group'``; ``item_id`` is the moved item's id
+        (unprefixed). ``parent`` is the **id** of the target folder/group, or
+        ``''``/``None`` for the top level. ``before`` is the sibling the item is
+        inserted *before*, encoded with a kind prefix to stay unambiguous across
+        the rule/group id spaces (``r:<rule-id>`` / ``g:<group-id>``); ``None``/
+        ``''`` appends at the end of ``parent``'s children.
+
+        Sibling ordering is the same as the UI: within one parent, sub-folders and
+        rules share one ``meta.order`` space (ties keep insertion order, sub-folders
+        before rules). After the move, every sibling under the target parent is
+        renumbered to consecutive integers (``0..n-1``) so the stored orders stay
+        clean and drift-free. Only the target parent's children are touched.
+
+        Returns the moved ``Rule``/``Group`` (its ``group``/``parent`` and
+        ``meta.order`` are updated in place and persisted by the caller via
+        :meth:`save`).
+        """
+        kind = f'{kind}'
+        item_id = f'{item_id}'
+
+        if kind not in ('rule', 'group'):
+            raise ValueError(f"unknown kind: {kind!r}")
+
+        parent = self.resolve_group_ref('' if parent in (None, '') else parent)
+
+        if kind == 'rule':
+            if not self.has_rule(item_id):
+                raise KeyError(f'rule not found: {item_id}')
+            item = self.get_rule(item_id)
+            siblings = []
+            for rule in self.list_rules():
+                if rule.group == parent and rule.id != item_id:
+                    siblings.append(('rule', rule))
+            for group in self.list_groups():
+                if group.parent == parent:
+                    siblings.append(('group', group))
+        else:
+            if not self.has_group(item_id):
+                raise KeyError(f'group not found: {item_id}')
+            item = self.get_group(item_id)
+            parent = self._validate_group_parent(item, parent)
+            siblings = []
+            for group in self.list_groups():
+                if group.parent == parent and group.id != item_id:
+                    siblings.append(('group', group))
+            for rule in self.list_rules():
+                if rule.group == parent:
+                    siblings.append(('rule', rule))
+
+        before_kind = None
+        before_id = None
+        if before not in (None, ''):
+            before = f'{before}'
+            if before.startswith('r:'):
+                before_kind, before_id = 'rule', before[2:]
+            elif before.startswith('g:'):
+                before_kind, before_id = 'group', before[2:]
+            else:
+                raise ValueError(
+                    f'invalid before reference: {before!r} '
+                    f'(expected r:<id> or g:<id>)'
+                )
+
+        def order_of(obj):
+            meta = obj.meta or {}
+            value = meta.get('order')
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return 0.0
+
+        # Stable sort matching the UI tie-break: sub-folders before rules on an
+        # equal order, insertion order within each kind.
+        def sort_key(entry):
+            entry_kind, obj = entry
+            return (order_of(obj), 0 if entry_kind == 'group' else 1)
+
+        ordered = sorted(siblings, key=sort_key)
+
+        if before_id is not None:
+            insert_at = None
+            for index, (entry_kind, obj) in enumerate(ordered):
+                if entry_kind == before_kind and obj.id == before_id:
+                    insert_at = index
+                    break
+            if insert_at is None:
+                raise ValueError(f'sibling not found under parent: {before!r}')
+        else:
+            insert_at = len(ordered)
+
+        ordered.insert(insert_at, (kind, item))
+
+        for position, (entry_kind, obj) in enumerate(ordered):
+            meta = dict(obj.meta or {})
+            meta['order'] = position
+            if entry_kind == 'rule':
+                if entry_kind == kind and obj.id == item_id:
+                    self.update_rule(obj.id, meta=meta, group=parent)
+                else:
+                    self.update_rule(obj.id, meta=meta)
+            else:
+                if entry_kind == kind and obj.id == item_id:
+                    self.update_group(obj.id, meta=meta, parent=parent)
+                else:
+                    self.update_group(obj.id, meta=meta)
+
+        return item
+
     def _validate_group_parent(self, group, parent):
         """Return the canonical parent id, or raise on an invalid reference.
 

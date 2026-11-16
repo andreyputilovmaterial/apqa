@@ -84,7 +84,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @save="onSaveRule" @cancel="onCancelEdit" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @save="onSaveRule" @cancel="onCancelEdit" @reorder="onReorder" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -473,6 +473,16 @@ const QcRulesList = {
       }
     }
 
+    async function onReorder(descriptor) {
+      try {
+        await postJson('/qc/reorder', descriptor);
+        await load();
+      } catch (e) {
+        window.alert(`Failed to reorder: ${e}`);
+        logError(`Failed to reorder: ${e}`);
+      }
+    }
+
     onMounted(load);
 
     return {
@@ -495,6 +505,7 @@ const QcRulesList = {
       onDeleteRule,
       onSaveRule,
       onCancelEdit,
+      onReorder,
     };
   },
 };

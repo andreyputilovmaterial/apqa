@@ -1,9 +1,10 @@
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, onUnmounted, reactive, ref, watch } from 'vue';
 
 import AliasRecord from './alias_record';
 import MarksBadges from './marks_badges';
 import RuleRecord from './rule_record';
 import { buildGroupNodes } from './grouping';
+import { moveDescriptor } from './reorder';
 import { runTickFor } from './run_result';
 
 // Foldable tree of QC rules: renders folders (groups) and rules as a single
@@ -27,7 +28,7 @@ const RulesTree = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'reorder'],
 
   components: {
     'alias-record': AliasRecord,
@@ -36,11 +37,19 @@ const RulesTree = {
   },
 
   template: `
-<div class="apqa-rules-tree">
+<div ref="rootEl" class="apqa-rules-tree">
   <ul class="apqa-rules-tree-list">
     <template v-for="node in pagedNodes" :key="node.key">
-      <li v-if="node.kind === 'group'" class="apqa-rules-tree-item apqa-rules-tree-group" :class="node.markClasses" :style="{ '--rules-tree-depth': node.depth }">
-        <span class="apqa-rules-tree-gutter" aria-hidden="true">
+      <li v-if="node.kind === 'group'" class="apqa-rules-tree-item apqa-rules-tree-group" :class="itemClasses(node)" :data-node-key="node.key" :style="{ '--rules-tree-depth': node.depth }">
+        <span class="apqa-rules-tree-gutter">
+          <button
+            type="button"
+            class="apqa-rules-tree-handle"
+            aria-label="Drag to reorder"
+            @pointerdown="onHandleDown(node, $event)"
+          >
+            <i class="ri-drag-move-2-line" aria-hidden="true"></i>
+          </button>
           <span v-if="node.tick" class="apqa-rule-run-tick" :class="node.tick.cls" :title="node.tick.title">
             <i v-if="node.tick.icon" :class="node.tick.icon"></i>
             <span v-else-if="node.tick.text" class="apqa-run-tick-text">{{ node.tick.text }}</span>
@@ -71,12 +80,17 @@ const RulesTree = {
       <rule-record
         v-else
         :record="node.record"
+        :node-key="node.key"
         :style="{ '--rules-tree-depth': node.depth }"
         :editing-id="editingId"
         :run-results="runResults"
         :cmdlets="cmdlets"
         :ops="ops"
         :tag-suggestions="tagSuggestions"
+        :dragging-key="drag.draggingKey"
+        :drop-target-key="drag.targetKey"
+        :drop-position="drag.position"
+        @handle-down="onRuleHandleDown"
         @edit="$emit('edit', $event)"
         @run="$emit('run', $event)"
         @delete="$emit('delete', $event)"
@@ -104,6 +118,12 @@ const RulesTree = {
   setup(props, { emit }) {
     const collapsed = reactive({});
     const page = ref(0);
+    const rootEl = ref(null);
+
+    // Drag state. `draggingKey` is the `key` of the node being dragged; while it
+    // is set, `targetKey`/`position` describe the current drop target
+    // (`position` is 'before' | 'after' | 'inside').
+    const drag = reactive({ draggingKey: '', targetKey: '', position: '' });
 
     // Every folder starts folded. Re-fold whenever the group set is (re)loaded,
     // e.g. after creating/renaming/deleting a group via the page — but skip the
@@ -120,6 +140,11 @@ const RulesTree = {
     );
 
     const nodes = computed(() => buildGroupNodes(props.groups, props.records, props.cmdlets, props.ops, props.runResults));
+    const nodeByKey = computed(() => {
+      const map = new Map();
+      for (const node of nodes.value) map.set(node.key, node);
+      return map;
+    });
     const visibleNodes = computed(() =>
       nodes.value.filter((node) => !node.parents.some((parent) => collapsed[parent])),
     );
@@ -187,7 +212,119 @@ const RulesTree = {
       emit('cancel', record);
     }
 
-    return { collapsed, page, numPages, pagedNodes, toggle, goToPage, onSave, onCancel };
+    function itemClasses(node) {
+      const classes = [...(node.markClasses || [])];
+      if (drag.draggingKey === node.key) classes.push('apqa-is-dragging');
+      if (drag.targetKey === node.key && drag.position) {
+        classes.push(`apqa-is-drop-${drag.position}`);
+      }
+      return classes;
+    }
+
+    // ---- drag & drop ---------------------------------------------------------
+
+    function isPrimaryPointer(event) {
+      if (event.pointerType === 'mouse' && event.button !== 0) return false;
+      return true;
+    }
+
+    function onRuleHandleDown(payload) {
+      if (!payload || !payload.record) return;
+      const node = nodeByKey.value.get(`r:${payload.record.id}`);
+      if (node) onHandleDown(node, payload.event);
+    }
+
+    function onHandleDown(node, event) {
+      if (!node || !isPrimaryPointer(event)) return;
+      event.preventDefault();
+      drag.draggingKey = node.key;
+      drag.targetKey = '';
+      drag.position = '';
+      window.addEventListener('pointermove', onPointerMove, { passive: false });
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    }
+
+    function onPointerMove(event) {
+      event.preventDefault();
+      const drop = computeDropTarget(event.clientY);
+      if (drop.targetKey !== drag.targetKey || drop.position !== drag.position) {
+        drag.targetKey = drop.targetKey;
+        drag.position = drop.position;
+      }
+    }
+
+    function onPointerUp() {
+      const descriptor = currentDescriptor();
+      cleanupDrag();
+      if (descriptor) emit('reorder', descriptor);
+    }
+
+    function currentDescriptor() {
+      const dragged = nodeByKey.value.get(drag.draggingKey);
+      const target = nodeByKey.value.get(drag.targetKey);
+      if (!dragged || !target || !drag.position) return null;
+      return moveDescriptor(dragged, target, drag.position, nodes.value);
+    }
+
+    function resolvePosition(key, y, rect) {
+      const node = nodeByKey.value.get(key);
+      if (!node) return '';
+      const height = rect.height || 1;
+      if (y < rect.top + height * 0.25) return 'before';
+      if (y > rect.top + height * 0.75) return 'after';
+      if (node.kind === 'group') return 'inside';
+      return y < rect.top + height / 2 ? 'before' : 'after';
+    }
+
+    function computeDropTarget(y) {
+      const root = rootEl.value;
+      if (!root) return { targetKey: '', position: '' };
+      const items = Array.from(root.querySelectorAll('.apqa-rules-tree-item'));
+      const GAP = 4;
+      let first = null;
+      let last = null;
+      for (const el of items) {
+        const key = el.getAttribute('data-node-key');
+        if (!key || key === drag.draggingKey) continue;
+        const rect = el.getBoundingClientRect();
+        if (!first || rect.top < first.rect.top) first = { key, rect };
+        if (!last || rect.bottom > last.rect.bottom) last = { key, rect };
+        if (y >= rect.top - GAP && y <= rect.bottom + GAP) {
+          return { targetKey: key, position: resolvePosition(key, y, rect) };
+        }
+      }
+      if (first && y < first.rect.top) return { targetKey: first.key, position: 'before' };
+      if (last && y > last.rect.bottom) return { targetKey: last.key, position: 'after' };
+      return { targetKey: '', position: '' };
+    }
+
+    function cleanupDrag() {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      drag.draggingKey = '';
+      drag.targetKey = '';
+      drag.position = '';
+    }
+
+    onUnmounted(cleanupDrag);
+
+    return {
+      rootEl,
+      collapsed,
+      page,
+      numPages,
+      pagedNodes,
+      drag,
+      itemClasses,
+      toggle,
+      goToPage,
+      onSave,
+      onCancel,
+      onHandleDown,
+      onRuleHandleDown,
+    };
   },
 };
 

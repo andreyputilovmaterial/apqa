@@ -343,4 +343,36 @@ describe('RulesTree', () => {
     expect(wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick').exists()).toBe(false);
   });
 
+  it('emits reorder when a rule is dragged below another and dropped', async () => {
+    const wrapper = mountTree({
+      props: { groups: [], records: [rule('r1'), rule('r2')] },
+    });
+
+    // Start dragging r1 by its handle.
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rules-tree-handle').trigger('pointerdown');
+
+    // Move below every row, then release on the window (the tree listens globally).
+    const move = new Event('pointermove');
+    move.clientY = 100;
+    window.dispatchEvent(move);
+    window.dispatchEvent(new Event('pointerup'));
+
+    expect(wrapper.emitted('reorder')).toHaveLength(1);
+    expect(wrapper.emitted('reorder')[0][0]).toEqual({
+      kind: 'rule',
+      id: 'r1',
+      parent: '',
+      before: null,
+    });
+  });
+
+  it('renders a drag handle on both rule rows and folder rows', () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [rule('r1'), rule('r2', 'Data')] },
+    });
+
+    expect(wrapper.find('[data-node-key="g:data"] .apqa-rules-tree-handle').exists()).toBe(true);
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-rules-tree-handle').exists()).toBe(true);
+  });
+
 });

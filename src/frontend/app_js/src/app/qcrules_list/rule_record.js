@@ -12,22 +12,34 @@ import { runTickFor } from './run_result';
 const RuleRecord = {
   props: {
     record: { type: Object, required: true },
+    nodeKey: { type: String, default: '' },
     editingId: { type: String, default: '' },
     runResults: { type: Object, default: () => ({}) },
     cmdlets: { type: Array, default: () => [] },
     ops: { type: Array, default: () => [] },
     tagSuggestions: { type: Array, default: () => [] },
+    draggingKey: { type: String, default: '' },
+    dropTargetKey: { type: String, default: '' },
+    dropPosition: { type: String, default: '' },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'handle-down'],
 
   components: {
     'rule-body': RuleBody,
   },
 
   template: `
-<li :class="classes">
+<li :class="classes" :data-node-key="nodeKey">
   <span class="apqa-rules-tree-gutter">
+    <button
+      type="button"
+      class="apqa-rules-tree-handle"
+      aria-label="Drag to reorder"
+      @pointerdown="onHandleDown"
+    >
+      <i class="ri-drag-move-2-line" aria-hidden="true"></i>
+    </button>
     <span class="apqa-rule-run-tick" :class="tick.cls" :title="tick.title">
       <i v-if="tick.icon" :class="tick.icon"></i>
       <span v-else-if="tick.text" class="apqa-run-tick-text">{{ tick.text }}</span>
@@ -66,12 +78,19 @@ const RuleRecord = {
         filterMeta && Array.isArray(filterMeta.cssClasses)
           ? filterMeta.cssClasses
           : [];
-      return [
+      const result = [
         'apqa-rules-tree-item',
         'apqa-rule-record',
         ...markClassesForRecord(props.record, props.cmdlets, props.ops),
         ...filterClasses,
       ];
+      if (props.nodeKey && props.draggingKey === props.nodeKey) {
+        result.push('apqa-is-dragging');
+      }
+      if (props.nodeKey && props.dropTargetKey === props.nodeKey && props.dropPosition) {
+        result.push(`apqa-is-drop-${props.dropPosition}`);
+      }
+      return result;
     });
 
     const runResult = computed(() => props.runResults[props.record.id] || null);
@@ -89,7 +108,11 @@ const RuleRecord = {
       emit('cancel', record);
     }
 
-    return { expanded, editing, classes, tick, onSave, onCancel };
+    function onHandleDown(event) {
+      emit('handle-down', { record: props.record, event });
+    }
+
+    return { expanded, editing, classes, tick, onSave, onCancel, onHandleDown };
   },
 };
 
