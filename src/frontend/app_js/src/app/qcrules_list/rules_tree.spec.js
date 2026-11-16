@@ -189,7 +189,7 @@ describe('RulesTree', () => {
     expect(wrapper.find('.apqa-rules-tree-group-empty').exists()).toBe(true);
   });
 
-  it('renders the folder comment next to the name', async () => {
+  it('renders the folder comment on its own line', async () => {
     const wrapper = mountTree({
       props: { groups: [group('Data', '', [], 'Wave 69 checks')], records: [] },
     });

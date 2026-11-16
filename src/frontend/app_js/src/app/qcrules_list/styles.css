@@ -103,9 +103,8 @@
 
 .apqa-rule-card-head {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
   /* A touch swipe on the head stays a normal scroll; press-and-hold (see
      rules_tree.js) starts a reorder. */
@@ -117,14 +116,9 @@
   color: #333;
 }
 
+/* Rule description/comment, shown on its own line under the rule name. */
 .apqa-rule-card-comment {
   color: #888;
-}
-
-.apqa-rule-card-comment::before {
-  content: "—";
-  margin: 0 6px;
-  color: #bbb;
 }
 
 /* Icon-only action row shared by rules and folders. */
@@ -210,17 +204,6 @@
   color: #888;
   font-size: 0.8rem;
 }
-
-/* In the rule card head (a wrapping row) force the derived-mark note onto its
-   own line, directly under the name/comment, without a gap above it. */
-.apqa-rule-card-head .apqa-rule-unfinished-note,
-.apqa-rule-card-head .apqa-rule-invalid-note {
-  flex-basis: 100%;
-}
-
-
-
-
 
 /* Folder aliases (alias_record.js) — plain "name: chain" rows shown inside an
    expanded folder in the rules tree. No borders/boxes: just a few tight lines
@@ -503,21 +486,10 @@
   white-space: nowrap;
 }
 
-/* Folder description/comment, shown inline next to the folder name (mirrors the
-   rule's compact comment). Truncates instead of wrapping so the one-line folder
-   heading stays a single line. */
+/* Folder description/comment, shown on its own line under the folder name. */
 .apqa-rules-tree-group-comment {
   color: #888;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.apqa-rules-tree-group-comment::before {
-  content: "—";
-  margin: 0 6px;
-  color: #bbb;
 }
 
 /* Folder mark summary: "includes rules marked …" preceding the badges, so it is
