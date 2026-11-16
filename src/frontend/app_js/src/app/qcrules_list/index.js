@@ -7,6 +7,7 @@ import { createModal } from '@/common_components/modals/modals';
 import RuleRecord from './rule_record';
 import RulesTree from './rules_tree';
 import RuleForm from './rule_form';
+import GroupForm from './group_form';
 import RuleDeleteConfirm from './rule_delete_confirm';
 
 import './styles.css';
@@ -55,6 +56,7 @@ function toGroupRecord(group) {
     name: group.name || '',
     parent: group.parent || '',
     order: meta.order ?? 0,
+    comment: meta.comment || '',
     aliases: Array.isArray(group.aliases) ? group.aliases.map(toAlias) : [],
     meta,
   };
@@ -74,7 +76,7 @@ const QcRulesList = {
   <template v-else>
     <div class="apqa-qcrules-page-toolbar">
       <button type="button" class="apqa-qcrules-page-button apqa-qcrules-page-button-primary" @click="createRule">Create new QC rule</button>
-      <button type="button" class="apqa-qcrules-page-button" @click="createGroup">Create group</button>
+      <button type="button" class="apqa-qcrules-page-button" @click="createFolder">Create folder</button>
       <button type="button" class="apqa-qcrules-page-button" @click="createAlias">Add alias</button>
     </div>
 
@@ -144,19 +146,6 @@ const QcRulesList = {
     const existingRuleIds = computed(() =>
       records.value.map((record) => record.id).filter(Boolean),
     );
-
-    // Resolve a user-typed group reference (display name or id) to the group id
-    // stored on rules/groups. Unknown values are passed through for the backend
-    // to reject with a clear message.
-    function groupIdFor(value) {
-      const input = (value || '').trim();
-      if (!input) return '';
-      const byName = groups.value.find((group) => group.name === input);
-      if (byName) return byName.id;
-      const byId = groups.value.find((group) => group.id === input);
-      if (byId) return byId.id;
-      return input;
-    }
 
     async function requestJson(url) {
       const response = await fetch(url);
@@ -279,24 +268,37 @@ const QcRulesList = {
       }
     }
 
-    async function createGroup() {
-      const name = window.prompt('New group name');
-      if (name == null || name.trim() === '') return;
-      let parent = '';
-      if (groups.value.length) {
-        const answer = window.prompt(
-          `Parent group for "${name.trim()}"? (leave empty for top-level)\nExisting groups: ${groupNames.value}`,
-          '',
-        );
-        if (answer == null) return;
-        parent = groupIdFor(answer);
-      }
+    async function createFolder() {
+      const MyForm = defineComponent({
+        setup: (_, { attrs }) => () => h(GroupForm, { ...attrs }),
+      });
+
+      let payload;
       try {
-        await postJson('/qc/groups', { name: name.trim(), parent });
+        payload = await createModal(MyForm);
+      } catch (e) {
+        // Modal dismissed — nothing to create.
+        return;
+      }
+
+      // Append the new folder at the end of the top-level list: give it an order
+      // just past the largest existing order (rules and folders share one order
+      // space). Without an explicit order it would sort first, not last.
+      let maxOrder = 0;
+      for (const record of records.value) {
+        if (record.order > maxOrder) maxOrder = record.order;
+      }
+      for (const group of groups.value) {
+        if (group.order > maxOrder) maxOrder = group.order;
+      }
+      payload.meta = { ...(payload.meta || {}), order: maxOrder + 1 };
+
+      try {
+        await postJson('/qc/groups', payload);
         await load();
       } catch (e) {
-        window.alert(`Failed to create group: ${e}`);
-        logError(`Failed to create group: ${e}`);
+        window.alert(`Failed to create folder: ${e}`);
+        logError(`Failed to create folder: ${e}`);
       }
     }
 
@@ -486,7 +488,7 @@ const QcRulesList = {
       tagSuggestions,
       load,
       createRule,
-      createGroup,
+      createFolder,
       createAlias,
       onEditRule,
       onRunRule,

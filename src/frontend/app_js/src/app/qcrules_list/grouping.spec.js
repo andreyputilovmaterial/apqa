@@ -25,8 +25,8 @@ function rule(name, group = '', order = 0, extra = {}) {
   };
 }
 
-function group(name, parent = '', order = 0, aliases = []) {
-  return { id: name, name, parent, order, aliases };
+function group(name, parent = '', order = 0, aliases = [], comment = '') {
+  return { id: name, name, parent, order, aliases, comment };
 }
 
 describe('buildGroupNodes', () => {
@@ -84,6 +84,12 @@ describe('buildGroupNodes', () => {
     const nodes = buildGroupNodes([group('Data', '', 0, aliases)], []);
     const node = nodes.find((n) => n.kind === 'group');
     expect(node.aliases).toEqual(aliases);
+  });
+
+  it('carries the folder comment onto group nodes', () => {
+    const nodes = buildGroupNodes([group('Data', '', 0, [], 'Wave 69 checks')], []);
+    const node = nodes.find((n) => n.kind === 'group');
+    expect(node.comment).toBe('Wave 69 checks');
   });
 
   it('treats a group with a missing parent as a root', () => {

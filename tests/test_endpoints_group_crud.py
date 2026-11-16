@@ -66,6 +66,15 @@ def test_create_and_list(config):
     assert [g['id'] for g in data['groups']] == ['data']
 
 
+def test_create_group_with_comment(config):
+    status, data = call(config, 'POST', '/qc/groups', {
+        'name': 'Data',
+        'meta': {'comment': 'Wave 69 checks'},
+    })
+    assert status == 201
+    assert data['group']['meta']['comment'] == 'Wave 69 checks'
+
+
 def test_create_duplicate_name_dedups_id(config):
     call(config, 'POST', '/qc/groups', {'name': 'Data'})
     status, data = call(config, 'POST', '/qc/groups', {'name': 'Data'})

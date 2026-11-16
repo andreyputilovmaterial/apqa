@@ -56,6 +56,7 @@ const RulesTree = {
             <span class="apqa-rules-tree-group-header-row">
               <span class="apqa-rules-tree-group-toggle" aria-hidden="true">{{ collapsed[node.id] ? '[+]' : '[-]' }}</span>
               <span class="apqa-rules-tree-group-name">{{ node.name }}</span>
+              <span v-if="node.comment" class="apqa-rules-tree-group-comment">{{ node.comment }}</span>
             </span>
             <span v-if="node.marks.length" class="apqa-rules-tree-group-marks">
               <span class="apqa-rules-tree-group-marks-label">includes rules marked</span>

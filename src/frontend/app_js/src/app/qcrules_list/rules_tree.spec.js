@@ -22,8 +22,8 @@ function rule(name, group = '', extra = {}) {
   };
 }
 
-function group(name, parent = '', aliases = []) {
-  return { id: name, name, parent, aliases };
+function group(name, parent = '', aliases = [], comment = '') {
+  return { id: name, name, parent, aliases, comment };
 }
 
 // `rules_tree` renders cmdlets through the globally-registered display
@@ -96,6 +96,14 @@ describe('RulesTree', () => {
     expect(wrapper.text()).toContain('survey_mdd');
     expect(wrapper.text()).toContain('get-content-mdd');
     expect(wrapper.text()).toContain('path=x');
+  });
+
+  it('renders the folder comment next to the name', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data', '', [], 'Wave 69 checks')], records: [] },
+    });
+
+    expect(wrapper.find('.apqa-rules-tree-group-comment').text()).toBe('Wave 69 checks');
   });
 
   it('keeps child rules hidden while a parent folder is folded', async () => {

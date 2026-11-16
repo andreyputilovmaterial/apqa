@@ -1,0 +1,52 @@
+/* The group form is a normal content modal: the shared shell scrolls the whole
+   content (fields + actions together) when it is taller than the viewport.
+   Mirrors the rule form's field styling under a `group`-prefixed namespace. */
+.apqa-group-form-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.apqa-group-form-error {
+  color: #cc0000;
+}
+
+.apqa-group-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apqa-group-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apqa-group-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.apqa-group-form-field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.apqa-group-form-required {
+  color: #990000;
+}
+
+.apqa-group-form-input {
+  font: inherit;
+  padding: 5px 7px;
+  border: 1px solid #d0d0d0;
+  border-radius: 7px;
+  background: #fff;
+  color: #333;
+}

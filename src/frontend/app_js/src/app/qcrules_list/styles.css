@@ -512,6 +512,23 @@
   white-space: nowrap;
 }
 
+/* Folder description/comment, shown inline next to the folder name (mirrors the
+   rule's compact comment). Truncates instead of wrapping so the one-line folder
+   heading stays a single line. */
+.apqa-rules-tree-group-comment {
+  color: #888;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apqa-rules-tree-group-comment::before {
+  content: "—";
+  margin: 0 6px;
+  color: #bbb;
+}
+
 /* Folder mark summary: "includes rules marked …" preceding the badges, so it is
    clear the folder itself is not marked but contains rules that are. */
 .apqa-rules-tree-group-marks {
