@@ -109,6 +109,7 @@
   /* No gap: the compact header also puts its note flush under the name, so a
      gap here would make the title's first line jump down on expand. */
   cursor: pointer;
+  touch-action: pan-y;
 }
 
 .apqa-qcrules-list-item-name {
@@ -195,6 +196,9 @@
   align-items: baseline;
   min-width: 0;
   cursor: pointer;
+  /* Keeps a touch swipe on the header a normal scroll; a press-and-hold (see
+     rules_tree.js) is what starts a reorder on touch. */
+  touch-action: pan-y;
 }
 
 .apqa-rule-compact-name {
@@ -273,6 +277,8 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+  /* Space between the fixed gutter (run tick) and the rule/folder content. */
+  gap: 10px;
 }
 
 /* Fixed left gutter (one column for the drag handle + the per-rule run tick) plus
@@ -281,39 +287,10 @@
    and all ticks line up in a single column. */
 .apqa-rules-tree-gutter {
   flex: 0 0 auto;
-  min-width: calc(var(--mdm-space) + 18px);
+  min-width: 21px;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 4px;
-}
-
-/* Drag handle: the only element that starts a drag. `touch-action: none` is
-   required so a touch drag fires pointermove instead of scrolling the page. */
-.apqa-rules-tree-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 14px;
-  height: 21px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  color: #b6b6b6;
-  cursor: grab;
-  touch-action: none;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.apqa-rules-tree-handle:hover {
-  color: #666;
-}
-
-.apqa-rules-tree-handle:active {
-  cursor: grabbing;
 }
 
 .apqa-rules-tree-content {
@@ -335,10 +312,6 @@
    accent on the edge (before/after) or a full outline (inside a folder). */
 .apqa-rules-tree-item.apqa-is-dragging {
   opacity: 0.45;
-}
-
-.apqa-rules-tree-item.apqa-is-dragging .apqa-rules-tree-handle {
-  cursor: grabbing;
 }
 
 .apqa-rules-tree-item.apqa-is-drop-before {
@@ -505,6 +478,7 @@
   cursor: pointer;
   font: inherit;
   text-align: left;
+  touch-action: pan-y;
 }
 
 /* First line of a folder heading: the [+]/[-] toggle and the folder name. */

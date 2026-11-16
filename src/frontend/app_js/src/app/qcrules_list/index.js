@@ -156,7 +156,11 @@ const QcRulesList = {
     }
 
     async function load() {
-      loading.value = true;
+      // `loading` is initialized to true and only ever cleared below, so the
+      // spinner shows for the first load. Do not re-set it to true on later
+      // reloads (create/delete/save/reorder): toggling it would unmount the
+      // rules tree (`v-if="loading"`) and reset every folder's folded state and
+      // every rule's expanded state.
       loadError.value = '';
       try {
         const [rulesData, groupsData, metadata] = await Promise.all([

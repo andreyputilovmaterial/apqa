@@ -68,6 +68,55 @@ describe('RulesTree', () => {
     expect(wrapper.text()).not.toContain('r1');
   });
 
+  it('keeps folders expanded when the groups prop reloads with the same ids (reorder)', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('data')], records: [rule('r1', 'data')] },
+    });
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+    expect(wrapper.text()).toContain('r1');
+
+    // The page reloads groups + records after a reorder POST.
+    await wrapper.setProps({
+      groups: [group('data')],
+      records: [rule('r1', 'data')],
+    });
+
+    expect(wrapper.text()).toContain('r1');
+    expect(wrapper.text()).toContain('[-]');
+  });
+
+  it('folds a newly added folder while leaving existing folders untouched', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('data')], records: [rule('r1', 'data')] },
+    });
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+    expect(wrapper.text()).toContain('r1');
+
+    await wrapper.setProps({
+      groups: [group('data'), group('extra')],
+      records: [rule('r1', 'data')],
+    });
+
+    // data stays expanded; the new extra folder starts folded.
+    expect(wrapper.text()).toContain('r1');
+    expect(wrapper.find('[data-node-key="g:extra"] .apqa-rules-tree-group-toggle').text()).toBe('[+]');
+  });
+
+  it('keeps a rule expanded when the records prop reloads with the same id', async () => {
+    const wrapper = mountTree({
+      props: { groups: [], records: [rule('r1')] },
+    });
+
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('click');
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(true);
+
+    await wrapper.setProps({ records: [rule('r1')] });
+
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(true);
+  });
+
   it('renders ungrouped rules directly, without a folder heading', () => {
     const wrapper = mountTree({
       props: { groups: [], records: [rule('r1')] },
@@ -348,8 +397,8 @@ describe('RulesTree', () => {
       props: { groups: [], records: [rule('r1'), rule('r2')] },
     });
 
-    // Start dragging r1 by its handle.
-    await wrapper.find('[data-node-key="r:r1"] .apqa-rules-tree-handle').trigger('pointerdown');
+    // Start dragging r1 from its header (desktop pointer: drag starts on move).
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('pointerdown');
 
     // Move below every row, then release on the window (the tree listens globally).
     const move = new Event('pointermove');
@@ -366,13 +415,55 @@ describe('RulesTree', () => {
     });
   });
 
-  it('renders a drag handle on both rule rows and folder rows', () => {
+  it('emits reorder when a folder header is dragged below another row and dropped', async () => {
     const wrapper = mountTree({
-      props: { groups: [group('Data')], records: [rule('r1'), rule('r2', 'Data')] },
+      props: { groups: [group('data')], records: [rule('r1', 'data'), rule('r2', '', { order: 1 })] },
     });
 
-    expect(wrapper.find('[data-node-key="g:data"] .apqa-rules-tree-handle').exists()).toBe(true);
-    expect(wrapper.find('[data-node-key="r:r1"] .apqa-rules-tree-handle').exists()).toBe(true);
+    await wrapper.find('[data-node-key="g:data"] .apqa-rules-tree-group-header').trigger('pointerdown');
+
+    const move = new Event('pointermove');
+    move.clientY = 100;
+    window.dispatchEvent(move);
+    window.dispatchEvent(new Event('pointerup'));
+
+    expect(wrapper.emitted('reorder')).toHaveLength(1);
+    expect(wrapper.emitted('reorder')[0][0]).toEqual({
+      kind: 'group',
+      id: 'data',
+      parent: '',
+      before: null,
+    });
+  });
+
+  it('expands a rule on a plain header click (no drag)', async () => {
+    const wrapper = mountTree({
+      props: { groups: [], records: [rule('r1')] },
+    });
+
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('click');
+
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(true);
+    expect(wrapper.emitted('reorder')).toBeUndefined();
+  });
+
+  it('does not toggle a rule after its header was dragged', async () => {
+    const wrapper = mountTree({
+      props: { groups: [], records: [rule('r1'), rule('r2')] },
+    });
+
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('pointerdown');
+
+    const move = new Event('pointermove');
+    move.clientY = 100;
+    window.dispatchEvent(move);
+    window.dispatchEvent(new Event('pointerup'));
+
+    await wrapper.find('[data-node-key="r:r1"] .apqa-rule-compact-description').trigger('click');
+
+    expect(wrapper.emitted('reorder')).toHaveLength(1);
+    // The swallowed click must not have expanded r1.
+    expect(wrapper.find('[data-node-key="r:r1"] .apqa-qcrules-list-item').exists()).toBe(false);
   });
 
 });

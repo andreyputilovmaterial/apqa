@@ -23,7 +23,7 @@ const RuleRecord = {
     dropPosition: { type: String, default: '' },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel', 'handle-down'],
+  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
 
   components: {
     'rule-body': RuleBody,
@@ -32,14 +32,6 @@ const RuleRecord = {
   template: `
 <li :class="classes" :data-node-key="nodeKey">
   <span class="apqa-rules-tree-gutter">
-    <button
-      type="button"
-      class="apqa-rules-tree-handle"
-      aria-label="Drag to reorder"
-      @pointerdown="onHandleDown"
-    >
-      <i class="ri-drag-move-2-line" aria-hidden="true"></i>
-    </button>
     <span class="apqa-rule-run-tick" :class="tick.cls" :title="tick.title">
       <i v-if="tick.icon" :class="tick.icon"></i>
       <span v-else-if="tick.text" class="apqa-run-tick-text">{{ tick.text }}</span>
@@ -108,11 +100,7 @@ const RuleRecord = {
       emit('cancel', record);
     }
 
-    function onHandleDown(event) {
-      emit('handle-down', { record: props.record, event });
-    }
-
-    return { expanded, editing, classes, tick, onSave, onCancel, onHandleDown };
+    return { expanded, editing, classes, tick, onSave, onCancel };
   },
 };
 

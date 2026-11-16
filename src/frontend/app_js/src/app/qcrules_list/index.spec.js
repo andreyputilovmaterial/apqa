@@ -78,6 +78,36 @@ describe('QcRulesList', () => {
     );
   });
 
+  it('keeps a folder expanded across a reorder reload', async () => {
+    const rule = { id: 'r1', name: 'Rule one', group: 'data', left: [], op: '', right: [], meta: {} };
+    const group = { id: 'data', name: 'Data', parent: '', meta: {} };
+
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/qc/reorder') return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
+      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    await wrapper.find('.apqa-rules-tree-group-header').trigger('click');
+    expect(wrapper.text()).toContain('Rule one');
+
+    // A reorder reloads rules + groups; the tree must not remount and re-fold.
+    wrapper.findComponent(RulesTree).vm.$emit('reorder', {
+      kind: 'rule',
+      id: 'r1',
+      parent: 'data',
+      before: null,
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Rule one');
+  });
+
   it('shows a red exception snippet when running raises', async () => {
     const rule = {
       id: 'r1',

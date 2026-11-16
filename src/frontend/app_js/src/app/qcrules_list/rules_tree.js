@@ -37,19 +37,11 @@ const RulesTree = {
   },
 
   template: `
-<div ref="rootEl" class="apqa-rules-tree">
+<div ref="rootEl" class="apqa-rules-tree" @pointerdown.capture="onHeaderPointerDown" @click.capture="onClickCapture">
   <ul class="apqa-rules-tree-list">
     <template v-for="node in pagedNodes" :key="node.key">
       <li v-if="node.kind === 'group'" class="apqa-rules-tree-item apqa-rules-tree-group" :class="itemClasses(node)" :data-node-key="node.key" :style="{ '--rules-tree-depth': node.depth }">
         <span class="apqa-rules-tree-gutter">
-          <button
-            type="button"
-            class="apqa-rules-tree-handle"
-            aria-label="Drag to reorder"
-            @pointerdown="onHandleDown(node, $event)"
-          >
-            <i class="ri-drag-move-2-line" aria-hidden="true"></i>
-          </button>
           <span v-if="node.tick" class="apqa-rule-run-tick" :class="node.tick.cls" :title="node.tick.title">
             <i v-if="node.tick.icon" :class="node.tick.icon"></i>
             <span v-else-if="node.tick.text" class="apqa-run-tick-text">{{ node.tick.text }}</span>
@@ -90,7 +82,6 @@ const RulesTree = {
         :dragging-key="drag.draggingKey"
         :drop-target-key="drag.targetKey"
         :drop-position="drag.position"
-        @handle-down="onRuleHandleDown"
         @edit="$emit('edit', $event)"
         @run="$emit('run', $event)"
         @delete="$emit('delete', $event)"
@@ -117,24 +108,56 @@ const RulesTree = {
 
   setup(props, { emit }) {
     const collapsed = reactive({});
+    // Group ids the tree has already seen, so a reload can tell a "new folder"
+    // (fold it) apart from an "existing folder" (leave its state alone).
+    const knownGroupIds = new Set();
     const page = ref(0);
     const rootEl = ref(null);
 
     // Drag state. `draggingKey` is the `key` of the node being dragged; while it
     // is set, `targetKey`/`position` describe the current drop target
     // (`position` is 'before' | 'after' | 'inside').
-    const drag = reactive({ draggingKey: '', targetKey: '', position: '' });
+    const drag = reactive({ draggingKey: '', targetKey: '', position: '', suppressClick: false });
 
-    // Every folder starts folded. Re-fold whenever the group set is (re)loaded,
-    // e.g. after creating/renaming/deleting a group via the page — but skip the
-    // reset while a rule is being edited, so a group mutation elsewhere cannot
-    // collapse the folder and destroy the inline form.
+    // Pending pointer gesture. A mouse pointer starts a drag as soon as it moves
+    // past a small threshold; a touch pointer only starts after a press-and-hold,
+    // so a quick swipe keeps scrolling the page and a tap still toggles.
+    const pointer = {
+      active: false,
+      dragging: false,
+      nodeKey: '',
+      startX: 0,
+      startY: 0,
+      holdTimer: null,
+    };
+
+    // A drag may start only from a rule/folder header — not from the inline edit
+    // form, the action buttons, the definition chips, or the mark badges.
+    const DRAG_SURFACE_SELECTOR =
+      '.apqa-rules-tree-group-header, .apqa-rule-compact-description, .apqa-qcrules-list-item-head';
+    const MOUSE_DRAG_THRESHOLD = 8;
+    const TOUCH_HOLD_MS = 400;
+    const TOUCH_SLOP = 10;
+
+    // Every folder starts folded. On a group reload we only fold folders that
+    // are new to the tree (and prune removed ones) — existing folders keep their
+    // open/closed state, so a reorder (which reloads the groups) does not
+    // collapse the folder the user just rearranged. Skipped while a rule is
+    // being edited, so a group mutation elsewhere cannot collapse the folder and
+    // destroy the inline form.
     watch(
       () => props.groups,
-      () => {
+      (groups) => {
         if (props.editingId) return;
-        for (const key of Object.keys(collapsed)) delete collapsed[key];
-        for (const group of props.groups) collapsed[group.id] = true;
+        const current = new Set(groups.map((group) => group.id));
+        for (const id of current) {
+          if (!knownGroupIds.has(id)) collapsed[id] = true;
+        }
+        for (const key of Object.keys(collapsed)) {
+          if (!current.has(key)) delete collapsed[key];
+        }
+        knownGroupIds.clear();
+        for (const id of current) knownGroupIds.add(id);
       },
       { immediate: true },
     );
@@ -228,26 +251,85 @@ const RulesTree = {
       return true;
     }
 
-    function onRuleHandleDown(payload) {
-      if (!payload || !payload.record) return;
-      const node = nodeByKey.value.get(`r:${payload.record.id}`);
-      if (node) onHandleDown(node, payload.event);
+    // Delegated from the tree root: a press on a rule/folder header starts a
+    // candidate drag. A mouse pointer starts dragging as soon as it moves past
+    // `MOUSE_DRAG_THRESHOLD`; a touch pointer requires a press-and-hold so the
+    // header stays scrollable and a tap still toggles.
+    function onHeaderPointerDown(event) {
+      // A fresh gesture clears any stale click suppression left by a previous
+      // drag that produced no click (e.g. a touch drag).
+      drag.suppressClick = false;
+
+      const target = event.target;
+      const surface =
+        target && target.closest ? target.closest(DRAG_SURFACE_SELECTOR) : null;
+      if (!surface) return;
+      const item = target.closest('[data-node-key]');
+      if (!item) return;
+      const key = item.getAttribute('data-node-key');
+      if (!nodeByKey.value.has(key) || !isPrimaryPointer(event)) return;
+
+      pointer.active = true;
+      pointer.dragging = false;
+      pointer.nodeKey = key;
+      pointer.startX = event.clientX ?? 0;
+      pointer.startY = event.clientY ?? 0;
+
+      if (event.pointerType === 'touch') {
+        pointer.holdTimer = window.setTimeout(() => startDrag(key), TOUCH_HOLD_MS);
+        if (rootEl.value) {
+          rootEl.value.addEventListener('touchmove', onTouchMove, { passive: false });
+          rootEl.value.addEventListener('touchend', onTouchEnd);
+          rootEl.value.addEventListener('touchcancel', onTouchEnd);
+        }
+      } else {
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+      }
     }
 
-    function onHandleDown(node, event) {
-      if (!node || !isPrimaryPointer(event)) return;
-      event.preventDefault();
-      drag.draggingKey = node.key;
+    function startDrag(key) {
+      if (!pointer.active) return;
+      pointer.dragging = true;
+      pointer.holdTimer = null;
+      drag.draggingKey = key;
       drag.targetKey = '';
       drag.position = '';
-      window.addEventListener('pointermove', onPointerMove, { passive: false });
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerUp);
+      drag.suppressClick = true;
     }
 
     function onPointerMove(event) {
+      if (!pointer.active) return;
+      if (!pointer.dragging) {
+        const dx = (event.clientX ?? pointer.startX) - pointer.startX;
+        const dy = (event.clientY ?? pointer.startY) - pointer.startY;
+        if (dx * dx + dy * dy < MOUSE_DRAG_THRESHOLD * MOUSE_DRAG_THRESHOLD) return;
+        startDrag(pointer.nodeKey);
+      }
       event.preventDefault();
-      const drop = computeDropTarget(event.clientY);
+      updateDropTarget(event.clientY ?? pointer.startY);
+    }
+
+    function onTouchMove(event) {
+      if (!pointer.active) return;
+      const touch = event.touches && event.touches[0];
+      if (!touch) return;
+      if (!pointer.dragging) {
+        const dx = touch.clientX - pointer.startX;
+        const dy = touch.clientY - pointer.startY;
+        if (dx * dx + dy * dy <= TOUCH_SLOP * TOUCH_SLOP) return;
+        // Moved too far before the hold fired: it is a scroll/tap, abandon it.
+        cleanupDrag();
+        return;
+      }
+      // The hold fired — take over the gesture so the page stops scrolling.
+      event.preventDefault();
+      updateDropTarget(touch.clientY);
+    }
+
+    function updateDropTarget(clientY) {
+      const drop = computeDropTarget(clientY);
       if (drop.targetKey !== drag.targetKey || drop.position !== drag.position) {
         drag.targetKey = drop.targetKey;
         drag.position = drop.position;
@@ -255,9 +337,23 @@ const RulesTree = {
     }
 
     function onPointerUp() {
+      finishDrag();
+    }
+
+    function onTouchEnd() {
+      finishDrag();
+    }
+
+    function finishDrag() {
       const descriptor = currentDescriptor();
       cleanupDrag();
       if (descriptor) emit('reorder', descriptor);
+    }
+
+    function onClickCapture(event) {
+      if (!drag.suppressClick) return;
+      event.stopPropagation();
+      drag.suppressClick = false;
     }
 
     function currentDescriptor() {
@@ -303,6 +399,20 @@ const RulesTree = {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
+      if (rootEl.value) {
+        rootEl.value.removeEventListener('touchmove', onTouchMove);
+        rootEl.value.removeEventListener('touchend', onTouchEnd);
+        rootEl.value.removeEventListener('touchcancel', onTouchEnd);
+      }
+      if (pointer.holdTimer) {
+        window.clearTimeout(pointer.holdTimer);
+        pointer.holdTimer = null;
+      }
+      pointer.active = false;
+      pointer.dragging = false;
+      pointer.nodeKey = '';
+      pointer.startX = 0;
+      pointer.startY = 0;
       drag.draggingKey = '';
       drag.targetKey = '';
       drag.position = '';
@@ -322,8 +432,8 @@ const RulesTree = {
       goToPage,
       onSave,
       onCancel,
-      onHandleDown,
-      onRuleHandleDown,
+      onHeaderPointerDown,
+      onClickCapture,
     };
   },
 };

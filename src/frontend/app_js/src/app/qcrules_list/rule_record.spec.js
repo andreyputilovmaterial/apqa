@@ -276,15 +276,4 @@ describe('RuleRecord', () => {
     expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
 
-  it('renders a drag handle that emits handle-down on pointerdown', async () => {
-    const wrapper = mountRecord({ props: { record: makeRecord() } });
-    const handle = wrapper.find('.apqa-rules-tree-handle');
-    expect(handle.exists()).toBe(true);
-
-    await handle.trigger('pointerdown');
-
-    expect(wrapper.emitted('handle-down')).toHaveLength(1);
-    expect(wrapper.emitted('handle-down')[0][0].record.id).toBe('Rule A');
-  });
-
 });
