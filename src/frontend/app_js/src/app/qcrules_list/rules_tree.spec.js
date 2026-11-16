@@ -414,7 +414,7 @@ describe('RulesTree', () => {
     const summary = wrapper.find('.apqa-rules-tree-group-run-result');
     expect(summary.exists()).toBe(true);
     const status = summary.find('.apqa-rules-tree-group-run-result-status');
-    expect(status.text()).toBe('1 passed, 1 failed, 1 errored');
+    expect(status.text()).toBe('1 passed, 1 failed, 1 error');
     expect(status.classes()).toContain('apqa-rule-run-result-failed');
   });
 
