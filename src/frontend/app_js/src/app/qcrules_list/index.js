@@ -87,7 +87,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -111,6 +111,11 @@ const QcRulesList = {
     // a copied record would be lost on the next recompute. Keying by id also keeps
     // the result visible across list reloads until the rule is edited/deleted.
     const runResults = reactive({});
+
+    // Folder ids whose "Run" was clicked while the folder contained no QC rules
+    // (recursively). Keyed by group id; the tree turns each into a "no tests ran"
+    // note in the folder's run-result area instead of a browser alert.
+    const emptyRunGroups = reactive({});
 
     // The create/edit forms need the cmdlet + comparison-op metadata, fetched
     // lazily on first use. These computed refs keep the template readable.
@@ -546,7 +551,7 @@ const QcRulesList = {
     async function onRunGroup(group) {
       const rules = rulesForGroup(groups.value, records.value, group.id);
       if (rules.length === 0) {
-        window.alert('This folder contains no QC rules to run.');
+        emptyRunGroups[group.id] = true;
         return;
       }
 
@@ -605,6 +610,7 @@ const QcRulesList = {
       editingId,
       editingGroupId,
       runResults,
+      emptyRunGroups,
       cmdlets,
       ops,
       tagSuggestions,

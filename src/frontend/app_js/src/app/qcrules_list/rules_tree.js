@@ -25,6 +25,7 @@ const RulesTree = {
     editingId: { type: String, default: '' },
     editingGroupId: { type: String, default: '' },
     runResults: { type: Object, default: () => ({}) },
+    emptyRunGroups: { type: Object, default: () => ({}) },
     cmdlets: { type: Array, default: () => [] },
     ops: { type: Array, default: () => [] },
     tagSuggestions: { type: Array, default: () => [] },
@@ -249,20 +250,36 @@ const RulesTree = {
 
     // Folder "last run" summary, mirroring a rule's cached run-result banner. It
     // is shown once at least one rule inside has a result (passed/failed/errored/
-    // running); a folder whose rules were never run stays blank, and an empty
-    // folder shows nothing.
+    // running), or when an empty folder was run (a "no tests ran" note). A folder
+    // whose rules were never run stays blank, and an untouched empty folder shows
+    // nothing.
     function hasRunSummary(node) {
+      if (isEmptyRun(node)) return true;
       const agg = node.runAggregate;
       return Boolean(
         agg && agg.total > 0 && agg.passed + agg.failed + agg.errored + agg.running > 0,
       );
     }
 
+    // A folder whose "Run" was clicked while it contained no rules (recursively)
+    // — the page remembers the click so we can show a "no tests ran" note in the
+    // same spot a real run summary appears, instead of a browser alert.
+    function isEmptyRun(node) {
+      return Boolean(
+        node.kind === 'group' &&
+        node.runAggregate &&
+        node.runAggregate.total === 0 &&
+        props.emptyRunGroups[node.id],
+      );
+    }
+
     function runSummaryText(node) {
+      if (isEmptyRun(node)) return 'no tests ran';
       return groupRunSummary(node.runAggregate);
     }
 
     function runSummaryClass(node) {
+      if (isEmptyRun(node)) return 'apqa-rule-run-result-running';
       switch (node.runStatus) {
         case 'passed':
           return 'apqa-rule-run-result-passed';

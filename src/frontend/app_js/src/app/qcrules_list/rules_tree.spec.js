@@ -426,6 +426,30 @@ describe('RulesTree', () => {
     expect(wrapper.find('.apqa-rules-tree-group-run-result').exists()).toBe(false);
   });
 
+  it('shows a "no tests ran" note for an empty folder that was run', () => {
+    const wrapper = mountTree({
+      props: {
+        groups: [group('Data')],
+        records: [],
+        emptyRunGroups: { Data: true },
+      },
+    });
+
+    const summary = wrapper.find('.apqa-rules-tree-group-run-result');
+    expect(summary.exists()).toBe(true);
+    const status = summary.find('.apqa-rules-tree-group-run-result-status');
+    expect(status.text()).toBe('no tests ran');
+    expect(status.classes()).toContain('apqa-rule-run-result-running');
+  });
+
+  it('shows no run summary for an empty folder that was not run', () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [] },
+    });
+
+    expect(wrapper.find('.apqa-rules-tree-group-run-result').exists()).toBe(false);
+  });
+
   it('shows a blank folder tick when nothing inside has run', () => {
     const wrapper = mountTree({
       props: {

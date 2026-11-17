@@ -109,6 +109,31 @@ describe('QcRulesList', () => {
     });
   });
 
+  it('shows a "no tests ran" note instead of an alert when running an empty folder', async () => {
+    const rule = { id: 'r1', name: 'Rule one', group: '', left: [], op: 'eq', op_args: {}, right: [], meta: {} };
+    const group = { id: 'empty', name: 'Empty', parent: '', meta: {} };
+
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
+      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    wrapper.findComponent(RulesTree).vm.$emit('run-group', { id: 'empty', name: 'Empty' });
+    await flushPromises();
+
+    expect(alert).not.toHaveBeenCalled();
+    expect(wrapper.find('.apqa-rules-tree-group-run-result-status').text()).toBe('no tests ran');
+
+    alert.mockRestore();
+  });
+
   it('keeps a folder expanded across a reorder reload', async () => {
     const rule = { id: 'r1', name: 'Rule one', group: 'data', left: [], op: '', right: [], meta: {} };
     const group = { id: 'data', name: 'Data', parent: '', meta: {} };
