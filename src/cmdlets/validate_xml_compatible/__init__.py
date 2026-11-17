@@ -14,7 +14,7 @@ compound value is vacuously valid).
 
 When a text value fails, the cmdlet records a **diagnostic note** (if a run is
 collecting notes) whose path points at the offending leaf — e.g.
-``['fields', 'BrandAwareness', 'label']`` — so the runner can tell the user exactly
+``['Fields', 'BrandAwareness', 'Label']`` — so the runner can tell the user exactly
 which field of which MDD section was not XML-compatible (see
 ``docs/qc-results-reporting.md``). The cmdlet still returns a plain ``bool``, so a rule
 that compares it to ``literal(True)`` keeps working unchanged.

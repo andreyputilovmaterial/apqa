@@ -4,16 +4,16 @@ import { formatPath, formatNote, groupRunSummary } from './run_result.js';
 
 describe('formatPath', () => {
   it('joins identifier keys with dots', () => {
-    expect(formatPath(['fields', 'A', 'label'])).toBe('fields.A.label');
+    expect(formatPath(['Fields', 'A', 'Label'])).toBe('Fields.A.Label');
   });
 
   it('renders array indices as [i]', () => {
-    expect(formatPath(['pages', 'Q1', 'value', 2])).toBe('pages.Q1.value[2]');
+    expect(formatPath(['Pages', 'Q1', 'value', 2])).toBe('Pages.Q1.value[2]');
   });
 
   it('quotes non-identifier keys', () => {
-    expect(formatPath(['pages', 'Q1', 'categories', 'None of the above', 'label'])).toBe(
-      "pages.Q1.categories['None of the above'].label",
+    expect(formatPath(['Pages', 'Q1', 'Categories', 'None of the above', 'Label'])).toBe(
+      "Pages.Q1.Categories['None of the above'].Label",
     );
   });
 
@@ -25,8 +25,8 @@ describe('formatPath', () => {
 
 describe('formatNote', () => {
   it('renders path: message', () => {
-    expect(formatNote({ path: ['fields', 'A', 'label'], message: 'bad' })).toBe(
-      'fields.A.label: bad',
+    expect(formatNote({ path: ['Fields', 'A', 'Label'], message: 'bad' })).toBe(
+      'Fields.A.Label: bad',
     );
   });
 

@@ -23,18 +23,18 @@ def _literal(value):
 
 def _data():
     return {
-        'fields': {
+        'Fields': {
             'SnifferData': {
-                'fields': {
+                'Fields': {
                     'Cluster': {
-                        'categories': {
-                            'Select': {'label': '<-Select->'},
-                            'Other': {'label': 'Other'},
+                        'Categories': {
+                            'Select': {'Label': '<-Select->'},
+                            'Other': {'Label': 'Other'},
                         },
                     },
                 },
             },
-            'BrandAwareness': {'label': 'ok'},
+            'BrandAwareness': {'Label': 'ok'},
         },
     }
 
@@ -43,31 +43,31 @@ def test_filter_removes_deep_leaf_at_root():
     result = run_chain([
         _literal(_data()),
         {'cmdlet': 'filter', 'args': {
-            'ignorelist': ['fields.SnifferData.fields.Cluster.categories.Select'],
+            'ignorelist': ['Fields.SnifferData.Fields.Cluster.Categories.Select'],
         }},
     ])
-    categories = result['fields']['SnifferData']['fields']['Cluster']['categories']
+    categories = result['Fields']['SnifferData']['Fields']['Cluster']['Categories']
     assert 'Select' not in categories
-    assert categories['Other']['label'] == 'Other'
-    assert result['fields']['BrandAwareness']['label'] == 'ok'
+    assert categories['Other']['Label'] == 'Other'
+    assert result['Fields']['BrandAwareness']['Label'] == 'ok'
 
 
 def test_filter_removes_whole_node():
     result = run_chain([
         _literal(_data()),
-        {'cmdlet': 'filter', 'args': {'ignorelist': ['fields.SnifferData.fields.Cluster']}},
+        {'cmdlet': 'filter', 'args': {'ignorelist': ['Fields.SnifferData.Fields.Cluster']}},
     ])
-    assert 'Cluster' not in result['fields']['SnifferData']['fields']
+    assert 'Cluster' not in result['Fields']['SnifferData']['Fields']
 
 
 def test_filter_uses_full_path_mid_chain():
     result = run_chain([
         _literal(_data()),
-        _field('fields'),
+        _field('Fields'),
         _field('SnifferData'),
-        {'cmdlet': 'filter', 'args': {'ignorelist': ['fields.SnifferData.fields.Cluster']}},
+        {'cmdlet': 'filter', 'args': {'ignorelist': ['Fields.SnifferData.Fields.Cluster']}},
     ])
-    assert result == {'fields': {}}
+    assert result == {'Fields': {}}
 
 
 def test_filter_removes_array_element():
@@ -80,27 +80,27 @@ def test_filter_removes_array_element():
 
 def test_filter_removes_nested_array_element():
     result = filter_(
-        {'pages': {'Q1': {'value': [{'label': 'a'}, {'label': 'b'}]}}},
-        {'ignorelist': ['pages.Q1.value[1]']},
+        {'Pages': {'Q1': {'value': [{'Label': 'a'}, {'Label': 'b'}]}}},
+        {'ignorelist': ['Pages.Q1.value[1]']},
     )
-    assert result == {'pages': {'Q1': {'value': [{'label': 'a'}]}}}
+    assert result == {'Pages': {'Q1': {'value': [{'Label': 'a'}]}}}
 
 
 def test_filter_ignores_path_outside_subtree():
     result = run_chain([
         _literal(_data()),
-        _field('fields'),
+        _field('Fields'),
         _field('SnifferData'),
-        {'cmdlet': 'filter', 'args': {'ignorelist': ['fields.Other.x']}},
+        {'cmdlet': 'filter', 'args': {'ignorelist': ['Fields.Other.x']}},
     ])
-    assert 'Cluster' in result['fields']
+    assert 'Cluster' in result['Fields']
 
 
 def test_filter_removes_whole_value_when_path_matches_position():
     result = run_chain([
         _literal(_data()),
-        _field('fields'),
-        {'cmdlet': 'filter', 'args': {'ignorelist': ['fields']}},
+        _field('Fields'),
+        {'cmdlet': 'filter', 'args': {'ignorelist': ['Fields']}},
     ])
     assert result is None
 

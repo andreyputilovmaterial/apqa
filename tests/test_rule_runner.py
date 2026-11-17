@@ -138,7 +138,7 @@ def test_run_rule_with_report_no_notes_on_plain_false():
 
 
 def test_run_rule_with_report_records_validation_notes():
-    block = {'fields': {'BrandAwareness': {'label': 'a & b'}}}
+    block = {'Fields': {'BrandAwareness': {'Label': 'a & b'}}}
     rule = {
         'left': [
             {'cmdlet': 'literal', 'args': {'value': block}},
@@ -150,12 +150,12 @@ def test_run_rule_with_report_records_validation_notes():
     result, notes = run_rule_with_report(rule)
     assert result is False
     assert len(notes) == 1
-    assert notes[0]['path'] == ['fields', 'BrandAwareness', 'label']
+    assert notes[0]['path'] == ['Fields', 'BrandAwareness', 'Label']
     assert 'not XML-compatible' in notes[0]['message']
 
 
 def test_run_rule_with_report_records_array_index_paths():
-    block = {'pages': {'Q1': {'value': ['ok', 'a & b']}}}
+    block = {'Pages': {'Q1': {'value': ['ok', 'a & b']}}}
     rule = {
         'left': [
             {'cmdlet': 'literal', 'args': {'value': block}},
@@ -166,4 +166,4 @@ def test_run_rule_with_report_records_array_index_paths():
     }
     result, notes = run_rule_with_report(rule)
     assert result is False
-    assert notes[0]['path'] == ['pages', 'Q1', 'value', 1]
+    assert notes[0]['path'] == ['Pages', 'Q1', 'value', 1]

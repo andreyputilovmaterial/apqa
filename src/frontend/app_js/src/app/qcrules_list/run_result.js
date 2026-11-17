@@ -5,7 +5,7 @@
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-// Render a data path (`['fields', 'A', 'label']`) as `fields.A.label`; array
+// Render a data path (`['Fields', 'A', 'Label']`) as `Fields.A.Label`; array
 // indices as `[i]`; non-identifier keys quoted, e.g. `['None of the above']`.
 export function formatPath(path) {
   let result = '';

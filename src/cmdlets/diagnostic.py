@@ -12,7 +12,7 @@ A QC rule run has two kinds of bad outcome (see ``docs/qc-results-reporting.md``
 
 A note is a small JSON-safe mapping::
 
-    {'path': ['fields', 'BrandAwareness', 'label'], 'message': '…'}
+    {'path': ['Fields', 'BrandAwareness', 'Label'], 'message': '…'}
 
 ``path`` is the **data path** — the sequence of block keys and array indices that
 leads from the top-level piped value to the offending leaf. It is the "which
@@ -86,10 +86,10 @@ def collect_notes():
 def format_path(path):
     """Render a data path as a short, human-readable address.
 
-    ``['fields', 'BrandAwareness', 'label']`` becomes
-    ``fields.BrandAwareness.label``; array indices become ``[i]``; a key that is
+    ``['Fields', 'BrandAwareness', 'Label']`` becomes
+    ``Fields.BrandAwareness.Label``; array indices become ``[i]``; a key that is
     not a plain identifier is quoted, e.g.
-    ``pages.Q1.value[2].categories['None of the above'].label``.
+    ``Pages.Q1.value[2].Categories['None of the above'].Label``.
     """
     result = ''
     for part in path:

@@ -19,19 +19,19 @@ from src.cmdlets.diagnostic import (
 
 
 def test_format_path_identifier_chain():
-    assert format_path(['fields', 'BrandAwareness', 'label']) == (
-        'fields.BrandAwareness.label'
+    assert format_path(['Fields', 'BrandAwareness', 'Label']) == (
+        'Fields.BrandAwareness.Label'
     )
 
 
 def test_format_path_array_index():
-    assert format_path(['pages', 'Q1', 'value', 2]) == 'pages.Q1.value[2]'
+    assert format_path(['Pages', 'Q1', 'value', 2]) == 'Pages.Q1.value[2]'
 
 
 def test_format_path_quotes_non_identifier_keys():
     assert format_path([
-        'pages', 'Q1', 'value', 2, 'categories', 'None of the above', 'label',
-    ]) == "pages.Q1.value[2].categories['None of the above'].label"
+        'Pages', 'Q1', 'value', 2, 'Categories', 'None of the above', 'Label',
+    ]) == "Pages.Q1.value[2].Categories['None of the above'].Label"
 
 
 def test_format_path_empty():
@@ -39,8 +39,8 @@ def test_format_path_empty():
 
 
 def test_format_note_with_path():
-    assert format_note({'path': ['fields', 'X', 'label'], 'message': 'bad &'}) == (
-        'fields.X.label: bad &'
+    assert format_note({'path': ['Fields', 'X', 'Label'], 'message': 'bad &'}) == (
+        'Fields.X.Label: bad &'
     )
 
 

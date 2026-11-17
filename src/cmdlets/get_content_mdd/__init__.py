@@ -21,35 +21,41 @@ Args (stored named mapping):
                          ``False`` ("step over") keeps the reference as a single
                          item.
 
-The result is a block whose top-level fields are the MDD sections:
+The result is a block whose top-level fields are the MDD sections, named after
+the COM collection properties (Pascal-style, e.g. ``document.Fields``):
 
     source_file   absolute path to the read file
-    languages     array of ``{name, label}`` blocks
-    shared_lists  block keyed by shared-list name (each value is a shared-list block)
-    fields        block keyed by field name (each value is a field block)
-    pages         block keyed by page name (each value is a page block)
-    routing       the routing script as a single text value
+    Languages     array of ``{Name, LongName}`` blocks
+    Types         block keyed by shared-list name (each value is a shared-list block)
+    Fields        block keyed by field name (each value is a field block)
+    Pages         block keyed by page name (each value is a page block)
+    Routing       the routing script as a single text value
 
-Every item block has the metadata fields ``name``, ``label``, ``attributes``,
-``properties``, ``translations``, ``scripting`` plus a ``value`` field whose shape
-depends on the item kind:
+Every item block carries the metadata fields ``Name``, ``Label``, ``_Attrs``,
+``Labels`` (translations keyed by language code), ``Script`` and ``Properties``,
+plus a ``value`` field whose shape depends on the item kind:
 
     scalar (ObjectTypeValue 0)   ``value`` is ``None`` (MDD metadata has no
                                  data value). A categorical (DataType 3)
-                                 additionally carries a ``categories`` block.
+                                 additionally carries a ``Categories`` block.
     array/grid (ObjectTypeValue 1/2)
                                  ``value`` is an ordered array of iteration
-                                 blocks, and ``fields`` holds the loop's subfields.
+                                 blocks, and ``Fields`` holds the loop's subfields.
     block/class (ObjectTypeValue 3)
-                                 ``fields`` is a block of subfields and ``value``
+                                 ``Fields`` is a block of subfields and ``value``
                                  is ``None``.
     shared list / page           ``value`` is an array of category/entry blocks.
 
 Items that own categories (categorical scalars, arrays, shared lists) also carry a
-``categories`` block keyed by category name → detailed category block; for a
-categorical scalar the keys of ``categories`` are the available response options.
+``Categories`` block keyed by category name → detailed category block; for a
+categorical scalar the keys of ``Categories`` are the available response options.
 Category groups (``Type`` != 0) nest their children in their own ``value`` array
 and are not selectable response options.
+
+``_Attrs`` mirrors the raw MDD object model: Pascal-cased COM properties such as
+``ObjectTypeValue``, ``DataType``, ``IsSystem``, ``HasCaseData``, ``IsGrid``,
+``MinValue``/``MaxValue`` and, for shared-list references,
+``IsReference``/``ReferenceName``.
 """
 
 from pathlib import Path
@@ -152,7 +158,7 @@ def _iter(collection):
 
 
 def _index_category(cat, result):
-    name = cat.get('name')
+    name = cat.get('Name')
     if name:
         result.setdefault(name, cat)
     value = cat.get('value')
@@ -259,11 +265,11 @@ class _MDDReader:
         try:
             return {
                 'source_file': self.path,
-                'languages': self._read_languages(),
-                'shared_lists': self._read_shared_lists(),
-                'fields': self._read_fields(),
-                'pages': self._read_pages(),
-                'routing': self._read_routing(),
+                'Languages': self._read_languages(),
+                'Types': self._read_types(),
+                'Fields': self._read_fields(),
+                'Pages': self._read_pages(),
+                'Routing': self._read_routing(),
             }
         finally:
             self._set_current_context(preserve)
@@ -274,12 +280,12 @@ class _MDDReader:
         result = []
         for lang in self._languages:
             result.append({
-                'name': _safe_str_get(lang, 'Name'),
-                'label': _safe_str_get(lang, 'LongName'),
+                'Name': _safe_str_get(lang, 'Name'),
+                'LongName': _safe_str_get(lang, 'LongName'),
             })
         return result
 
-    def _read_shared_lists(self):
+    def _read_types(self):
         types = _safe_get(self.document, 'Types')
         if types is None:
             return {}
@@ -292,7 +298,7 @@ class _MDDReader:
             sl = types[sl_name]
             categories = self._read_category_collection(sl)
             block = self._read_item_meta(sl, self._shared_list_attributes(sl))
-            block['categories'] = _category_map(categories)
+            block['Categories'] = _category_map(categories)
             block['value'] = categories
             result[sl_name] = block
         return result
@@ -312,7 +318,7 @@ class _MDDReader:
             name = _safe_str_get(page, 'Name')
             if not name:
                 continue
-            block = self._read_item_meta(page, {'type': 'page'})
+            block = self._read_item_meta(page, {})
             block['value'] = self._read_page_entries(page)
             result[name] = block
         return result
@@ -320,7 +326,7 @@ class _MDDReader:
     def _read_page_entries(self, page):
         result = []
         for entry in _iter(page):
-            block = self._read_item_meta(entry, {'type': 'page_entry'})
+            block = self._read_item_meta(entry, {})
             block['value'] = None
             result.append(block)
         return result
@@ -332,12 +338,12 @@ class _MDDReader:
         return _safe_str_get(routing, 'Script')
 
     def _shared_list_attributes(self, sl):
-        attrs = {'type': 'shared_list'}
+        attrs = {}
         if _safe_get(sl, 'IsReference'):
-            attrs['is_reference'] = True
+            attrs['IsReference'] = True
             ref = _safe_str_get(sl, 'ReferenceName')
             if ref:
-                attrs['reference_name'] = ref
+                attrs['ReferenceName'] = ref
         return attrs
 
 
@@ -359,7 +365,7 @@ class _MDDReader:
             block = self._read_block_field(field)
         elif object_type_value == 16:
             block = self._read_item_meta(
-                field, {'object_type_value': 16, 'type': 'plain/type16'}
+                field, {'ObjectTypeValue': 16}
             )
             block['value'] = None
         else:
@@ -371,7 +377,7 @@ class _MDDReader:
         self._add_field_flags(field, block)
         helper_fields = self._read_helper_fields(field)
         if helper_fields:
-            block['helper_fields'] = helper_fields
+            block['HelperFields'] = helper_fields
         return block
 
     def _read_scalar_field(self, field):
@@ -380,73 +386,47 @@ class _MDDReader:
             field, self._scalar_attributes(field, data_type)
         )
         if data_type == 3:
-            block['categories'] = _category_map(
+            block['Categories'] = _category_map(
                 self._read_category_collection(field)
             )
         block['value'] = None
         return block
 
     def _read_array_field(self, field, object_type_value):
-        attrs = {
-            'object_type_value': object_type_value,
-            'type': 'array' if object_type_value == 1 else 'grid',
-        }
+        attrs = {'ObjectTypeValue': object_type_value}
         is_grid = _safe_get(field, 'IsGrid')
         if is_grid is not None:
-            attrs['is_grid'] = bool(is_grid)
+            attrs['IsGrid'] = bool(is_grid)
         block = self._read_item_meta(field, attrs)
         categories = self._read_category_collection(field)
-        block['categories'] = _category_map(categories)
+        block['Categories'] = _category_map(categories)
         block['value'] = categories
         subfields = self._read_subfields(field)
         if subfields:
-            block['fields'] = subfields
+            block['Fields'] = subfields
         return block
 
     def _read_block_field(self, field):
         block = self._read_item_meta(
-            field, {'object_type_value': 3, 'type': 'block'}
+            field, {'ObjectTypeValue': 3}
         )
         block['value'] = None
-        block['fields'] = self._read_subfields(field)
+        block['Fields'] = self._read_subfields(field)
         return block
 
     def _scalar_attributes(self, field, data_type):
-        attrs = {'object_type_value': 0, 'data_type': data_type, 'type': 'plain'}
-        if data_type == 0:
-            attrs['type'] = 'plain/info'
-        elif data_type == 1:
-            attrs['type'] = 'plain/long'
-            attrs['minvalue'] = _plain(_safe_get(field, 'MinValue'))
-            attrs['maxvalue'] = _plain(_safe_get(field, 'MaxValue'))
-        elif data_type == 2:
-            attrs['type'] = 'plain/text'
-            attrs['minvalue'] = _plain(_safe_get(field, 'MinValue'))
-            attrs['maxvalue'] = _plain(_safe_get(field, 'MaxValue'))
-        elif data_type == 3:
-            attrs['type'] = 'plain/categorical'
-            minv = _plain(_safe_get(field, 'MinValue'))
-            maxv = _plain(_safe_get(field, 'MaxValue'))
-            attrs['minvalue'] = minv
-            attrs['maxvalue'] = maxv
-            # MaxValue == 1 → single-punch; anything else (or missing) → multi-punch.
-            attrs['categorical_kind'] = 'single' if maxv == 1 else 'multi'
-        elif data_type == 5:
-            attrs['type'] = 'plain/date'
-        elif data_type == 6:
-            attrs['type'] = 'plain/double'
-            attrs['minvalue'] = _plain(_safe_get(field, 'MinValue'))
-            attrs['maxvalue'] = _plain(_safe_get(field, 'MaxValue'))
-        elif data_type == 7:
-            attrs['type'] = 'plain/boolean'
+        attrs = {'ObjectTypeValue': 0, 'DataType': data_type}
+        if data_type in (1, 2, 3, 6):
+            attrs['MinValue'] = _plain(_safe_get(field, 'MinValue'))
+            attrs['MaxValue'] = _plain(_safe_get(field, 'MaxValue'))
         return attrs
 
     def _add_field_flags(self, field, block):
-        attrs = block['attributes']
+        attrs = block['_Attrs']
         if _safe_get(field, 'IsSystem'):
-            attrs['is_system'] = True
+            attrs['IsSystem'] = True
         if _safe_get(field, 'HasCaseData') is False:
-            attrs['has_case_data'] = False
+            attrs['HasCaseData'] = False
 
     def _read_subfields(self, field):
         result = {}
@@ -461,10 +441,9 @@ class _MDDReader:
         result = {}
         for helper in _iter_attr(field, 'HelperFields'):
             block = self._read_field(helper)
-            name = block.get('name')
+            name = block.get('Name')
             if not name:
                 continue
-            block['attributes']['is_helper_field'] = True
             result[name] = block
         return result
 
@@ -473,12 +452,12 @@ class _MDDReader:
 
     def _read_item_meta(self, item, attributes):
         return {
-            'name': _safe_str_get(item, 'Name'),
-            'label': _safe_str_get(item, 'Label'),
-            'attributes': attributes,
-            'translations': self._read_translations(item),
-            'scripting': _safe_str_get(item, 'Script'),
-            'properties': self._read_properties(item),
+            'Name': _safe_str_get(item, 'Name'),
+            'Label': _safe_str_get(item, 'Label'),
+            '_Attrs': attributes,
+            'Labels': self._read_translations(item),
+            'Script': _safe_str_get(item, 'Script'),
+            'Properties': self._read_properties(item),
         }
 
     def _read_translations(self, item):
@@ -581,14 +560,13 @@ class _MDDReader:
         )
 
         attributes = {
-            'category_type': cat_type,
-            'is_group': is_group,
-            'is_reference': is_reference,
+            'Type': cat_type,
+            'IsReference': is_reference,
         }
         if is_reference:
             ref_name = _safe_str_get(cat, 'ReferenceName')
             if ref_name:
-                attributes['reference_name'] = ref_name
+                attributes['ReferenceName'] = ref_name
 
         block = self._read_item_meta(cat, attributes)
         block['value'] = (

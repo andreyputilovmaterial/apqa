@@ -16,8 +16,8 @@ prefix it has already travelled to every node it walks before matching.
 ``ignorelist`` is a list of path **strings**, rendered in the same notation the
 diagnostic notes use (``format_path``): block keys joined with ``.``, array
 indices as ``[i]``, non-identifier keys quoted (``['None of the above']``), e.g.
-``fields.SnifferData.fields.Cluster.categories.Select`` or
-``pages.Q1.value[2].label``.
+``Fields.SnifferData.Fields.Cluster.Categories.Select`` or
+``Pages.Q1.value[2].Label``.
 
 A path naming a block key or an array element removes that whole node; a path
 naming a leaf removes just that leaf; a path equal to the filter's own position
@@ -40,7 +40,7 @@ from ..value_types import PipeValue
             'name': 'ignorelist',
             'type': 'strings',
             'required': True,
-            'description': 'Full paths to remove, e.g. fields.SnifferData.fields.Cluster.categories.Select.',
+            'description': 'Full paths to remove, e.g. Fields.SnifferData.Fields.Cluster.Categories.Select.',
         },
     ],
 )

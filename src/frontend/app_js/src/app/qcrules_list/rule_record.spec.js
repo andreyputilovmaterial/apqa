@@ -151,7 +151,7 @@ describe('RuleRecord', () => {
         runResults: {
           'Rule A': {
             status: 'failed',
-            notes: [{ path: ['fields', 'A', 'label'], message: 'not XML-compatible' }],
+            notes: [{ path: ['Fields', 'A', 'Label'], message: 'not XML-compatible' }],
           },
         },
       },
@@ -159,7 +159,7 @@ describe('RuleRecord', () => {
 
     expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
     expect(wrapper.find('.apqa-rule-run-result-notes li').text()).toContain(
-      'fields.A.label: not XML-compatible',
+      'Fields.A.Label: not XML-compatible',
     );
   });
 

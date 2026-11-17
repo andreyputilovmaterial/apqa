@@ -161,8 +161,8 @@ just traverses whatever input it receives.
 `ignorelist` is a list of path **strings** in the same notation the diagnostic
 notes use (`format_path`): block keys joined with `.`, array indices as `[i]`,
 non-identifier keys quoted (`['None of the above']`), e.g.
-`fields.SnifferData.fields.Cluster.categories.Select` or
-`pages.Q1.value[2].label`.
+`Fields.SnifferData.Fields.Cluster.Categories.Select` or
+`Pages.Q1.value[2].Label`.
 
 A path naming a block key or an array element removes that whole node; a path
 naming a leaf removes just that leaf; a path equal to the filter's own position
@@ -409,16 +409,19 @@ read their input from ``args``). Currently implemented:
   Optional dependency: ``pywin32`` (Windows only; reads via the
   ``MDM.Document`` COM API).
 
-  Top-level fields: ``source_file``, ``languages`` (array of ``{name, label}``),
-  ``shared_lists`` (block keyed by name), ``fields`` (block keyed by name),
-  ``pages`` (block keyed by name), ``routing`` (text). Every item block carries
-  ``name``/``label``/``attributes``/``properties``/``translations``/``scripting``
-  plus ``value`` (``None`` for scalars and classes/blocks, an array of iteration
-  blocks for arrays/grids) and, for items that own categories, a ``categories``
+  Top-level fields: ``source_file``, ``Languages`` (array of ``{Name, LongName}``),
+  ``Types`` (block keyed by name), ``Fields`` (block keyed by name),
+  ``Pages`` (block keyed by name), ``Routing`` (text). Every item block carries
+  ``Name``/``Label``/``_Attrs``/``Labels``/``Script``/``Properties`` plus
+  ``value`` (``None`` for scalars and classes/blocks, an array of iteration
+  blocks for arrays/grids) and, for items that own categories, a ``Categories``
   block keyed by category name → detailed category block (for a categorical
   scalar its keys are the available response options). Blocks that contain other
   fields (a class/block's sub-fields, and the columns of an array/grid) put them
-  in a ``fields`` block keyed by name.
+  in a ``Fields`` block keyed by name. ``_Attrs`` mirrors the raw MDD object
+  model (Pascal-cased COM properties such as ``ObjectTypeValue``, ``DataType``,
+  ``IsSystem``, ``HasCaseData``, ``IsGrid``, ``MinValue``/``MaxValue`` and, for
+  shared-list references, ``IsReference``/``ReferenceName``).
 
 ## Network cmdlets
 

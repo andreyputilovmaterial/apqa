@@ -96,7 +96,7 @@ def test_run_tst_case_failure_message_includes_id_and_name():
 
 
 def test_run_tst_case_failure_message_includes_notes():
-    block = {'fields': {'BrandAwareness': {'label': 'a & b'}}}
+    block = {'Fields': {'BrandAwareness': {'Label': 'a & b'}}}
     rule = Rule(
         name='Verify all xml',
         left=[
@@ -109,7 +109,7 @@ def test_run_tst_case_failure_message_includes_notes():
     with pytest.raises(AssertionError) as excinfo:
         run_tst_case(rule)
     message = str(excinfo.value)
-    assert 'fields.BrandAwareness.label' in message
+    assert 'Fields.BrandAwareness.Label' in message
     assert 'not XML-compatible' in message
 
 

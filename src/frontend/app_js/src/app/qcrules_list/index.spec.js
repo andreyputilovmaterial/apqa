@@ -61,7 +61,7 @@ describe('QcRulesList', () => {
           ok: true,
           json: () => Promise.resolve({
             result: false,
-            notes: [{ path: ['fields', 'A', 'label'], message: 'not XML-compatible' }],
+            notes: [{ path: ['Fields', 'A', 'Label'], message: 'not XML-compatible' }],
           }),
         });
       }
@@ -76,7 +76,7 @@ describe('QcRulesList', () => {
 
     expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
     expect(wrapper.find('.apqa-rule-run-result-notes li').text()).toContain(
-      'fields.A.label: not XML-compatible',
+      'Fields.A.Label: not XML-compatible',
     );
   });
 

@@ -81,7 +81,7 @@ def test_run_true_with_report_has_no_notes_key():
 
 
 def test_run_false_with_report_includes_notes():
-    block = {'fields': {'A': {'label': 'a & b'}}}
+    block = {'Fields': {'A': {'Label': 'a & b'}}}
     rule = {
         'left': [
             {'cmdlet': 'literal', 'args': {'value': block}},
@@ -95,7 +95,7 @@ def test_run_false_with_report_includes_notes():
     )
     assert status == 200
     assert data['result'] is False
-    assert data['notes'][0]['path'] == ['fields', 'A', 'label']
+    assert data['notes'][0]['path'] == ['Fields', 'A', 'Label']
 
 
 def test_invalid_json():

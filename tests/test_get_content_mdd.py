@@ -89,29 +89,29 @@ def test_iter_attr():
 
 def test_category_map_indexes_leaves_and_nested_groups():
     categories = [
-        {'name': 'A', 'value': None},
+        {'Name': 'A', 'value': None},
         {
-            'name': 'Group',
+            'Name': 'Group',
             'value': [
-                {'name': 'B', 'value': None},
-                {'name': 'C', 'value': None},
+                {'Name': 'B', 'value': None},
+                {'Name': 'C', 'value': None},
             ],
         },
     ]
     mapped = _category_map(categories)
     assert set(mapped) == {'A', 'Group', 'B', 'C'}
     assert mapped['A']['value'] is None
-    assert mapped['Group']['value'][0]['name'] == 'B'
-    assert mapped['B']['name'] == 'B'
+    assert mapped['Group']['value'][0]['Name'] == 'B'
+    assert mapped['B']['Name'] == 'B'
 
 
-def test_block_field_stores_subfields_in_fields_bucket(monkeypatch):
-    subfields = {'Cluster': {'name': 'Cluster'}}
+def test_block_field_stores_subfields_in_Fields_bucket(monkeypatch):
+    subfields = {'Cluster': {'Name': 'Cluster'}}
     reader = _MDDReader.__new__(_MDDReader)
     monkeypatch.setattr(
         _MDDReader,
         '_read_item_meta',
-        lambda self, item, attrs: {'name': 'SnifferData'},
+        lambda self, item, attrs: {'Name': 'SnifferData'},
     )
     monkeypatch.setattr(
         _MDDReader,
@@ -121,6 +121,6 @@ def test_block_field_stores_subfields_in_fields_bucket(monkeypatch):
 
     block = reader._read_block_field(_Stub(Name='SnifferData'))
 
-    assert block['name'] == 'SnifferData'
-    assert block['fields'] is subfields
+    assert block['Name'] == 'SnifferData'
+    assert block['Fields'] is subfields
     assert block['value'] is None
