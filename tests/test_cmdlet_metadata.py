@@ -188,6 +188,15 @@ def test_exclude_cmdlets_rules_arg_is_path_rules():
         assert 'first_kinds' not in rules
 
 
+def test_include_cmdlets_rules_arg_is_path_rules():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    for name in ('include-child', 'include-deep-node'):
+        rules = {a['name']: a for a in meta[name]['args']}['rules']
+        assert rules['type'] == 'path-rules'
+        assert rules['required'] is True
+        assert 'first_kinds' not in rules
+
+
 def test_literal_value_arg_is_typed():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
     value_args = {a['name']: a for a in meta['literal']['args']}

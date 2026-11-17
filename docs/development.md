@@ -384,8 +384,8 @@ Three cmdlet types:
 
 1. **Source readers** — read source data (Excel, SPSS, CSV, text, databases, …).
 2. **Middle processors** — `select-field`, `select-item`, `select-range`,
-   `exclude-child`, `exclude-deep-node`, `where`, `map`, `sort`, `count`,
-   `to-string`, …
+   `exclude-child`, `exclude-deep-node`, `include-child`, `include-deep-node`,
+   `where`, `map`, `sort`, `count`, `to-string`, …
 3. **Terminal** — produce a value for comparison.
 
 Cmdlets are defined through a **global registry** (plugin-like) and are

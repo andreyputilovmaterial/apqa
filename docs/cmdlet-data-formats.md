@@ -134,34 +134,39 @@ array is a workbook, a sheet, a table, or a query result:
 | `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
 | — | remove the direct children of a block/array whose key/index matches a rule | `exclude-child` |
 | — | recursively remove nodes whose data path (relative to the received value) matches a rule | `exclude-deep-node` |
+| — | keep only the direct children of a block/array whose key/index matches a rule | `include-child` |
+| — | keep only nodes whose data path (relative to the received value) matches a rule, plus their scaffolding | `include-deep-node` |
 
 > **Naming note (unsettled).** `select-field` is a deliberately provisional name
 > for "read one field" — the verb (`select-` vs `get-`/`read-`) and the noun
 > (`field` vs `property`) are still being felt out and may change. Likewise
 > `map`/`where` are the spec names for ForEach-Object/Where-Object;
 > `foreach-object` is an equally valid alternative for `map`. The former
-> path-removal cmdlet `filter` was split into `exclude-child` /
-> `exclude-deep-node` (see "Excluding nodes by path"); the `exclude-` prefix is
-> still provisional. Treat these as placeholders, not a final API.
+> path-removal cmdlet `filter` was split into the `exclude-*` / `include-*`
+> pairs (see "Excluding / including nodes by path"); the `exclude-` /
+> `include-` prefixes are still provisional. Treat these as placeholders, not
+> a final API.
 
-## Excluding nodes by path (`exclude-child`, `exclude-deep-node`)
+## Excluding / including nodes by path (`exclude-*`, `include-*`)
 
-The `exclude-*` family removes nodes from the piped value by matching their
-**data path** — the `format_path` notation used by diagnostic notes: block keys
-joined with `.`, array indices as `[i]`, non-identifier keys quoted
-(`['None of the above']`).
+The `exclude-*` and `include-*` families remove or keep nodes of the piped value
+by matching their **data path** — the `format_path` notation used by diagnostic
+notes: block keys joined with `.`, array indices as `[i]`, non-identifier keys
+quoted (`['None of the above']`).
 
-- `exclude-child` — a **shallow** processor: removes only the direct children of
-  the received block/array whose key/index matches a rule, and does not recurse
-  into the children that stay.
-- `exclude-deep-node` — a **recursive** processor: walks the received value and
-  removes every node whose path matches a rule; a matching block key or array
-  element removes that whole subtree, a matching leaf removes just that leaf.
+- `exclude-child` / `include-child` — **shallow** processors acting only on the
+  direct children of the received block/array: `exclude-child` removes the
+  matching children, `include-child` keeps the matching children and drops the
+  rest. Neither recurses.
+- `exclude-deep-node` / `include-deep-node` — **recursive** processors:
+  `exclude-deep-node` removes every node whose path matches a rule;
+  `include-deep-node` keeps a node whose path matches a rule (with its whole
+  subtree) plus every ancestor needed to reach it, and drops everything else.
 
-Both take a `rules` argument — a list of rule mappings (see
+All four take a `rules` argument — a list of rule mappings (see
 `src/cmdlets/path_rules.py`):
 
-    get-content-mdd path=… -> exclude-deep-node rules=[{type: eq, pattern: Fields.SnifferData.Fields.Cluster.Categories.Select}] -> validate-xml-compatible cmp-eq literal(True)
+    get-content-mdd path=… -> include-deep-node rules=[{type: endswith, pattern: .Label}] -> validate-xml-compatible cmp-eq literal(True)
 
 - `pattern` (required) — the text matched against the rendered path.
 - `type` (default `eq`) — `eq` (full exact match), `startswith`, `endswith`,
@@ -171,9 +176,9 @@ Both take a `rules` argument — a list of rule mappings (see
 - `name` (optional) — a display label, falling back to `pattern`.
 
 Matching is **relative**: each rule is written against whatever the cmdlet
-receives, not the root, so both cmdlets are pure functions of their input and
-can sit anywhere in a chain. The received value itself is never a removal
-candidate, and a path matching no node is ignored.
+receives, not the root, so all four cmdlets are pure functions of their input
+and can sit anywhere in a chain. `include-*` returns `sysmissing` (`None`) when
+nothing is kept.
 
 ## Validation cmdlets
 

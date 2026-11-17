@@ -52,6 +52,10 @@ This sections is to capture everything that comes to mind that should ideally be
   **relative** to the received value — the old full-path behaviour and the
   `navigation.py` path machinery were dropped as unnecessary.
 
+- (done) Added the `include-*` pair (`include-child`, `include-deep-node`) as
+  the keep-complement of `exclude-*`, reusing the same `path-rules` arg; both
+  return `sysmissing` when nothing is kept.
+
 ## Random thougds and things to compare
 
 - safe yaml
