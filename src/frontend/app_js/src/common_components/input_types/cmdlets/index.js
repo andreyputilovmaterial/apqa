@@ -19,6 +19,7 @@ import InputArgLiteralValue from './data_types/literal_value/index';
 import InputArgCmdletChain from './data_types/cmdlet_chain/index';
 import InputArgCmdletChains from './data_types/cmdlet_chains/index';
 import InputArgDate from './data_types/date/index';
+import InputArgPathRules from './data_types/path_rules/index';
 
 export const inputCmdletComponents = {
   'component-input-cmdlet': InputCmdlet,
@@ -38,6 +39,7 @@ export const inputCmdletComponents = {
   'component-input-cmdlet-arg-cmdlet-chain': InputArgCmdletChain,
   'component-input-cmdlet-arg-cmdlet-chains': InputArgCmdletChains,
   'component-input-cmdlet-arg-date': InputArgDate,
+  'component-input-cmdlet-arg-path-rules': InputArgPathRules,
 };
 
 export function registerInputCmdletComponents(app) {

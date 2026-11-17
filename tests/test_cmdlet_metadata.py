@@ -179,12 +179,13 @@ def test_logical_bitwise_short_forms():
     assert_short_form('bitwise-rshift', 'BITRSHIFT')
 
 
-def test_filter_ignorelist_arg_is_strings_list():
+def test_exclude_cmdlets_rules_arg_is_path_rules():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
-    ignorelist = {a['name']: a for a in meta['filter']['args']}['ignorelist']
-    assert ignorelist['type'] == 'strings'
-    assert ignorelist['required'] is True
-    assert 'first_kinds' not in ignorelist
+    for name in ('exclude-child', 'exclude-deep-node'):
+        rules = {a['name']: a for a in meta[name]['args']}['rules']
+        assert rules['type'] == 'path-rules'
+        assert rules['required'] is True
+        assert 'first_kinds' not in rules
 
 
 def test_literal_value_arg_is_typed():

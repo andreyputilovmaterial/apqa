@@ -1,6 +1,5 @@
 """Run a chain of cmdlets, threading each output into the next."""
 
-from .navigation import navigation_scope
 from .registry import cmdlets
 from ..user_settings import current_user_settings, user_settings_scope
 
@@ -55,15 +54,11 @@ def run_chain(chain, initial=None, settings=None):
 
     A failing cmdlet (including an unknown cmdlet name) raises `ChainError`
     identifying the step, with the original exception chained as ``__cause__``.
-
-    Each run also opens a fresh navigation-path scope (see
-    ``src/cmdlets/navigation.py``) so navigating cmdlets can record their step
-    and a downstream ``filter`` can read the path that led to its input.
     """
     if settings is None:
         settings = current_user_settings()
     value = initial
-    with navigation_scope(), user_settings_scope(settings):
+    with user_settings_scope(settings):
         for index, step in enumerate(chain):
             if not isinstance(step, dict):
                 raise ValueError(

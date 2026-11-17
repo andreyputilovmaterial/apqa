@@ -38,6 +38,7 @@ CMDLET_RENAMES = {
     'bit-not': 'bitwise-not',
     'bit-lshift': 'bitwise-lshift',
     'bit-rshift': 'bitwise-rshift',
+    'filter': 'exclude-deep-node',
 }
 
 
@@ -46,6 +47,33 @@ def migrate_op_name(op):
     if op is None or op == '':
         return op
     return OP_RENAMES.get(f'{op}', f'{op}')
+
+
+def _migrate_filter_args(migrated):
+    """Convert a legacy ``filter`` step's ``ignorelist`` into ``rules``.
+
+    ``filter`` was renamed to ``exclude-deep-node``, and its ``ignorelist`` (a
+    flat list of exact full-path strings) became ``rules`` (a list of
+    ``{name, type, pattern}`` mappings). The old exact-match behaviour maps to
+    ``type: 'eq'``; each old path becomes both the display ``name`` and the
+    ``pattern``.
+    """
+    args = migrated.get('args')
+    if not isinstance(args, dict) or 'ignorelist' not in args:
+        return
+    ignorelist = args['ignorelist']
+    if not isinstance(ignorelist, list):
+        return
+    rules = [
+        {'name': path, 'type': 'eq', 'pattern': path}
+        for path in ignorelist
+        if isinstance(path, str)
+    ]
+    migrated_args = {
+        key: item for key, item in args.items() if key != 'ignorelist'
+    }
+    migrated_args['rules'] = rules
+    migrated['args'] = migrated_args
 
 
 def _migrate_value(value):
@@ -65,6 +93,8 @@ def _migrate_value(value):
                     key: _migrate_value(arg_value)
                     for key, arg_value in value['args'].items()
                 }
+            if migrated['cmdlet'] == 'exclude-deep-node':
+                _migrate_filter_args(migrated)
             return migrated
         return {key: _migrate_value(item) for key, item in value.items()}
     if isinstance(value, list):

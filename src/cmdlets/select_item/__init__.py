@@ -5,7 +5,6 @@ source readers (see "Row & column names" in `docs/cmdlet-data-formats.md`),
 which is not implemented yet.
 """
 
-from ..navigation import record_navigation_step
 from ..registry import cmdlets
 from ..value_types import PipeValue
 
@@ -43,5 +42,4 @@ def select_item(value: PipeValue, args: dict) -> PipeValue:
             f'select-item: index {index} out of range for array of length {len(value)}'
         ) from None
 
-    record_navigation_step({'cmdlet': 'select-item', 'args': {'index': index}})
     return result

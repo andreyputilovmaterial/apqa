@@ -132,42 +132,48 @@ array is a workbook, a sheet, a table, or a query result:
 | `Where-Object { … }` | filter iterations by a condition | `where` |
 | `ForEach-Object { … }` | map/transform each iteration | `map` |
 | `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
-| — | remove nodes by their data path (full path from root) | `filter` |
+| — | remove the direct children of a block/array whose key/index matches a rule | `exclude-child` |
+| — | recursively remove nodes whose data path (relative to the received value) matches a rule | `exclude-deep-node` |
 
 > **Naming note (unsettled).** `select-field` is a deliberately provisional name
 > for "read one field" — the verb (`select-` vs `get-`/`read-`) and the noun
 > (`field` vs `property`) are still being felt out and may change. Likewise
 > `map`/`where` are the spec names for ForEach-Object/Where-Object;
-> `foreach-object` is an equally valid alternative for `map`. The name `filter`
-> is now taken by the path-removal processor (see "Filtering nodes by path").
-> Treat these as placeholders, not a final API.
+> `foreach-object` is an equally valid alternative for `map`. The former
+> path-removal cmdlet `filter` was split into `exclude-child` /
+> `exclude-deep-node` (see "Excluding nodes by path"); the `exclude-` prefix is
+> still provisional. Treat these as placeholders, not a final API.
 
-## Filtering nodes by path (`filter`)
+## Excluding nodes by path (`exclude-child`, `exclude-deep-node`)
 
-The `filter` cmdlet is a **processor** that removes nodes from the piped input
-by their **data path** — the sequence of block keys and array indices from the
-root value to the node — and passes everything else through unchanged:
+The `exclude-*` family removes nodes from the piped value by matching their
+**data path** — the `format_path` notation used by diagnostic notes: block keys
+joined with `.`, array indices as `[i]`, non-identifier keys quoted
+(`['None of the above']`).
 
-    get-content-mdd path=… -> filter ignorelist=[…] -> validate-xml-compatible cmp-eq literal(True)
+- `exclude-child` — a **shallow** processor: removes only the direct children of
+  the received block/array whose key/index matches a rule, and does not recurse
+  into the children that stay.
+- `exclude-deep-node` — a **recursive** processor: walks the received value and
+  removes every node whose path matches a rule; a matching block key or array
+  element removes that whole subtree, a matching leaf removes just that leaf.
 
-The navigation path is tracked per chain run (`src/cmdlets/navigation.py`):
-each navigating cmdlet (`select-field`, `select-item`) contributes a data-path
-segment (a field name / an array index), so `filter` can sit **anywhere** in the
-chain — it prepends the prefix already travelled to every node it walks, then
-matches the full path. Non-navigating cmdlets (e.g. `select-range`, `map`,
-`where`) change the value, not its location, so they add no segment; the filter
-just traverses whatever input it receives.
+Both take a `rules` argument — a list of rule mappings (see
+`src/cmdlets/path_rules.py`):
 
-`ignorelist` is a list of path **strings** in the same notation the diagnostic
-notes use (`format_path`): block keys joined with `.`, array indices as `[i]`,
-non-identifier keys quoted (`['None of the above']`), e.g.
-`Fields.SnifferData.Fields.Cluster.Categories.Select` or
-`Pages.Q1.value[2].Label`.
+    get-content-mdd path=… -> exclude-deep-node rules=[{type: eq, pattern: Fields.SnifferData.Fields.Cluster.Categories.Select}] -> validate-xml-compatible cmp-eq literal(True)
 
-A path naming a block key or an array element removes that whole node; a path
-naming a leaf removes just that leaf; a path equal to the filter's own position
-removes the whole received value (returns `None`). A path matching no node under
-the received value is ignored.
+- `pattern` (required) — the text matched against the rendered path.
+- `type` (default `eq`) — `eq` (full exact match), `startswith`, `endswith`,
+  `contains`, or `regex` (`re.search`).
+- `case_insensitive` (default `false`) — folds case for the literal modes and
+  adds `re.IGNORECASE` for `regex`.
+- `name` (optional) — a display label, falling back to `pattern`.
+
+Matching is **relative**: each rule is written against whatever the cmdlet
+receives, not the root, so both cmdlets are pure functions of their input and
+can sit anywhere in a chain. The received value itself is never a removal
+candidate, and a path matching no node is ignored.
 
 ## Validation cmdlets
 
@@ -457,11 +463,12 @@ served to the frontend by `GET /functionality/cmdlet-metadata` (see
   cmdlets run.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
-`strings` (a list of strings with add/remove rows), `json`, `literal-value` (the
-`literal` cmdlet's typed constant editor — see below), `cmdlet-chains` (a list
-of cmdlet chains, e.g. `logical-and`/`logical-or`/`bitwise-*` `operands`), and
-`cmdlet-chain` (a single cmdlet chain, e.g. `map`'s `transform` or `where`'s
-`predicate`).
+`strings` (a list of strings with add/remove rows), `path-rules` (a list of
+structured exclude rules — name / match type / pattern / case flag), `json`,
+`literal-value` (the `literal` cmdlet's typed constant editor — see below),
+`cmdlet-chains` (a list of cmdlet chains, e.g.
+`logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a single
+cmdlet chain, e.g. `map`'s `transform` or `where`'s `predicate`).
 
 `literal-value` (used only by `literal.value`) is a **composite editor**: a type
 selector (`text` / `number` / `boolean` / `path` / `date` / `json`) plus the

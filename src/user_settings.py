@@ -83,11 +83,10 @@ _SETTINGS = ContextVar('apqa_user_settings', default=None)
 def user_settings_scope(settings):
     """Make ``settings`` the active settings for one chain run.
 
-    Like ``navigation_scope`` (see ``src/cmdlets/navigation.py``), this uses a
-    ``ContextVar`` so nested chain runs (``map``'s transform, ``where``'s
-    predicate, operand chains) inherit the same settings without an extra
-    parameter threaded through every cmdlet signature, and concurrent rule runs
-    never mix their settings.
+    This uses a ``ContextVar`` so nested chain runs (``map``'s transform,
+    ``where``'s predicate, operand chains) inherit the same settings without an
+    extra parameter threaded through every cmdlet signature, and concurrent rule
+    runs never mix their settings.
     """
     token = _SETTINGS.set(settings)
     try:

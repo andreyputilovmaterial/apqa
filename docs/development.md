@@ -384,7 +384,8 @@ Three cmdlet types:
 
 1. **Source readers** — read source data (Excel, SPSS, CSV, text, databases, …).
 2. **Middle processors** — `select-field`, `select-item`, `select-range`,
-   `where`, `map`, `sort`, `count`, `to-string`, …
+   `exclude-child`, `exclude-deep-node`, `where`, `map`, `sort`, `count`,
+   `to-string`, …
 3. **Terminal** — produce a value for comparison.
 
 Cmdlets are defined through a **global registry** (plugin-like) and are
@@ -565,8 +566,9 @@ An **arg schema** is `{ name, type, required, description }` plus optional
 
 - `text` (default), `number`, `boolean` (a `true`/`false` drop-down), `path`,
   `options` (single-select from `options`), `list` (comma-separated text →
-  array), `strings` (a list of strings with add/remove rows), `json` (raw JSON),
-  `literal-value` (the `literal` cmdlet's typed
+  array), `strings` (a list of strings with add/remove rows), `path-rules` (a
+  list of structured exclude rules: name / match type / pattern / case flag),
+  `json` (raw JSON), `literal-value` (the `literal` cmdlet's typed
   constant editor: text / number / boolean / path / date / json),
   `cmdlet-chains` (a list of cmdlet chains, e.g.
   `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a

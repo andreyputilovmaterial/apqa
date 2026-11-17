@@ -45,6 +45,13 @@ This sections is to capture everything that comes to mind that should ideally be
   the middle, re-measuring on resize; (b) extract the `nowrap + ellipsis` style into
   a shared utility class once a second consumer appears.
 
+- (done) Renamed the path-removal cmdlet: `filter` → `exclude-child` (shallow,
+  direct children only) + `exclude-deep-node` (recursive), with a structured
+  `rules` arg (`{name, type: eq|startswith|endswith|contains|regex, pattern,
+  case_insensitive}`) and a new `path-rules` arg type/editor. Matching is now
+  **relative** to the received value — the old full-path behaviour and the
+  `navigation.py` path machinery were dropped as unnecessary.
+
 ## Random thougds and things to compare
 
 - safe yaml

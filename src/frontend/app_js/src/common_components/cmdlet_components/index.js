@@ -35,6 +35,8 @@ import DataTypeCmdletChainsCompact from './data_types/cmdlet_chains/compact';
 import DataTypeCmdletChainsFull from './data_types/cmdlet_chains/full';
 import DataTypeDateCompact from './data_types/date/compact';
 import DataTypeDateFull from './data_types/date/full';
+import DataTypePathRulesCompact from './data_types/path_rules/compact';
+import DataTypePathRulesFull from './data_types/path_rules/full';
 
 export const cmdletComponents = {
   'component-cmdlet-compact': CmdletCompact,
@@ -70,6 +72,8 @@ export const cmdletComponents = {
   'component-cmdlet-arg-cmdlet-chains-full': DataTypeCmdletChainsFull,
   'component-cmdlet-arg-date-compact': DataTypeDateCompact,
   'component-cmdlet-arg-date-full': DataTypeDateFull,
+  'component-cmdlet-arg-path-rules-compact': DataTypePathRulesCompact,
+  'component-cmdlet-arg-path-rules-full': DataTypePathRulesFull,
 };
 
 export function registerCmdletComponents(app) {

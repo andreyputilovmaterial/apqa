@@ -1,0 +1,31 @@
+.apqa-input-cmdlet-arg-path-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apqa-input-cmdlet-arg-path-rule {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.apqa-input-cmdlet-arg-rule-name {
+  flex: 0 0 auto;
+  width: 9em;
+}
+
+.apqa-input-cmdlet-arg-rule-pattern {
+  flex: 1 1 auto;
+}
+
+.apqa-input-cmdlet-arg-rule-ci {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+}

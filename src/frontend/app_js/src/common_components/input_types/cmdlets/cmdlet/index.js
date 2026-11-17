@@ -12,6 +12,7 @@ function defaultArgValue(arg) {
       return false;
     case 'list':
     case 'strings':
+    case 'path-rules':
       return [];
     case 'number':
     case 'path':

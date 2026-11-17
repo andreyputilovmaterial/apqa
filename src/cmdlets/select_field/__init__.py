@@ -7,7 +7,6 @@ field over every iteration, like JS ``items.map(x => x.field)``). Nesting is by
 chaining — ``select-field "a" | select-field "b"`` is ``obj.a.b``.
 """
 
-from ..navigation import record_navigation_step
 from ..registry import cmdlets
 from ..value_types import PipeValue
 
@@ -41,7 +40,6 @@ def select_field(value: PipeValue, args: dict) -> PipeValue:
             f'select-field: expected a block or an array, got {type(value).__name__}'
         )
 
-    record_navigation_step({'cmdlet': 'select-field', 'args': {'field': field}})
     return result
 
 

@@ -63,6 +63,25 @@ def test_migrate_rule_dict():
     assert out['right'][0]['cmdlet'] == 'literal'
 
 
+def test_migrate_chain_rewrites_filter_to_exclude_deep_node():
+    chain = [
+        {
+            'cmdlet': 'filter',
+            'args': {'ignorelist': ['Fields.SnifferData.Fields.Cluster.Categories.Select']},
+        },
+    ]
+    out = migrate_chain(chain)
+    assert out[0]['cmdlet'] == 'exclude-deep-node'
+    assert out[0]['args']['rules'] == [
+        {
+            'name': 'Fields.SnifferData.Fields.Cluster.Categories.Select',
+            'type': 'eq',
+            'pattern': 'Fields.SnifferData.Fields.Cluster.Categories.Select',
+        },
+    ]
+    assert 'ignorelist' not in out[0]['args']
+
+
 def test_migrate_group_dict_rewrites_alias_chains():
     data = {
         'name': 'g',
