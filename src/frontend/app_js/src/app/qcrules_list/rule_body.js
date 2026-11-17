@@ -10,7 +10,7 @@ import { formatNote } from './run_result';
 // the card is replaced by the inline edit form; otherwise it shows, in order:
 //   1. name + optional comment (the rule header, which is also the reorder drag
 //      surface),
-//   2. an icon-only action row (Edit / Run / Delete),
+//   2. an icon-only action row (Edit / Run / Duplicate / Delete),
 //   3. the cached last-run result (only when one exists),
 //   4. the rule content (left chain, comparison, right chain),
 //   5. meta (tags, markers, created timestamp).
@@ -26,7 +26,7 @@ const RuleBody = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel'],
 
   components: {
     'rule-edit-form': RuleEditForm,
@@ -59,6 +59,9 @@ const RuleBody = {
       </button>
       <button type="button" class="apqa-record-action apqa-record-action-run" title="Run" aria-label="Run rule" @click="$emit('run', record)">
         <i class="ri-play-large-line" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="apqa-record-action apqa-record-action-duplicate" title="Duplicate" aria-label="Duplicate rule" @click="$emit('duplicate', record)">
+        <i class="ri-file-copy-line" aria-hidden="true"></i>
       </button>
       <button type="button" class="apqa-record-action apqa-record-action-delete" title="Delete" aria-label="Delete rule" @click="$emit('delete', record)">
         <i class="ri-delete-bin-6-line" aria-hidden="true"></i>

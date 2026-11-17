@@ -1,5 +1,7 @@
 
 from .detect_type import detect_type
+from .ids import ensure_unique
+from .rule_base import Rule
 
 
 class DBFile:
@@ -257,6 +259,67 @@ class DBFile:
                     self.update_group(obj.id, meta=meta)
 
         return item
+
+    def _ordered_rule_siblings(self, parent, exclude_rule_id=None):
+        """Ordered siblings under ``parent`` as ``(kind, obj)`` tuples.
+
+        Mirrors the ordering used by :meth:`reorder` for a rule: rules and
+        sub-folders share one order space (ties put sub-folders first, insertion
+        order within each kind). ``exclude_rule_id`` drops a rule from the list
+        (used while duplicating so the fresh copy is not counted as an existing
+        sibling).
+        """
+        entries = []
+        for rule in self.list_rules():
+            if rule.group == parent and rule.id != exclude_rule_id:
+                entries.append(('rule', rule))
+        for group in self.list_groups():
+            if group.parent == parent:
+                entries.append(('group', group))
+
+        def order_of(obj):
+            meta = obj.meta or {}
+            value = meta.get('order')
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return 0.0
+
+        return sorted(
+            entries,
+            key=lambda entry: (order_of(entry[1]), 0 if entry[0] == 'group' else 1),
+        )
+
+    def duplicate_rule(self, rule_id):
+        """Duplicate a rule into the same parent, immediately after the original.
+
+        The copy keeps the original's display name, chains, op and meta, but gets
+        a fresh unique id (``-2``/``-3``/… appended on collision — display names
+        may repeat, ids may not). It is inserted right after the original so it
+        does not jump to the end of the folder. Returns the new :class:`Rule`.
+        """
+        rule = self.get_rule(rule_id)
+
+        duplicate = Rule.from_dict(rule.to_dict())
+        duplicate.id = ensure_unique(f'{rule.id}', self._existing_rule_ids())
+        new_id = duplicate.id
+        self.add_rule(duplicate)
+
+        # Find the sibling that currently follows the original, then move the copy
+        # to sit immediately after it (``None`` = append at the end of the folder).
+        before = None
+        ordered = self._ordered_rule_siblings(rule.group, exclude_rule_id=duplicate.id)
+        for index, (kind, obj) in enumerate(ordered):
+            if kind == 'rule' and obj.id == rule.id:
+                if index + 1 < len(ordered):
+                    next_kind, next_obj = ordered[index + 1]
+                    before = f'{"r" if next_kind == "rule" else "g"}:{next_obj.id}'
+                break
+
+        self.reorder('rule', new_id, parent=rule.group, before=before)
+        # Re-read from storage so the returned rule reflects the renumbered order
+        # for every backend (the SQLite processor reads a fresh object on update).
+        return self.get_rule(new_id)
 
     def _validate_group_parent(self, group, parent):
         """Return the canonical parent id, or raise on an invalid reference.

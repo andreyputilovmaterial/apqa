@@ -87,7 +87,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -475,6 +475,16 @@ const QcRulesList = {
       editingId.value = '';
     }
 
+    async function onDuplicateRule(record) {
+      try {
+        await postJson(`/qc/rules/${encodeURIComponent(record.id)}/duplicate`, {});
+        await load();
+      } catch (e) {
+        window.alert(`Failed to duplicate QC rule: ${e}`);
+        logError(`Failed to duplicate QC rule: ${e}`);
+      }
+    }
+
     async function onDeleteRule(record) {
       const Confirm = defineComponent({
         setup: (_, { attrs }) => () =>
@@ -620,6 +630,7 @@ const QcRulesList = {
       createAlias,
       onEditRule,
       onRunRule,
+      onDuplicateRule,
       onDeleteRule,
       onEditGroup,
       onRunGroup,

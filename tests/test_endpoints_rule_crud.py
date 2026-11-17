@@ -188,3 +188,37 @@ def test_update_rule_with_group(config):
     status, data = call(config, 'PUT', '/qc/rules/r1', {'group': 'Data'})
     assert status == 200
     assert data['rule']['group'] == 'data'
+
+
+def test_duplicate_rule(config):
+    call(config, 'POST', '/qc/rules', {'name': 'r1', 'op': 'cmp-eq'})
+
+    status, data = call(config, 'POST', '/qc/rules/r1/duplicate')
+
+    assert status == 201
+    assert data['rule']['id'] == 'r1-2'
+    assert data['rule']['name'] == 'r1'
+    assert data['rule']['op'] == 'cmp-eq'
+
+    status, data = call(config, 'GET', '/qc/rules')
+    assert status == 200
+    assert [r['id'] for r in data['rules']] == ['r1', 'r1-2']
+
+
+def test_duplicate_rule_missing(config):
+    status, data = call(config, 'POST', '/qc/rules/nope/duplicate')
+    assert status == 404
+
+
+def test_duplicate_rule_places_copy_right_after_original(config):
+    for name in ('a', 'b', 'c'):
+        call(config, 'POST', '/qc/rules', {'name': name})
+
+    status, data = call(config, 'POST', '/qc/rules/b/duplicate')
+    assert status == 201
+    assert data['rule']['id'] == 'b-2'
+
+    status, data = call(config, 'GET', '/qc/rules')
+    assert status == 200
+    orders = {r['id']: (r['meta'] or {}).get('order') for r in data['rules']}
+    assert orders['a'] < orders['b'] < orders['b-2'] < orders['c']

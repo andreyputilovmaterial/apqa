@@ -164,6 +164,27 @@ describe('QcRulesList', () => {
     expect(wrapper.text()).toContain('Rule one');
   });
 
+  it('duplicates a rule and reloads the list', async () => {
+    const rule = { id: 'r1', name: 'Rule one', group: '', left: [], op: '', right: [], meta: {} };
+
+    const calls = [];
+    vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
+      calls.push({ url, method: options.method || 'GET' });
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
+      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    wrapper.findComponent(RulesTree).vm.$emit('duplicate', { id: 'r1', name: 'Rule one' });
+    await flushPromises();
+
+    expect(calls).toContainEqual({ url: '/qc/rules/r1/duplicate', method: 'POST' });
+  });
+
   it('shows a red exception snippet when running raises', async () => {
     const rule = {
       id: 'r1',

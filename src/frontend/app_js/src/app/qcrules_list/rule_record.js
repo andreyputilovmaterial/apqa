@@ -23,7 +23,7 @@ const RuleRecord = {
     dropPosition: { type: String, default: '' },
   },
 
-  emits: ['edit', 'run', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel'],
 
   components: {
     'rule-body': RuleBody,
@@ -47,6 +47,7 @@ const RuleRecord = {
       :tag-suggestions="tagSuggestions"
       @edit="$emit('edit', record)"
       @run="$emit('run', record)"
+      @duplicate="$emit('duplicate', record)"
       @delete="$emit('delete', record)"
       @save="onSave"
       @cancel="onCancel"

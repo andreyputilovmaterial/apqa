@@ -251,6 +251,16 @@ describe('RulesTree', () => {
     expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'r1' });
   });
 
+  it('forwards duplicate actions from a rule', async () => {
+    const wrapper = mountTree({
+      props: { groups: [], records: [rule('r1')] },
+    });
+    await wrapper.find('.apqa-record-action-duplicate').trigger('click');
+
+    expect(wrapper.emitted('duplicate')).toHaveLength(1);
+    expect(wrapper.emitted('duplicate')[0][0]).toMatchObject({ name: 'r1' });
+  });
+
   it('forwards edit-group, run-group and delete-group actions from a folder', async () => {
     const wrapper = mountTree({
       props: { groups: [group('Data')], records: [] },

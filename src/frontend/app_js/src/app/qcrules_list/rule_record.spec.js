@@ -44,25 +44,29 @@ describe('RuleRecord', () => {
     expect(wrapper.find('.apqa-rule-card-definition').exists()).toBe(true);
   });
 
-  it('shows the three icon action buttons', () => {
+  it('shows the four icon action buttons', () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
 
     expect(wrapper.find('.apqa-record-action-edit i.ri-edit-box-line').exists()).toBe(true);
     expect(wrapper.find('.apqa-record-action-run i.ri-play-large-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-duplicate i.ri-file-copy-line').exists()).toBe(true);
     expect(wrapper.find('.apqa-record-action-delete i.ri-delete-bin-6-line').exists()).toBe(true);
   });
 
-  it('forwards edit, run and delete actions with the record', async () => {
+  it('forwards edit, run, duplicate and delete actions with the record', async () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
 
     await wrapper.find('.apqa-record-action-edit').trigger('click');
     await wrapper.find('.apqa-record-action-run').trigger('click');
+    await wrapper.find('.apqa-record-action-duplicate').trigger('click');
     await wrapper.find('.apqa-record-action-delete').trigger('click');
 
     expect(wrapper.emitted('edit')).toHaveLength(1);
     expect(wrapper.emitted('edit')[0][0]).toMatchObject({ name: 'Rule A' });
     expect(wrapper.emitted('run')).toHaveLength(1);
     expect(wrapper.emitted('run')[0][0]).toMatchObject({ name: 'Rule A' });
+    expect(wrapper.emitted('duplicate')).toHaveLength(1);
+    expect(wrapper.emitted('duplicate')[0][0]).toMatchObject({ name: 'Rule A' });
     expect(wrapper.emitted('delete')).toHaveLength(1);
     expect(wrapper.emitted('delete')[0][0]).toMatchObject({ name: 'Rule A' });
   });

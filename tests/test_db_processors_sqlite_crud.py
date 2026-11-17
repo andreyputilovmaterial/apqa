@@ -109,6 +109,31 @@ def test_add_rule_explicit_duplicate_id_raises(dbfile):
     assert len(dbfile) == 1
 
 
+def test_duplicate_rule_copies_content_and_dedups_id(dbfile):
+    duplicate = dbfile.duplicate_rule("wave69-counts-equal-9002")
+
+    assert duplicate.id == "wave69-counts-equal-9002-2"
+    assert duplicate.name == "wave69-counts-equal-9002"
+    assert duplicate.op == "cmp-eq"
+    assert duplicate.meta["tags"] == ["counts", "wave69"]
+    assert dbfile.has_rule("wave69-counts-equal-9002-2")
+    assert len(dbfile) == 2
+
+
+def test_duplicate_rule_places_copy_right_after_original(tmp_path):
+    db_file = tmp_path / "projects.sqlite3"
+    _insert_raw(db_file, {"name": "a", "meta": {}, "left": [], "op": "", "right": []})
+    dbfile = DBFile(str(db_file))
+    dbfile.add_rule({"name": "b"})
+    dbfile.add_rule({"name": "c"})
+
+    duplicate = dbfile.duplicate_rule("b")
+
+    orders = {rule.id: (rule.meta or {}).get("order") for rule in dbfile.list_rules()}
+    assert duplicate.id == "b-2"
+    assert orders["a"] < orders["b"] < orders["b-2"] < orders["c"]
+
+
 def test_update_rule(dbfile):
     rule = dbfile.update_rule("wave69-counts-equal-9002", op="cmp-lt")
     assert rule.op == "cmp-lt"

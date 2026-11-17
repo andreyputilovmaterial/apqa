@@ -200,4 +200,57 @@ def test_yaml_load_generates_ids_and_remaps_group_references(tmp_path):
     assert rule.group == "comp-titles"
 
 
+def test_duplicate_rule_copies_content_and_dedups_id(dbfile):
+    original = dbfile.get_rule("wave69-counts-equal-9002")
+
+    duplicate = dbfile.duplicate_rule("wave69-counts-equal-9002")
+
+    assert duplicate is not original
+    assert duplicate.id == "wave69-counts-equal-9002-2"
+    assert duplicate.name == original.name
+    assert duplicate.left == original.left
+    assert duplicate.op == original.op
+    assert duplicate.op_args == original.op_args
+    assert duplicate.right == original.right
+    assert duplicate.meta["tags"] == original.meta["tags"]
+    assert dbfile.has_rule("wave69-counts-equal-9002-2")
+    assert len(dbfile) == 2
+
+
+def test_duplicate_rule_suffix_increments_past_existing_copies(dbfile):
+    dbfile.add_rule({"name": "wave69-counts-equal-9002-2"})
+
+    duplicate = dbfile.duplicate_rule("wave69-counts-equal-9002")
+
+    assert duplicate.id == "wave69-counts-equal-9002-3"
+
+
+def test_duplicate_rule_places_copy_right_after_original(tmp_path):
+    db_file = tmp_path / "projects.yaml"
+    db_file.write_text("[]", encoding="utf-8")
+    dbfile = DBFile(str(db_file))
+    dbfile.add_rule({"name": "a"})
+    dbfile.add_rule({"name": "b"})
+    dbfile.add_rule({"name": "c"})
+
+    duplicate = dbfile.duplicate_rule("b")
+
+    orders = {rule.id: (rule.meta or {}).get("order") for rule in dbfile.list_rules()}
+    assert duplicate.id == "b-2"
+    assert orders["a"] < orders["b"] < orders["b-2"] < orders["c"]
+
+
+def test_duplicate_rule_stays_in_same_group(tmp_path):
+    db_file = tmp_path / "projects.yaml"
+    db_file.write_text("[]", encoding="utf-8")
+    dbfile = DBFile(str(db_file))
+    dbfile.add_group({"name": "Data"})
+    dbfile.add_rule({"name": "r1", "group": "data"})
+
+    duplicate = dbfile.duplicate_rule("r1")
+
+    assert duplicate.group == "data"
+    assert duplicate.id == "r1-2"
+
+
 

@@ -115,6 +115,16 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
         db_file.save()
         return json_response(200, {'rule': rule.to_dict()})
 
+    def handle_duplicate_rule(rule_id):
+        if not db_file.has_rule(rule_id):
+            return json_response(404, {'error': f'rule not found: {rule_id}'})
+        try:
+            rule = db_file.duplicate_rule(rule_id)
+        except (ValueError, KeyError) as e:
+            return json_response(400, {'error': f'{e}'})
+        db_file.save()
+        return json_response(201, {'rule': rule.to_dict()})
+
     # ---- routing ------------------------------------------------------------
 
     method = net_request_handler.command
@@ -140,6 +150,9 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
     elif len(path_parts) == 5 and path_parts[1] == 'qc' and path_parts[2] == 'rules' and path_parts[4] == 'rename':
         if method == 'POST':
             renderer = partial(handle_rename_rule, path_parts[3])
+    elif len(path_parts) == 5 and path_parts[1] == 'qc' and path_parts[2] == 'rules' and path_parts[4] == 'duplicate':
+        if method == 'POST':
+            renderer = partial(handle_duplicate_rule, path_parts[3])
 
     if renderer is None:
         return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})
