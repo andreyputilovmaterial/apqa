@@ -146,6 +146,13 @@
   color: var(--mdm-color-primary);
 }
 
+/* The Run action swaps its outline play glyph for the filled one on hover.
+   Pure CSS ::before content swap (same element, same font metrics), so the
+   button keeps its exact size and nothing shifts. */
+.apqa-record-action-run:hover .ri-play-large-line::before {
+  content: "\f507";
+}
+
 /* Delete is destructive: fade to red instead of the primary green. */
 .apqa-record-action-delete:hover {
   color: var(--mdm-color-error);
