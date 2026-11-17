@@ -46,7 +46,6 @@ from . import logical_tristate_any  # noqa: F401 - import registers the cmdlet
 from . import logical_tristate_not  # noqa: F401 - import registers the cmdlet
 from . import logical_tristate_or  # noqa: F401 - import registers the cmdlet
 from . import map_  # noqa: F401 - import registers the cmdlet
-from . import matches  # noqa: F401 - import registers the cmdlet
 from . import select_field  # noqa: F401 - import registers the cmdlet
 from . import select_item  # noqa: F401 - import registers the cmdlet
 from . import select_range  # noqa: F401 - import registers the cmdlet
@@ -54,5 +53,6 @@ from . import sort  # noqa: F401 - import registers the cmdlet
 from . import transform_strip_html  # noqa: F401 - import registers the optional-dep cmdlet
 from . import transform_text_regex  # noqa: F401 - import registers the cmdlet
 from . import validate_network_request_result  # noqa: F401 - import registers the cmdlet
+from . import validate_text_matches  # noqa: F401 - import registers the cmdlet
 from . import validate_xml_compatible  # noqa: F401 - import registers the optional-dep cmdlet
 from . import where  # noqa: F401 - import registers the cmdlet

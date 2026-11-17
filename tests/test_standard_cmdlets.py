@@ -238,27 +238,6 @@ def test_length_requires_text():
         cmdlets.get('length')(5, {})
 
 
-def test_matches_case_sensitive_default():
-    assert cmdlets.get('matches')('hello world', {'pattern': 'world'}) is True
-    assert cmdlets.get('matches')('hello world', {'pattern': 'World'}) is False
-
-
-def test_matches_case_insensitive():
-    m = cmdlets.get('matches')
-    assert m('hello world', {'pattern': 'WORLD', 'case_insensitive': True}) is True
-
-
-def test_matches_regex():
-    m = cmdlets.get('matches')
-    assert m('abc123', {'pattern': '^abc', 'regex': True}) is True
-    assert m('abc', {'pattern': '^b', 'regex': True}) is False
-
-
-def test_matches_requires_pattern():
-    with pytest.raises(ValueError):
-        cmdlets.get('matches')('abc', {})
-
-
 def test_transform_text_regex_replaces_all_matches():
     assert cmdlets.get('transform-text-regex')(
         'abc 123 abc', {'pattern': 'abc', 'replacement': 'x'}

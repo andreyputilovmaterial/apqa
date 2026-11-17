@@ -164,6 +164,91 @@ def test_validate_xml_compatible_compound_of_non_strings_passes():
     assert validate({'a': 1, 'b': Path('/tmp/x&y')}, {}) is True
 
 
+def test_validate_text_matches_case_sensitive_default():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate('hello world', {'pattern': 'world'}) is True
+    assert validate('hello world', {'pattern': 'World'}) is False
+
+
+def test_validate_text_matches_case_insensitive():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate('hello world', {'pattern': 'WORLD', 'case_insensitive': True}) is True
+
+
+def test_validate_text_matches_regex():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate('abc123', {'pattern': '^abc', 'regex': True}) is True
+    assert validate('abc', {'pattern': '^b', 'regex': True}) is False
+
+
+def test_validate_text_matches_requires_pattern():
+    with pytest.raises(ValueError):
+        cmdlets.get('validate-text-matches')('abc', {})
+
+
+def test_validate_text_matches_non_text_scalars_pass():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate(42, {'pattern': 'x'}) is True
+    assert validate(3.14, {'pattern': 'x'}) is True
+    assert validate(True, {'pattern': 'x'}) is True
+    assert validate(False, {'pattern': 'x'}) is True
+    assert validate(date(2025, 7, 15), {'pattern': 'x'}) is True
+    assert validate(datetime(2025, 7, 15, 10, 0, tzinfo=timezone.utc), {'pattern': 'x'}) is True
+    assert validate(sysmissing, {'pattern': 'x'}) is True
+    assert validate(Path('/tmp/plain-name'), {'pattern': 'x'}) is True
+
+
+def test_validate_text_matches_block_ands_fields():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate({'a': 'world', 'b': 'world'}, {'pattern': 'world'}) is True
+    assert validate({'a': 'world', 'b': 'other'}, {'pattern': 'world'}) is False
+
+
+def test_validate_text_matches_array_ands_items():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate(['world', 'world'], {'pattern': 'world'}) is True
+    assert validate(['world', 'other'], {'pattern': 'world'}) is False
+
+
+def test_validate_text_matches_empty_compound_is_vacuously_true():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate({}, {'pattern': 'x'}) is True
+    assert validate([], {'pattern': 'x'}) is True
+
+
+def test_validate_text_matches_ands_nested_compounds_recursively():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate([{'a': 'world'}, {'b': 'nested world'}], {'pattern': 'world'}) is True
+    assert validate([{'a': 'world'}, {'b': 'nested'}], {'pattern': 'world'}) is False
+
+
+def test_validate_text_matches_compound_of_non_strings_passes():
+    validate = cmdlets.get('validate-text-matches')
+    assert validate({'a': 1, 'b': Path('/tmp/x')}, {'pattern': 'x'}) is True
+
+
+def test_validate_text_matches_records_failed_path():
+    from src.cmdlets.diagnostic import collect_notes
+
+    validate = cmdlets.get('validate-text-matches')
+    with collect_notes() as notes:
+        assert validate({'a': 'world', 'b': 'nope'}, {'pattern': 'world'}) is False
+    assert len(notes.items) == 1
+    assert notes.items[0]['path'] == ['b']
+    assert 'world' in notes.items[0]['message']
+
+
+def test_validate_text_matches_records_array_index_path():
+    from src.cmdlets.diagnostic import collect_notes
+
+    validate = cmdlets.get('validate-text-matches')
+    with collect_notes() as notes:
+        assert validate(['world', 'nope'], {'pattern': 'world'}) is False
+    assert len(notes.items) == 1
+    assert notes.items[0]['path'] == [1]
+    assert 'world' in notes.items[0]['message']
+
+
 # ---- terminal predicate cmdlets --------------------------------------------
 
 def test_is_sysmissing_true_for_none():

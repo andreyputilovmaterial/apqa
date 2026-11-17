@@ -144,6 +144,11 @@ def _check(value, path, notes):
 `current_notes()` returns `None` when the cmdlet is called directly (outside a
 run), so the cmdlet's behavior is unchanged in unit tests.
 
+`validate-text-matches` opts in the same way: it walks the piped value, matches
+each `text` leaf against its `pattern`, and records a note whose path points at
+the leaf that failed (e.g. `Fields.BrandAwareness.Label`). The wording of its
+note is `text does not match <pattern> (value: <clip>)`.
+
 ## How the failure reaches the user
 
 ### "Run QC tests" mode (pytest)

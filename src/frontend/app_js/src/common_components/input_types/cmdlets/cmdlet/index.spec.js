@@ -6,7 +6,7 @@ import { inputCmdletComponents } from '../index.js';
 const CMDLETS = [
   { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'literal-value', required: true }] },
   { name: 'count', kind: 'processor', args: [{ name: 'fail_on_sysmissing', type: 'boolean', default: false }] },
-  { name: 'matches', kind: 'processor', args: [{ name: 'pattern', type: 'text', required: true }] },
+  { name: 'validate-text-matches', kind: 'terminal', args: [{ name: 'pattern', type: 'text', required: true }] },
   { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
 ];
 
@@ -62,15 +62,15 @@ describe('InputCmdlet', () => {
   });
 
   it('renders one input per argument once selected', () => {
-    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'matches', args: {} } });
+    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'validate-text-matches', args: {} } });
     expect(wrapper.find('input[name="pattern"]').exists()).toBe(true);
   });
 
   it('emits an updated args mapping when an argument changes', async () => {
-    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'matches', args: {} } });
+    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'validate-text-matches', args: {} } });
     await wrapper.find('input[name="pattern"]').setValue('abc');
     expect(wrapper.emitted('update:modelValue').at(-1)).toEqual([
-      { cmdlet: 'matches', args: { pattern: 'abc' } },
+      { cmdlet: 'validate-text-matches', args: { pattern: 'abc' } },
     ]);
   });
 

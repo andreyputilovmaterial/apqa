@@ -14,8 +14,8 @@ Args (stored named mapping):
     count             number, default ``0`` — maximum number of replacements
                       (``0`` replaces every match).
 
-A non-text value (including ``sysmissing``) raises, mirroring the ``matches``
-and ``length`` string helpers.
+A non-text value (including ``sysmissing``) raises, mirroring the ``length``
+string helper.
 """
 
 import re

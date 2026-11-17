@@ -82,6 +82,13 @@ def test_migrate_chain_rewrites_filter_to_exclude_deep_node():
     assert 'ignorelist' not in out[0]['args']
 
 
+def test_migrate_chain_rewrites_matches_to_validate_text_matches():
+    chain = [{'cmdlet': 'matches', 'args': {'pattern': 'world'}}]
+    out = migrate_chain(chain)
+    assert out[0]['cmdlet'] == 'validate-text-matches'
+    assert out[0]['args'] == {'pattern': 'world'}
+
+
 def test_migrate_group_dict_rewrites_alias_chains():
     data = {
         'name': 'g',

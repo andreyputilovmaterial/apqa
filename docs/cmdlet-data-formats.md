@@ -195,6 +195,15 @@ the piped value instead of producing a value for comparison. The common prefix i
   is vacuously valid). Uses the stdlib `xml.etree.ElementTree`, guarded as an
   optional dependency (see `docs/development.md` "Optional dependencies").
 
+- `validate-text-matches` — check whether every `text` leaf of the value matches
+  `args['pattern']` (a case-sensitive literal substring by default; `regex: true`
+  treats it as a regular expression with `re.search`, and `case_insensitive: true`
+  folds case). Every other scalar (`sysmissing`, booleans, numbers, dates, paths)
+  has no text to match and simply passes. Compound values (blocks/arrays) validate
+  every field/item and combine the results with a logical `AND` (an empty compound
+  is vacuously valid). A failing text leaf records a diagnostic note pointing at
+  its data path (see `docs/qc-results-reporting.md`).
+
 - `validate-network-request-result` — check whether a network result is
   successful. It expects the block produced by `get-content-network-fetch`
   (`status` integer, `body` text, `headers` block); a differently-shaped value
@@ -253,12 +262,11 @@ Bitwise operators require integer operands (bool excluded) and use
 `args['operands']` for the binary/n-ary ones: `bitwise-not` (unary), `bitwise-and`,
 `bitwise-or`, `bitwise-xor`, `bitwise-lshift`, `bitwise-rshift`.
 
-String helpers: `length` returns the text length; `matches` searches text for
-`args['pattern']` with optional `case_insensitive` / `regex` flags (default:
-case-sensitive literal substring); `transform-text-regex` replaces every regex match of
+String helpers: `length` returns the text length; `transform-text-regex` replaces every regex match of
 `args['pattern']` with `args['replacement']` (Python's `re.sub`, so replacement
 backreferences like `\1` work), with optional `case_insensitive` and `count`
-(maximum number of replacements; `0` replaces all).
+(maximum number of replacements; `0` replaces all). Text matching as a yes/no
+validation is `validate-text-matches` (see "Validation cmdlets").
 
 ## Text cleaning cmdlets
 

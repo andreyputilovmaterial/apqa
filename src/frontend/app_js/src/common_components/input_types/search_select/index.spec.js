@@ -5,7 +5,7 @@ import InputSearchSelect from './index.js';
 function mountComponent(props = {}) {
   return mount(InputSearchSelect, {
     props: {
-      options: ['count', 'matches', 'literal'],
+      options: ['count', 'validate-text-matches', 'literal'],
       placeholder: 'Select cmdlet…',
       ...props,
     },
@@ -22,7 +22,7 @@ describe('InputSearchSelect', () => {
   it('opens and focuses the search box when the trigger is clicked', async () => {
     const wrapper = mount(InputSearchSelect, {
       attachTo: document.body,
-      props: { options: ['count', 'matches', 'literal'], placeholder: 'Select cmdlet…' },
+      props: { options: ['count', 'validate-text-matches', 'literal'], placeholder: 'Select cmdlet…' },
     });
     await wrapper.find('.apqa-input-search-select-trigger').trigger('click');
     await flushPromises();
@@ -38,7 +38,7 @@ describe('InputSearchSelect', () => {
 
     await wrapper.find('.apqa-input-search-select-search').setValue('mat');
     const options = wrapper.findAll('.apqa-input-search-select-option');
-    expect(options.map((o) => o.text())).toEqual(['matches']);
+    expect(options.map((o) => o.text())).toEqual(['validate-text-matches']);
   });
 
   it('emits the chosen value and closes the menu', async () => {

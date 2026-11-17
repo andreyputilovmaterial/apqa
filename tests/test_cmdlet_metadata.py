@@ -73,6 +73,12 @@ def test_network_cmdlet_kinds():
     assert kinds['validate-network-request-result'] == 'terminal'
 
 
+def test_validate_text_matches_is_terminal():
+    kinds = {c['name']: c['kind'] for c in get_cmdlet_metadata()['cmdlets']}
+    assert kinds['validate-text-matches'] == 'terminal'
+    assert 'matches' not in kinds
+
+
 def test_every_cmdlet_has_permission_list():
     for cmdlet in get_cmdlet_metadata()['cmdlets']:
         assert isinstance(cmdlet['permissions'], list)

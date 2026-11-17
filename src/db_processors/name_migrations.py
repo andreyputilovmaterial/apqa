@@ -39,6 +39,7 @@ CMDLET_RENAMES = {
     'bit-lshift': 'bitwise-lshift',
     'bit-rshift': 'bitwise-rshift',
     'filter': 'exclude-deep-node',
+    'matches': 'validate-text-matches',
 }
 
 
