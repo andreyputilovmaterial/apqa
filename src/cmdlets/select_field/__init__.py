@@ -1,14 +1,14 @@
-"""`select-field` — read one field from a block, or a flat list of that field
-from every iteration of an array.
+"""`select-field` — read one field from a block, or a collection of that field
+from every element of a collection.
 
 This is the unified "dot + field" access of the JSON mental model: an object is
-a block (read one named field), and a collection is an array of blocks (map the
-field over every iteration, like JS ``items.map(x => x.field)``). Nesting is by
+a block (read one named field), and a collection is a sequence of blocks (map the
+field over every element, like JS ``items.map(x => x.field)``). Nesting is by
 chaining — ``select-field "a" | select-field "b"`` is ``obj.a.b``.
 """
 
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
@@ -26,7 +26,7 @@ from ..value_types import PipeValue
     compact=[{'text': '->', 'role': 'arrow'}, {'arg': 'field'}],
 )
 def select_field(value: PipeValue, args: dict) -> PipeValue:
-    """Return ``block[field]`` for a block, or ``[item[field] …]`` for an array."""
+    """Return ``block[field]`` for a block, or a collection of that field per element."""
     field = args.get('field')
     if field is None:
         raise ValueError("select-field: missing required arg 'field'")
@@ -34,10 +34,14 @@ def select_field(value: PipeValue, args: dict) -> PipeValue:
     if isinstance(value, dict):
         result = _read_field(value, field, 'block')
     elif isinstance(value, list):
-        result = [_read_field(item, field, 'array iteration') for item in value]
+        names = value.names if isinstance(value, Collection) else None
+        result = Collection(
+            [_read_field(item, field, 'collection element') for item in value],
+            names,
+        )
     else:
         raise TypeError(
-            f'select-field: expected a block or an array, got {type(value).__name__}'
+            f'select-field: expected a block or a collection, got {type(value).__name__}'
         )
 
     return result

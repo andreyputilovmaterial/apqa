@@ -3,13 +3,14 @@
 > Status: **agreed specification.** The runner (`src/rule_runner.py`), the cmdlet
 > registry, and the comparison ops are implemented and follow this spec. The
 > value-type *taxonomy* is spelled out in `src/cmdlets/value_types.py` — a root
-> `Value` base type plus `Scalar`/`Compound`/`Block`/`NamedCollection`/`Array`
-> structural `Protocol` types and the scalar-category aliases — and is used for
-> cmdlet annotations. Runtime values remain plain Python (`None` for `sysmissing`,
-> `dict` for a block, `list` for an array); full *runtime* value objects
-> (categoricals, and the block / named collection / array wrappers) are **not yet
-> implemented**. Source readers and the full cmdlet set are built on top of this
-> spec.
+> `Value` base type plus `Scalar`/`Compound`/`Block` structural `Protocol` types,
+> the scalar-category aliases, a runtime `Collection` type, and a `from_plain`
+> coercion helper — and is used for cmdlet annotations. Runtime values are plain
+> Python (`None` for `sysmissing`, `dict` for a block, `Collection` — a `list`
+> subclass — for a collection): a plain `list` **never** flows through the pipe,
+> every compound sequence is a `Collection`. Full *runtime* value objects for
+> categoricals are **not yet implemented**. Source readers and the full cmdlet
+> set are built on top of this spec.
 
 ## Goal
 
@@ -62,7 +63,7 @@ types that are conventionally nullable.
 `sysmissing` is represented as Python **`None`** (like SQL `NULL` / JSON `null` →
 `None`). `is_sysmissing(value)` is `value is None`.
 
-`None` is deliberately distinct from *empty* values: an empty array (`[]`), an
+`None` is deliberately distinct from *empty* values: an empty collection (`[]`), an
 empty block (`{}`), a nothing-punched multi-punch, an empty string (`""`), zero,
 and `False` are all real values, and none of them equals `None`.
 
@@ -75,43 +76,41 @@ In comparison, `None` is undefined/uncertain:
 
 ## Compound types
 
-Three compound types, which may nest (a field may itself be scalar or compound):
+Two compound types, which may nest (a field may itself be scalar or compound):
 
-1. **block** — a collection of named fields. Each field has a name and a value
-   of any scalar or compound type. Fields are selected by name (like
-   `record.field["state"]`). Python representation: `dict`.
+1. **block** — the fields of an object. Each field has a name and a value of any
+   scalar or compound type. Fields are selected by name (like
+   `record.field["state"]`). Field order is **not** significant: two blocks are
+   equal when they have the same field names with equal values, regardless of
+   order. Python representation: `dict` (which preserves insertion order, so a
+   field can also be read by position — a positional convenience that never
+   affects equality).
 
-2. **named collection** — a block with a **fixed field order**, so fields can be
-   selected by index **and** by name (Python `namedtuple` analog). Python
-   representation: `dict` plus an explicit field-order list.
+2. **collection** — an ordered sequence of elements (a block repeated per
+   iteration). Every element is addressable **both** by zero-based index and by
+   a **unique name**:
 
-   > **Provisional — do not rely on it yet.** We are not yet sure this type
-   > earns its place. A row read from a sheet is most naturally a *named
-   > collection* (its fields have a fixed order), but an array's iterations must
-   > be *blocks* — so a row would have to be either a block whose single field
-   > is the named collection, or simply a block (in which case a named
-   > collection is never needed). The provisional plan is to **avoid `named
-   > collection` at the initial stage** and see whether blocks + arrays cover
-   > the cases. If they do, we drop the type; if named collections prove to fit
-   > better once readers and cmdlets are implemented, we promote them back and
-   > update this spec.
+   - by index: `coll[i]` — 0-based, negative counts from the end;
+   - by name: `coll.by_name[name]` — the element name is unique within the
+     collection, so the lookup is unambiguous. An element whose source gives it
+     no name gets a provisional name per "Row & column names".
 
-3. **array** — a **block** repeated for each iteration. Each iteration:
-   - is always a block of fields (an "array of ints" is **not** possible — to
-     represent it you define a block with one integer field and an array of such
-     blocks);
-   - can be accessed by index;
-   - can also be accessed by name when every iteration has a unique key (the
-     record name in the collection). Every database record is assumed to have
-     such a key.
-   Python representation: `list` of blocks (plus an optional name→index map).
+   Order is significant by default: two collections are equal only when their
+   elements are equal in the same positions. A comparison op opts out via its
+   `unordered_arrays` argument (or the `cmp-eq-unordered` op). Python
+   representation: `Collection` — a `list` subclass that also carries the
+   per-element `names` and a `name → index` map (`by_name`).
+
+A block and a collection are **different kinds** and are never equal to each
+other in comparison, even when their contents look similar (see "Comparison
+semantics").
 
 ## Worked example: an Excel workbook
 
-- The workbook is a **block** keyed by **sheet name** (a named collection of
-  sheets; Python dict insertion order preserves sheet order, so a sheet is
-  addressable by name and by position).
-- Each sheet is an **array of rows**; each iteration (row) is a block with an
+- The workbook is a **block** keyed by **sheet name** (Python dict insertion
+  order preserves sheet order, so a sheet is addressable by name and by
+  position).
+- Each sheet is a **collection of rows**; each iteration (row) is a block with an
   implicit index (and an optional name read from an "index" column — see
   "Row & column names (missing or duplicate)" for the fallback when it does not exist).
 - Each row is a **block** whose fields are the sheet's columns (column names from
@@ -123,20 +122,20 @@ Three compound types, which may nest (a field may itself be scalar or compound):
 ## Cmdlet naming
 
 Names are shape-agnostic and mirror PowerShell, so they read the same whether the
-array is a workbook, a sheet, a table, or a query result:
+collection is a workbook, a sheet, a table, or a query result:
 
 | PowerShell | Meaning | Cmdlet |
 | --- | --- | --- |
 | `obj.field` (JS-style) / `Select-Object -ExpandProperty Name` | extract one field from a block, or one field from every iteration → flat list | `select-field` |
 | `Select-Object -First/-Last/-Skip/-Index` | pick one element by index, or a sub-range | `select-item`, `select-range` |
 | `Where-Object { … }` | filter iterations by a condition | `where` |
-| `ForEach-Object { … }` | map/transform each item of an array | `foreach-item` |
+| `ForEach-Object { … }` | map/transform each item of a collection | `foreach-item` |
 | — | map/transform each own field of a block (no recursion) | `foreach-field` |
 | — | map/transform each scalar leaf, traversing the whole tree | `foreach-deep-node` |
 | `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
-| — | remove the direct children of a block/array whose key/index matches a rule | `exclude-child` |
+| — | remove the direct children of a block/collection whose key/index matches a rule | `exclude-child` |
 | — | recursively remove nodes whose data path (relative to the received value) matches a rule | `exclude-deep-node` |
-| — | keep only the direct children of a block/array whose key/index matches a rule | `include-child` |
+| — | keep only the direct children of a block/collection whose key/index matches a rule | `include-child` |
 | — | keep only nodes whose data path (relative to the received value) matches a rule, plus their scaffolding | `include-deep-node` |
 
 > **Naming note (unsettled).** `select-field` is a deliberately provisional name
@@ -153,11 +152,11 @@ array is a workbook, a sheet, a table, or a query result:
 
 The `exclude-*` and `include-*` families remove or keep nodes of the piped value
 by matching their **data path** — the `format_path` notation used by diagnostic
-notes: block keys joined with `.`, array indices as `[i]`, non-identifier keys
+notes: block keys joined with `.`, collection indices as `[i]`, non-identifier keys
 quoted (`['None of the above']`).
 
 - `exclude-child` / `include-child` — **shallow** processors acting only on the
-  direct children of the received block/array: `exclude-child` removes the
+  direct children of the received block/collection: `exclude-child` removes the
   matching children, `include-child` keeps the matching children and drops the
   rest. Neither recurses.
 - `exclude-deep-node` / `include-deep-node` — **recursive** processors:
@@ -192,7 +191,7 @@ the piped value instead of producing a value for comparison. The common prefix i
   document unchanged. Only `text` values are actually checked (wrapped in a dummy
   root element and parsed); every other scalar (`sysmissing`, booleans, numbers,
   dates, paths) is not XML markup and simply passes. A bare `&` or an unbalanced
-  tag in a text value yields `false`. Compound values (blocks/arrays) validate
+  tag in a text value yields `false`. Compound values (blocks/collections) validate
   every field/item and combine the results with a logical `AND` (an empty compound
   is vacuously valid). Uses the stdlib `xml.etree.ElementTree`, guarded as an
   optional dependency (see `docs/development.md` "Optional dependencies").
@@ -201,7 +200,7 @@ the piped value instead of producing a value for comparison. The common prefix i
   `args['pattern']` (a case-sensitive literal substring by default; `regex: true`
   treats it as a regular expression with `re.search`, and `case_insensitive: true`
   folds case). Every other scalar (`sysmissing`, booleans, numbers, dates, paths)
-  has no text to match and simply passes. Compound values (blocks/arrays) validate
+  has no text to match and simply passes. Compound values (blocks/collections) validate
   every field/item and combine the results with a logical `AND` (an empty compound
   is vacuously valid). A failing text leaf records a diagnostic note pointing at
   its data path (see `docs/qc-results-reporting.md`).
@@ -246,9 +245,9 @@ Logical operators coerce operands to boolean and always return a boolean:
   starts with a source reader and does not depend on the piped value); a
   `sysmissing` operand counts as `false`.
 - `logical-any` / `logical-all` — reduce the piped value's **scalar leaves** to a
-  boolean, traversing blocks and arrays recursively; a scalar value counts as a
+  boolean, traversing blocks and collections recursively; a scalar value counts as a
   single leaf. `logical-all` is `true` when every leaf is truthy (an empty block
-  or array is vacuously `true`); `logical-any` is `true` when at least one leaf
+  or collection is vacuously `true`); `logical-any` is `true` when at least one leaf
   is truthy (empty compounds are `false`).
 
 The `logical-tristate-*` variants mirror these with SQL three-valued logic, so
@@ -283,7 +282,7 @@ markup/formatting. The common prefix is `transform-` (see
 - `transform-strip-html` — remove HTML tags, leaving the text content. Uses
   `BeautifulSoup(..., "html.parser")`, so misformatted/unbalanced markup is
   handled best-effort rather than rejected. `sysmissing` becomes `""`; a block or
-  array is processed recursively and returned in the same shape; any other scalar
+  collection is processed recursively and returned in the same shape; any other scalar
   (number, boolean, date/time, path, …) is converted with `as-text`.
   `beautifulsoup4` is an optional dependency (see the cmdlet's `requirements.txt`);
   the cmdlet is always registered and only raises its import error when run
@@ -291,21 +290,23 @@ markup/formatting. The common prefix is `transform-` (see
 
 ## Shape-changing operations
 
-On a **block** (object) or an **array** (collection):
+On a **block** (object) or a **collection**:
 
-- `select-field` (read one field) — on a block → the field's value; on an array →
-  a flat list of that field's value per iteration (like `items.map(x => x.field)`).
-  A missing field raises; nesting is by chaining (`select-field "a" | select-field "b"`).
-- `select-item` (pick one element of an array) — `args.index` (0-based; negative
+- `select-field` (read one field) — on a block → the field's value; on a collection →
+  a collection of that field's value per element (names preserved; like
+  `items.map(x => x.field)`). A missing field raises; nesting is by chaining
+  (`select-field "a" | select-field "b"`).
+- `select-item` (pick one element of a collection) — `args.index` (0-based; negative
   counts from the end) → that element. Selecting by name is deferred until source
   readers implement record/row naming.
-- `select-range` (sub-range of an array) — `args.start` (inclusive) /
+- `select-range` (sub-range of a collection) — `args.start` (inclusive) /
   `args.stop` (exclusive), both optional, Python-slice semantics, no step.
-- `where` (filter iterations) — `args.predicate` is a **cmdlet chain** run once
-  per iteration (the iteration is its piped value); an iteration is kept when the
-  chain's result is truthy. Returns an array again, same field shape.
-- `foreach-item` (transform array items) — `args.transform` is a **cmdlet chain**
-  run once per item (the item is its piped input); returns an array of the
+  Returns a collection with the sliced names.
+- `where` (filter elements) — `args.predicate` is a **cmdlet chain** run once
+  per element (the element is its piped value); an element is kept when the
+  chain's result is truthy. Returns a collection again, same field shape.
+- `foreach-item` (transform collection items) — `args.transform` is a **cmdlet chain**
+  run once per item (the item is its piped input); returns a collection of the
   transformed values (any shape). This was formerly named `map`.
 - `foreach-field` (transform block fields) — `args.transform` is a **cmdlet
   chain** run once per *own* field of a block (the field value is its piped
@@ -313,11 +314,11 @@ On a **block** (object) or an **array** (collection):
   It does not recurse.
 - `foreach-deep-node` (transform every leaf) — `args.transform` is a **cmdlet
   chain** run once per *scalar leaf* (including `sysmissing`), traversing the
-  whole block/array tree; returns the same shape with the transformed leaves.
+  whole block/collection tree; returns the same shape with the transformed leaves.
   This is the generic, chain-parameterized form of the recursive walk
   `transform-strip-html` does with a fixed operation.
-- `sort` (reorder iterations) → an array again, same field shape. `args.by`
-  (optional) sorts blocks by a field; without it an array of scalars sorts
+- `sort` (reorder elements) → a collection again, same field shape. `args.by`
+  (optional) sorts blocks by a field; without it a collection of scalars sorts
   naturally. `args.descending: true` reverses the order.
 
 ## Comparison semantics
@@ -343,29 +344,29 @@ Net effect: `0 == false` → `false`, while `"0" == 0` → `true`.
 ### Compound comparison (`cmp-eq` / `cmp-ne`)
 
 `cmp-eq` and `cmp-ne` also compare compound values **deeply**: the comparison recurses
-into fields/iterations and re-applies the scalar rules above to each leaf. Two
-compound values of different kinds are never equal (a block ≠ an array ≠ a
+into fields/elements and re-applies the scalar rules above to each leaf. Two
+compound values of different kinds are never equal (a block ≠ a collection ≠ a
 scalar).
 
 - **block vs block** — equal iff they have the same set of field names **and**
   each field's value compares equal by name. Field order does **not** matter:
   `{ Name, FullName }` equals `{ FullName, Name }`.
-- **array vs array** — equal iff they have the same length and each iteration
-  compares equal **in position order**. The same iterations at different
+- **collection vs collection** — equal iff they have the same length and each
+  element compares equal **in position order**. The same elements at different
   positions are **not** equal by default.
 
 `cmp-lt`/`cmp-le`/`cmp-gt`/`cmp-ge` stay **scalar-only**: ordering has no meaning for a compound
 value, so a compound value on either side returns `false` (they never recurse).
 `cmp-contains` keeps its membership semantics (substring for text, membership for
-arrays) and does not deep-compare.
+collections) and does not deep-compare.
 
-### Order-agnostic arrays
+### Order-agnostic collections
 
-Two arrays that contain the same iterations in a different order (e.g. two
+Two collections that contain the same elements in a different order (e.g. two
 workbooks listing the same US states, one alphabetically, one by zip) can be
 compared as equal **sets** — strictly, as *multisets* (duplicates still matter).
-Array equality is strict-order by default; order-agnostic comparison is opt-in,
-spelled in either of two equivalent ways:
+Collection equality is strict-order by default; order-agnostic comparison is
+opt-in, spelled in either of two equivalent ways:
 
 - **an argument on the comparison** — `cmp-eq`/`cmp-ne` accept
   `args: { unordered_arrays: true }`, stored on the rule as
@@ -373,38 +374,43 @@ spelled in either of two equivalent ways:
 - **a dedicated op** — `cmp-eq-unordered`, which is `cmp-eq` with
   `unordered_arrays: true` hard-wired.
 
-The flag is recursive (nested arrays inside blocks are also compared
+The flag is recursive (nested collections inside blocks are also compared
 order-agnostically) and has no effect on blocks or scalars. A `sort` cmdlet is
-also available for the related but different job of *canonicalizing* an array's
-order before a strict comparison (see "Shape-changing operations").
+also available for the related but different job of *canonicalizing* a
+collection's order before a strict comparison (see "Shape-changing operations").
 
 ## Row & column names (missing or duplicate)
 
 When a source reader turns tabular input (an Excel sheet, a CSV file, a DB
-table, …) into blocks and arrays, it must give every **column** (a block field)
-and every **row** (an array iteration / record) a name. The input may not always
-provide such names, or may provide them twice, so readers normalize them as
-follows:
+table, …) into blocks and collections, it must give every **column** (a block
+field) and every **row** (a collection element / record) a name. The input may
+not always provide such names, or may provide them twice, so readers normalize
+them as follows:
 
 - **Column with no header** → use the source's native coordinate: Excel letters
   (`"A"`, `"B"`, …), CSV/DB positions (`"1"`, `"2"`, …).
 - **Row with no index column** → generate a 1-based integer counter as the
-  provisional name.
+  provisional name (any unique name works — only uniqueness matters).
 - **Non-unique column names** → never drop or overwrite; deduplicate in order.
   First occurrence keeps the name, later duplicates get a numeric suffix:
   `state`, `state.1`, `state.2`, … (pandas' default `mangle_dupe_cols`
   behaviour; the underscore form `state_2` is the alternative). This happens at
   the source reader, producing unique field names in the block.
+- **Non-unique row names** → same rule as columns: a collection element name
+  must be unique within the collection, so duplicate record names are
+  deduplicated in order. `Collection` enforces this (it raises on a duplicate
+  name).
 
 ## Representation (Python / JSON / DB / UI)
 
 - **Python**: scalar → native (`str`, `int`, `float`, `bool`, `datetime`, `date`);
-  `sysmissing` → `None`; block → `dict`; named collection → `dict` + field order;
-  array → `list` of blocks (+ optional name→index map); categorical → value object
-  carrying `value` + `options` (to define when categoricals are implemented).
+  `sysmissing` → `None`; block → `dict`; collection → `Collection` (a `list`
+  subclass carrying per-element `names` and a `name → index` map); categorical →
+  value object carrying `value` + `options` (to define when categoricals are
+  implemented).
 - **JSON / DB / UI**: scalars → JSON primitives; date/time → ISO-8601 (UTC);
-  `sysmissing` → `null`; block → object; array → array; categorical → `{ value,
-  options }` (future).
+  `sysmissing` → `null`; block → object; collection → array; categorical →
+  `{ value, options }` (future).
 
 ## Dates & time
 
@@ -418,9 +424,10 @@ Source readers are the first cmdlet in a chain (they ignore the piped value and
 read their input from ``args``). Currently implemented:
 
 - **`get-content-excel`** — reads an Excel workbook into a block keyed by sheet
-  name; each sheet is an array of row blocks (one block per data row, keyed by
-  header cell). A rule must therefore address the sheet it wants by name, never
-  by the workbook's active sheet. Optional dependency: ``openpyxl``.
+  name; each sheet is a collection of row blocks (one block per data row, keyed by
+  header cell; rows get provisional 1-based names). A rule must therefore address
+  the sheet it wants by name, never by the workbook's active sheet. Optional
+  dependency: ``openpyxl``.
 
 - **`get-content-text`** — reads a text file into a single text value. Args:
   ``path`` (required), ``encoding`` (optional text encoding, default
@@ -444,30 +451,33 @@ read their input from ``args``). Currently implemented:
   Optional dependency: ``pywin32`` (Windows only; reads via the
   ``MDM.Document`` COM API).
 
-  Top-level fields: ``source_file``, ``Languages`` (array of ``{Name, LongName}``),
+  Top-level fields: ``source_file``, ``Languages`` (collection of ``{Name, LongName}``),
   ``Types`` (block keyed by name), ``Fields`` (block keyed by name),
   ``Pages`` (block keyed by name), ``Routing`` (text). Every item block carries
   ``Name``/``Label``/``_Attrs``/``Labels``/``Script``/``Properties`` plus
-  ``value`` (``None`` for scalars and classes/blocks, an array of iteration
-  blocks for arrays/grids) and, for items that own categories, a ``Categories``
-  block keyed by category name → detailed category block (for a categorical
-  scalar its keys are the available response options). Blocks that contain other
-  fields (a class/block's sub-fields, and the columns of an array/grid) put them
-  in a ``Fields`` block keyed by name. ``_Attrs`` mirrors the raw MDD object
-  model (Pascal-cased COM properties such as ``ObjectTypeValue``, ``DataType``,
-  ``IsSystem``, ``HasCaseData``, ``IsGrid``, ``MinValue``/``MaxValue`` and, for
-  shared-list references, ``IsReference``/``ReferenceName``).
+  ``value`` (``None`` for scalars and classes/blocks, a named ``Collection`` of
+  iteration blocks for arrays/grids) and, for items that own categories, a
+  ``Categories`` block keyed by category name → detailed category block (for a
+  categorical scalar its keys are the available response options, and its
+  ``value`` is a named ``Collection`` of those options). Blocks that contain
+  other fields (a class/block's sub-fields, and the columns of an array/grid)
+  put them in a ``Fields`` block keyed by name. ``_Attrs`` mirrors the raw MDD
+  object model (Pascal-cased COM properties such as ``ObjectTypeValue``,
+  ``DataType``, ``IsSystem``, ``HasCaseData``, ``IsGrid``, ``MinValue``/
+  ``MaxValue`` and, for shared-list references, ``IsReference``/``ReferenceName``).
 
 - **`literal`** — put a fixed constant on one side of a rule. Args: ``value``
   (required; a typed constant — text, number, boolean, path, date, or raw JSON).
-  The piped value is ignored.
+  A JSON array becomes a collection (with 1-based provisional names) via
+  `from_plain`. The piped value is ignored.
 
 - **`literal-from-json`** — parse an exact JSON string into an internal value.
   Args: ``value`` (required; the exact JSON text — a string, number, boolean,
   ``null``, array, or object). Parsed with the stdlib ``json.loads``, which maps
   JSON onto the internal runtime representation one-to-one (``null`` ->
-  `sysmissing`, object -> block, array -> array, string/number/boolean -> their
-  native forms); no pip dependency. The piped value is ignored.
+  `sysmissing`, object -> block, array -> collection with 1-based provisional
+  names, string/number/boolean -> their native forms); no pip dependency. The
+  piped value is ignored.
 
 ## Network cmdlets
 
@@ -595,14 +605,15 @@ value a cmdlet can return — rather than a plain path.
 
 ## Remaining to implement
 
-- Full *runtime* value objects for categoricals and the block / named collection /
-  array wrappers. The value-type *taxonomy* (names + a root `Value` base type)
-  already exists as `src/cmdlets/value_types.py` and is used for cmdlet
-  annotations; until the runtime wrappers are added, the plain-Python rules above
-  apply.
+- Full *runtime* value objects for categoricals. The value-type *taxonomy* (names
+  + a root `Value` base type + the runtime `Collection`) already exists as
+  `src/cmdlets/value_types.py` and is used for cmdlet annotations; until the
+  categorical wrappers are added, the plain-Python rules above apply.
 - Source readers beyond `get-content-excel` and `get-content-mdd` (CSV, SPSS, DB,
   …) and the rest of the middle/terminal cmdlet set (`select-properties`,
   `to-string`, comparison-as-cmdlet `cmp-eq`/`cmp-ne`/…, …).
 - Record/row naming in source readers (per "Row & column names") — required for
-  name-based `select-item` on arrays.
+  name-based `select-item` on collections. `get-content-mdd` emits named
+  collections; `get-content-excel` emits collections with provisional 1-based row
+  names (no index-column detection yet); CSV/DB readers are not yet implemented.
 

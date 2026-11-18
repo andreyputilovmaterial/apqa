@@ -1,4 +1,4 @@
-"""`select-item` — pick one element of an array by zero-based index.
+"""`select-item` — pick one element of a collection by zero-based index.
 
 Selecting an element by *name* is deferred: it needs record/row naming in the
 source readers (see "Row & column names" in `docs/cmdlet-data-formats.md`),
@@ -12,7 +12,7 @@ from ..value_types import PipeValue
 @cmdlets.register(
     'select-item',
     kind='processor',
-    help='Pick one element of an array by zero-based index.',
+    help='Pick one element of a collection by zero-based index.',
     args=[
         {
             'name': 'index',
@@ -23,9 +23,9 @@ from ..value_types import PipeValue
     ],
 )
 def select_item(value: PipeValue, args: dict) -> PipeValue:
-    """Return ``array[index]`` (Python indexing semantics, negatives allowed)."""
+    """Return ``collection[index]`` (Python indexing semantics, negatives allowed)."""
     if not isinstance(value, list):
-        raise TypeError(f'select-item: expected an array, got {type(value).__name__}')
+        raise TypeError(f'select-item: expected a collection, got {type(value).__name__}')
 
     index = args.get('index')
     if index is None:
@@ -39,7 +39,7 @@ def select_item(value: PipeValue, args: dict) -> PipeValue:
         result = value[index]
     except IndexError:
         raise ValueError(
-            f'select-item: index {index} out of range for array of length {len(value)}'
+            f'select-item: index {index} out of range for collection of length {len(value)}'
         ) from None
 
     return result

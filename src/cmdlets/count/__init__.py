@@ -21,10 +21,10 @@ from ..value_types import PipeValue
 def count(value: PipeValue, args: dict) -> int:
     """Count the meaningful entries in the incoming value.
 
-    - array (``list``): number of iterations.
-    - block / named collection (``dict``): number of fields.
+    - collection (``Collection``, a ``list``): number of elements.
+    - block (``dict``): number of fields.
     - multi-punch categorical: number of punched categories (today a punch list
-      is a plain ``list`` and counts as its length, like an array).
+      is a plain ``list`` and counts as its length, like a collection).
     - text: ``0`` if empty, ``1`` otherwise (text is not counted
       character-by-character).
     - single-punch categorical or any other scalar: ``1`` if a value is stored

@@ -1,18 +1,18 @@
-"""`select-range` — take a sub-range of an array.
+"""`select-range` — take a sub-range of a collection.
 
-Mirrors Python slice ``array[start:stop]``: ``start`` is inclusive, ``stop`` is
+Mirrors Python slice ``collection[start:stop]``: ``start`` is inclusive, ``stop`` is
 exclusive, both may be omitted (open-ended), and there is no step. Negative
 indices count from the end, exactly like Python.
 """
 
 from ..registry import cmdlets
-from ..value_types import Array, PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
     'select-range',
     kind='processor',
-    help='Take a sub-range of an array: start inclusive, stop exclusive.',
+    help='Take a sub-range of a collection: start inclusive, stop exclusive.',
     args=[
         {
             'name': 'start',
@@ -28,14 +28,16 @@ from ..value_types import Array, PipeValue
         },
     ],
 )
-def select_range(value: PipeValue, args: dict) -> Array:
-    """Return ``array[start:stop]`` (Python slice semantics, no step)."""
+def select_range(value: PipeValue, args: dict) -> Collection:
+    """Return ``collection[start:stop]`` (Python slice semantics, no step)."""
     if not isinstance(value, list):
-        raise TypeError(f'select-range: expected an array, got {type(value).__name__}')
+        raise TypeError(f'select-range: expected a collection, got {type(value).__name__}')
 
     start = _slice_index(args.get('start'), 'start')
     stop = _slice_index(args.get('stop'), 'stop')
-    return value[start:stop]
+    if isinstance(value, Collection):
+        return Collection(value[start:stop], value.names[start:stop])
+    return Collection(value[start:stop])
 
 
 def _slice_index(value, name):

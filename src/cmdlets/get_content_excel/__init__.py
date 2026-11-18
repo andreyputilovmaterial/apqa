@@ -13,7 +13,7 @@ original import error).
 """
 
 from ..registry import cmdlets
-from ..value_types import Block, PipeValue
+from ..value_types import Block, Collection, PipeValue
 
 try:
     import openpyxl
@@ -61,14 +61,14 @@ def get_content_excel(value: PipeValue, args: dict) -> Block:
             close()
 
 
-def _read_sheet(sheet) -> list:
-    """Read one sheet into an array of row blocks (header row = field names)."""
+def _read_sheet(sheet) -> Collection:
+    """Read one sheet into a collection of row blocks (header row = field names)."""
     rows = sheet.iter_rows(values_only=True)
     header = next(rows, None)
     if header is None:
-        return []
+        return Collection([])
     names = _deduplicate_headers(header)
-    return [dict(zip(names, row)) for row in rows]
+    return Collection([dict(zip(names, row)) for row in rows])
 
 
 def _deduplicate_headers(header) -> list:

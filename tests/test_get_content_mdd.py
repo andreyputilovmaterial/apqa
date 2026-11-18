@@ -24,6 +24,7 @@ from src.cmdlets.get_content_mdd import (  # noqa: E402
     _safe_str_get,
     _str_safe,
 )
+from src.cmdlets.value_types import Collection  # noqa: E402
 
 
 class _Stub:
@@ -124,3 +125,84 @@ def test_block_field_stores_subfields_in_Fields_bucket(monkeypatch):
     assert block['Name'] == 'SnifferData'
     assert block['Fields'] is subfields
     assert block['value'] is None
+
+
+def test_read_category_collection_returns_named_collection(monkeypatch):
+    reader = _MDDReader.__new__(_MDDReader)
+    monkeypatch.setattr(
+        reader, '_read_category',
+        lambda cat: {'Name': cat.Name},
+    )
+    stub = _Stub(Elements=[_Stub(Name='A'), _Stub(Name='B')])
+
+    result = reader._read_category_collection(stub)
+
+    assert isinstance(result, Collection)
+    assert result.names == ['A', 'B']
+    assert result.by_name == {'A': 0, 'B': 1}
+    assert result[1] == {'Name': 'B'}
+
+
+def test_read_category_collection_flattens_references_into_named_collection(monkeypatch):
+    reader = _MDDReader.__new__(_MDDReader)
+    reader.step_into = True
+    monkeypatch.setattr(
+        reader, '_read_category',
+        lambda cat: {'Name': cat.Name},
+    )
+    shared = _Stub(Elements=[_Stub(Name='X')])
+    monkeypatch.setattr(
+        reader, '_resolve_shared_list',
+        lambda ref_name: shared,
+    )
+    stub = _Stub(
+        Elements=[
+            _Stub(Name='A'),
+            _Stub(Name='Ref', IsReference=True, ReferenceName='SL'),
+        ]
+    )
+
+    result = reader._read_category_collection(stub)
+
+    assert isinstance(result, Collection)
+    assert result.names == ['A', 'X']
+    assert result.by_name == {'A': 0, 'X': 1}
+
+
+def test_scalar_categorical_field_emits_value_collection(monkeypatch):
+    reader = _MDDReader.__new__(_MDDReader)
+    monkeypatch.setattr(
+        _MDDReader, '_read_item_meta',
+        lambda self, item, attrs: {'Name': 'Q1', '_Attrs': attrs},
+    )
+    monkeypatch.setattr(
+        _MDDReader, '_scalar_attributes',
+        lambda self, field, dt: {'DataType': dt},
+    )
+    monkeypatch.setattr(
+        reader, '_read_category_collection',
+        lambda field: Collection([{'Name': 'Yes'}], ['Yes']),
+    )
+
+    block = reader._read_scalar_field(_Stub(DataType=3))
+
+    assert isinstance(block['value'], Collection)
+    assert block['value'].names == ['Yes']
+    assert block['Categories'] == {'Yes': {'Name': 'Yes'}}
+
+
+def test_non_categorical_scalar_field_value_is_none(monkeypatch):
+    reader = _MDDReader.__new__(_MDDReader)
+    monkeypatch.setattr(
+        _MDDReader, '_read_item_meta',
+        lambda self, item, attrs: {'Name': 'Q1', '_Attrs': attrs},
+    )
+    monkeypatch.setattr(
+        _MDDReader, '_scalar_attributes',
+        lambda self, field, dt: {'DataType': dt},
+    )
+
+    block = reader._read_scalar_field(_Stub(DataType=0))
+
+    assert block['value'] is None
+    assert 'Categories' not in block

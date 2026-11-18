@@ -20,7 +20,7 @@ just that leaf; a path matching no node is ignored.
 from ..diagnostic import format_path
 from ..path_rules import matches_any_rule, normalize_rules
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
@@ -60,11 +60,14 @@ def _prune(value, path, rules):
                 value[key] = _prune(value[key], child_path, rules)
         return value
     if isinstance(value, list):
-        for index in reversed(range(len(value))):
+        names = value.names if isinstance(value, Collection) else None
+        kept = []
+        kept_names = []
+        for index, child in enumerate(value):
             child_path = path + [index]
-            if matches_any_rule(format_path(child_path), rules):
-                del value[index]
-            else:
-                value[index] = _prune(value[index], child_path, rules)
-        return value
+            if not matches_any_rule(format_path(child_path), rules):
+                kept.append(_prune(child, child_path, rules))
+                if names is not None:
+                    kept_names.append(names[index])
+        return Collection(kept, kept_names if names is not None else None)
     return value

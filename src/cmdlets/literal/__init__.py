@@ -1,7 +1,7 @@
 """`literal` — put a fixed constant on one side of a rule."""
 
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import from_plain, PipeValue
 
 
 @cmdlets.register(
@@ -29,4 +29,4 @@ def literal(value: PipeValue, args: dict) -> PipeValue:
     """
     if 'value' not in args:
         raise ValueError("literal: missing required arg 'value'")
-    return args['value']
+    return from_plain(args['value'])

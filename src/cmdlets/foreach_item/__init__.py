@@ -1,19 +1,19 @@
-"""`foreach-item` — transform every item of an array with a cmdlet chain.
+"""`foreach-item` — transform every item of a collection with a cmdlet chain.
 
 `foreach-item` is ForEach-Object: its ``transform`` argument is a **cmdlet
 chain** run once per item, with the item threaded through as the piped value (a
-JS ``items.map(x => …)``). The result is an array of the transformed values.
+JS ``items.map(x => …)``). The result is a collection of the transformed values.
 """
 
 from ..chain_runner import run_chain
 from ..registry import cmdlets
-from ..value_types import Array, PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
     'foreach-item',
     kind='processor',
-    help='Transform every item of an array with a cmdlet chain.',
+    help='Transform every item of a collection with a cmdlet chain.',
     args=[
         {
             'name': 'transform',
@@ -23,10 +23,10 @@ from ..value_types import Array, PipeValue
         },
     ],
 )
-def foreach_item(value: PipeValue, args: dict) -> Array:
-    """Return ``[run_chain(transform, initial=item) for item in value]``."""
+def foreach_item(value: PipeValue, args: dict) -> Collection:
+    """Return a collection of ``run_chain(transform, initial=item)`` per item."""
     if not isinstance(value, list):
-        raise TypeError(f'foreach-item: expected an array, got {type(value).__name__}')
+        raise TypeError(f'foreach-item: expected a collection, got {type(value).__name__}')
 
     transform = args.get('transform')
     if not isinstance(transform, list) or not transform:
@@ -34,4 +34,8 @@ def foreach_item(value: PipeValue, args: dict) -> Array:
             "foreach-item: missing required arg 'transform' (a non-empty cmdlet chain)"
         )
 
-    return [run_chain(transform, initial=item) for item in value]
+    names = value.names if isinstance(value, Collection) else None
+    return Collection(
+        [run_chain(transform, initial=item) for item in value],
+        names,
+    )

@@ -11,6 +11,7 @@ import pytest
 
 from src.cmdlets import cmdlets
 from src.cmdlets.sysmissing import sysmissing
+from src.cmdlets.value_types import Collection
 
 
 def _parse(raw):
@@ -18,7 +19,16 @@ def _parse(raw):
 
 
 def test_parses_object_into_block():
-    assert _parse('{"a": 1, "b": [true, null]}') == {'a': 1, 'b': [True, None]}
+    parsed = _parse('{"a": 1, "b": [true, null]}')
+    assert parsed == {'a': 1, 'b': [True, None]}
+    assert isinstance(parsed['b'], Collection)
+
+
+def test_parses_array_into_collection():
+    parsed = _parse('[1, 2.5, "x", false]')
+    assert isinstance(parsed, Collection)
+    assert parsed == [1, 2.5, 'x', False]
+    assert parsed.names == ['1', '2', '3', '4']
 
 
 def test_parses_array():

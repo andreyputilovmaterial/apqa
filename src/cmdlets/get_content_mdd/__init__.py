@@ -25,7 +25,7 @@ The result is a block whose top-level fields are the MDD sections, named after
 the COM collection properties (Pascal-style, e.g. ``document.Fields``):
 
     source_file   absolute path to the read file
-    Languages     array of ``{Name, LongName}`` blocks
+    Languages     collection of ``{Name, LongName}`` blocks
     Types         block keyed by shared-list name (each value is a shared-list block)
     Fields        block keyed by field name (each value is a field block)
     Pages         block keyed by page name (each value is a page block)
@@ -37,20 +37,23 @@ plus a ``value`` field whose shape depends on the item kind:
 
     scalar (ObjectTypeValue 0)   ``value`` is ``None`` (MDD metadata has no
                                  data value). A categorical (DataType 3)
-                                 additionally carries a ``Categories`` block.
+                                 additionally carries a ``Categories`` block and
+                                 a ``value`` collection of its response options.
     array/grid (ObjectTypeValue 1/2)
-                                 ``value`` is an ordered array of iteration
-                                 blocks, and ``Fields`` holds the loop's subfields.
+                                 ``value`` is a collection of iteration blocks
+                                 (grid/loop iterations), and ``Fields`` holds
+                                 the loop's subfields.
     block/class (ObjectTypeValue 3)
                                  ``Fields`` is a block of subfields and ``value``
                                  is ``None``.
-    shared list / page           ``value`` is an array of category/entry blocks.
+    shared list / page           ``value`` is a collection of category/entry
+                                 blocks.
 
 Items that own categories (categorical scalars, arrays, shared lists) also carry a
 ``Categories`` block keyed by category name → detailed category block; for a
 categorical scalar the keys of ``Categories`` are the available response options.
-Category groups (``Type`` != 0) nest their children in their own ``value`` array
-and are not selectable response options.
+Category groups (``Type`` != 0) nest their children in their own ``value``
+collection and are not selectable response options.
 
 ``_Attrs`` mirrors the raw MDD object model: Pascal-cased COM properties such as
 ``ObjectTypeValue``, ``DataType``, ``IsSystem``, ``HasCaseData``, ``IsGrid``,
@@ -62,7 +65,7 @@ from pathlib import Path
 import re
 
 from ..registry import cmdlets
-from ..value_types import Block, PipeValue
+from ..value_types import Block, Collection, PipeValue
 
 try:
     import win32com.client as _win32com_client
@@ -277,13 +280,16 @@ class _MDDReader:
     # -- sections -----------------------------------------------------------
 
     def _read_languages(self):
-        result = []
+        items = []
+        names = []
         for lang in self._languages:
-            result.append({
+            block = {
                 'Name': _safe_str_get(lang, 'Name'),
                 'LongName': _safe_str_get(lang, 'LongName'),
-            })
-        return result
+            }
+            items.append(block)
+            names.append(block.get('Name'))
+        return Collection(items, names)
 
     def _read_types(self):
         types = _safe_get(self.document, 'Types')
@@ -324,12 +330,14 @@ class _MDDReader:
         return result
 
     def _read_page_entries(self, page):
-        result = []
+        items = []
+        names = []
         for entry in _iter(page):
             block = self._read_item_meta(entry, {})
             block['value'] = None
-            result.append(block)
-        return result
+            items.append(block)
+            names.append(block.get('Name'))
+        return Collection(items, names)
 
     def _read_routing(self):
         routing = _safe_get(self.document, 'Routing')
@@ -386,10 +394,11 @@ class _MDDReader:
             field, self._scalar_attributes(field, data_type)
         )
         if data_type == 3:
-            block['Categories'] = _category_map(
-                self._read_category_collection(field)
-            )
-        block['value'] = None
+            categories = self._read_category_collection(field)
+            block['Categories'] = _category_map(categories)
+            block['value'] = categories
+        else:
+            block['value'] = None
         return block
 
     def _read_array_field(self, field, object_type_value):
@@ -532,23 +541,24 @@ class _MDDReader:
     # -- categories ---------------------------------------------------------
 
     def _read_category_collection(self, item):
-        result = []
+        items = []
+        names = []
         for cat in _iter_attr(item, 'Elements'):
             if _safe_get(cat, 'IsReference'):
                 ref_name = _safe_str_get(cat, 'ReferenceName')
                 if ref_name:
                     self._resolve_shared_list(ref_name)
                 if self.step_into and ref_name:
-                    result.extend(
-                        self._read_category_collection(
-                            self._resolve_shared_list(ref_name)
-                        )
+                    resolved = self._read_category_collection(
+                        self._resolve_shared_list(ref_name)
                     )
-                else:
-                    result.append(self._read_category(cat))
-            else:
-                result.append(self._read_category(cat))
-        return result
+                    items.extend(resolved)
+                    names.extend(resolved.names)
+                    continue
+            block = self._read_category(cat)
+            items.append(block)
+            names.append(block.get('Name'))
+        return Collection(items, names)
 
     def _read_category(self, cat):
         is_reference = bool(_safe_get(cat, 'IsReference'))

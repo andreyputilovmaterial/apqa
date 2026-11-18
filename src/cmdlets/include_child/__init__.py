@@ -16,7 +16,7 @@ Returns ``None`` (sysmissing) when no child is kept.
 from ..diagnostic import format_path
 from ..path_rules import matches_any_rule, normalize_rules
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
@@ -44,10 +44,15 @@ def include_child(value: PipeValue, args: dict) -> PipeValue:
         }
         return kept if kept else None
     if isinstance(value, list):
-        kept = [
-            child
-            for index, child in enumerate(value)
-            if matches_any_rule(format_path([index]), rules)
-        ]
-        return kept if kept else None
+        names = value.names if isinstance(value, Collection) else None
+        kept = []
+        kept_names = []
+        for index, child in enumerate(value):
+            if matches_any_rule(format_path([index]), rules):
+                kept.append(child)
+                if names is not None:
+                    kept_names.append(names[index])
+        if not kept:
+            return None
+        return Collection(kept, kept_names if names is not None else None)
     return None

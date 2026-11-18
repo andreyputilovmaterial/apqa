@@ -14,7 +14,7 @@ same shape as `exclude-deep-node`:
 from ..diagnostic import format_path
 from ..path_rules import matches_any_rule, normalize_rules
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
@@ -41,9 +41,13 @@ def exclude_child(value: PipeValue, args: dict) -> PipeValue:
             if not matches_any_rule(format_path([key]), rules)
         }
     if isinstance(value, list):
-        return [
-            child
-            for index, child in enumerate(value)
-            if not matches_any_rule(format_path([index]), rules)
-        ]
+        names = value.names if isinstance(value, Collection) else None
+        kept = []
+        kept_names = []
+        for index, child in enumerate(value):
+            if not matches_any_rule(format_path([index]), rules):
+                kept.append(child)
+                if names is not None:
+                    kept_names.append(names[index])
+        return Collection(kept, kept_names if names is not None else None)
     return value

@@ -374,10 +374,10 @@ A QC rule has three essential parts: **left side**, **comparison op**, **right s
   JSON-serializable), `right` (list of cmdlets).
 - `op` is a registered comparison op name (e.g. `cmp-eq`, `cmp-ne`, `cmp-eq-unordered`,
   `cmp-lt`, `cmp-gt`, `cmp-contains`). `cmp-eq`/`cmp-ne` compare compound values deeply (blocks by
-  field name, order-insensitive; arrays in strict position order); the ordering
+  field name, order-insensitive; collections in strict position order); the ordering
   ops (`cmp-lt`/`cmp-le`/`cmp-gt`/`cmp-ge`) are scalar-only. `op_args` (optional) passes
   op-specific options, e.g. `cmp-eq`/`cmp-ne` accept
-  `op_args: { unordered_arrays: true }` for order-agnostic array comparison;
+  `op_args: { unordered_arrays: true }` for order-agnostic collection comparison;
   `cmp-eq-unordered` is that flag hard-wired.
 
 Three cmdlet types:
@@ -396,28 +396,30 @@ middle/terminal cmdlets and avoid source-specific cmdlets (no dedicated
 
 Scalar types a cmdlet can return: text, int, float, bool, path, date/time,
 single-punch categorical, multi-punch categorical. Compound types: **block**
-(named fields), **named collection** (provisional — see
-`cmdlet-data-formats.md`), and **array** (a block repeated per iteration).
+(named fields, order-insensitive) and **collection** (an ordered sequence of
+elements addressable by index and by a unique name — see
+`cmdlet-data-formats.md`). A plain `list` is never a pipe value — every compound
+sequence is a `Collection`.
 
-**`where` (Where-Object / filter).** `where` keeps the iterations of an array for
-which a **cmdlet chain** (`args.predicate`, arg type `cmdlet-chain`) returns a
-truthy value; the iteration is threaded through as the piped value and the result
+**`where` (Where-Object / filter).** `where` keeps the elements of a collection
+for which a **cmdlet chain** (`args.predicate`, arg type `cmdlet-chain`) returns
+a truthy value; the element is threaded through as the piped value and the result
 is coerced with `bool()`. For now the predicate is limited to the existing
 predicate/validation cmdlets (`is-sysmissing`, `logical-not`, `logical-and`, `logical-or`, `validate-*`,
 or truthiness of a field); comparison-as-cmdlet (`cmp-eq`/`cmp-ne`/…) is tracked in
 `docs/roadmap.md`.
 
-**`sort`.** `sort` reorders an array: `args.by` (optional) sorts blocks by a
-field, without it an array of scalars sorts naturally, and
+**`sort`.** `sort` reorders a collection: `args.by` (optional) sorts blocks by a
+field, without it a collection of scalars sorts naturally, and
 `args.descending: true` reverses the result. See `cmdlet-data-formats.md`.
 
 **The `foreach-*` family.** Three processors generalize ForEach-Object over the
-three "collection" shapes, each taking a **cmdlet chain** (`args.transform`, arg
+three compound shapes, each taking a **cmdlet chain** (`args.transform`, arg
 type `cmdlet-chain`) run once per element, with the element threaded through as
-the piped value: `foreach-item` maps each *item* of an array (the former `map`);
-`foreach-field` maps each *own field* of a block and returns a block with the
-same keys; `foreach-deep-node` maps each *scalar leaf* of the whole block/array
-tree and returns the same shape.
+the piped value: `foreach-item` maps each *item* of a collection (the former
+`map`); `foreach-field` maps each *own field* of a block and returns a block with
+the same keys; `foreach-deep-node` maps each *scalar leaf* of the whole
+block/collection tree and returns the same shape.
 
 **`sysmissing`:** every value may be `sysmissing`, regardless of type. In comparison,
 `sysmissing` is undefined/uncertain — it equals only another `sysmissing`. Comparing

@@ -1,4 +1,4 @@
-"""`where` — keep the iterations of an array whose predicate chain is truthy.
+"""`where` — keep the iterations of a collection whose predicate chain is truthy.
 
 `where` is Where-Object: its ``predicate`` argument is a **cmdlet chain** run
 once per iteration, with the iteration threaded through as the piped value (a
@@ -13,13 +13,13 @@ field); comparison-as-cmdlet (e.g. `eq`) is tracked in `docs/roadmap.md`.
 
 from ..chain_runner import run_chain
 from ..registry import cmdlets
-from ..value_types import Array, PipeValue
+from ..value_types import Collection, PipeValue
 
 
 @cmdlets.register(
     'where',
     kind='processor',
-    help='Keep the iterations of an array whose predicate chain is truthy.',
+    help='Keep the iterations of a collection whose predicate chain is truthy.',
     args=[
         {
             'name': 'predicate',
@@ -29,10 +29,10 @@ from ..value_types import Array, PipeValue
         },
     ],
 )
-def where(value: PipeValue, args: dict) -> Array:
-    """Return ``[item for item in value if bool(run_chain(predicate, initial=item))]``."""
+def where(value: PipeValue, args: dict) -> Collection:
+    """Return a collection of the items whose predicate chain is truthy."""
     if not isinstance(value, list):
-        raise TypeError(f'where: expected an array, got {type(value).__name__}')
+        raise TypeError(f'where: expected a collection, got {type(value).__name__}')
 
     predicate = args.get('predicate')
     if not isinstance(predicate, list) or not predicate:
@@ -40,4 +40,12 @@ def where(value: PipeValue, args: dict) -> Array:
             "where: missing required arg 'predicate' (a non-empty cmdlet chain)"
         )
 
-    return [item for item in value if bool(run_chain(predicate, initial=item))]
+    names = value.names if isinstance(value, Collection) else None
+    kept = []
+    kept_names = []
+    for index, item in enumerate(value):
+        if bool(run_chain(predicate, initial=item)):
+            kept.append(item)
+            if names is not None:
+                kept_names.append(names[index])
+    return Collection(kept, kept_names if names is not None else None)

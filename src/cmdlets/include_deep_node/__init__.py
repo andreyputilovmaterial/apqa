@@ -17,7 +17,7 @@ nothing is kept.
 from ..diagnostic import format_path
 from ..path_rules import matches_any_rule, normalize_rules
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import Collection, PipeValue
 
 
 _REMOVED = object()
@@ -60,10 +60,16 @@ def _keep(value, path, rules):
                 kept[key] = child_result
         return kept if kept else _REMOVED
     if isinstance(value, list):
+        names = value.names if isinstance(value, Collection) else None
         kept = []
+        kept_names = []
         for index, child in enumerate(value):
             child_result = _keep(child, path + [index], rules)
             if child_result is not _REMOVED:
                 kept.append(child_result)
-        return kept if kept else _REMOVED
+                if names is not None:
+                    kept_names.append(names[index])
+        if not kept:
+            return _REMOVED
+        return Collection(kept, kept_names if names is not None else None)
     return _REMOVED

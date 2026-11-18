@@ -22,7 +22,7 @@ original import error).
 
 from ..as_text import as_text
 from ..registry import cmdlets
-from ..value_types import PipeValue, Text
+from ..value_types import Collection, PipeValue, Text
 
 try:
     from bs4 import BeautifulSoup
@@ -50,7 +50,11 @@ def transform_strip_html(value: PipeValue, args: dict) -> PipeValue:
             for key, field in value.items()
         }
     if isinstance(value, list):
-        return [transform_strip_html(item, args) for item in value]
+        names = value.names if isinstance(value, Collection) else None
+        return Collection(
+            [transform_strip_html(item, args) for item in value],
+            names,
+        )
     return as_text(value, args)
 
 

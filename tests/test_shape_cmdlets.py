@@ -12,6 +12,7 @@ import pytest
 
 from src.cmdlets import cmdlets
 from src.cmdlets.sysmissing import sysmissing
+from src.cmdlets.value_types import Collection
 from src.rule_runner import run_rule
 
 
@@ -191,3 +192,46 @@ def test_where_pipeline():
         'right': [_literal([{'x': 1}])],
     }
     assert run_rule(rule) is True
+
+
+# ---- collections (no plain lists) -------------------------------------------
+
+def test_literal_list_becomes_collection():
+    result = cmdlets.get('literal')(None, {'value': [1, 2]})
+    assert isinstance(result, Collection)
+    assert result.names == ['1', '2']
+
+
+def test_select_field_preserves_collection_names():
+    rows = Collection([{'B': 'x'}, {'B': 'y'}], ['r1', 'r2'])
+    result = cmdlets.get('select-field')(rows, {'field': 'B'})
+    assert isinstance(result, Collection)
+    assert result.names == ['r1', 'r2']
+
+
+def test_select_range_preserves_collection_names():
+    coll = Collection([0, 1, 2, 3], ['a', 'b', 'c', 'd'])
+    result = cmdlets.get('select-range')(coll, {'start': 1, 'stop': 3})
+    assert isinstance(result, Collection)
+    assert result.names == ['b', 'c']
+
+
+def test_where_preserves_collection_names():
+    rows = Collection([{'x': 0}, {'x': 1}], ['zero', 'one'])
+    result = cmdlets.get('where')(rows, {'predicate': [_field('x')]})
+    assert isinstance(result, Collection)
+    assert result.names == ['one']
+
+
+def test_foreach_item_preserves_collection_names():
+    rows = Collection([{'x': 1}, {'x': 2}], ['a', 'b'])
+    result = cmdlets.get('foreach-item')(rows, {'transform': [_field('x')]})
+    assert isinstance(result, Collection)
+    assert result.names == ['a', 'b']
+
+
+def test_sort_preserves_collection_names():
+    rows = Collection([{'x': 2}, {'x': 1}], ['two', 'one'])
+    result = cmdlets.get('sort')(rows, {'by': 'x'})
+    assert isinstance(result, Collection)
+    assert result.names == ['one', 'two']
