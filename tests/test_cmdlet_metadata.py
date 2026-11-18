@@ -59,6 +59,7 @@ def test_source_readers_are_marked_as_sources():
     assert kinds['get-content'] == 'source'
     assert kinds['get-filesystem-obj-info'] == 'source'
     assert kinds['literal'] == 'source'
+    assert kinds['literal-from-json'] == 'source'
     # Processors cannot be the first cmdlet in a chain.
     assert kinds['as-date'] == 'processor'
     assert kinds['count'] == 'processor'
@@ -152,6 +153,9 @@ def test_cmdlet_display_specs():
     # literal renders as its value only, in both forms.
     assert meta['literal']['compact'] == [{'arg': 'value'}]
     assert meta['literal']['full'] == [{'arg': 'value'}]
+    # literal-from-json mirrors literal (the JSON text is its value).
+    assert meta['literal-from-json']['compact'] == [{'arg': 'value'}]
+    assert meta['literal-from-json']['full'] == [{'arg': 'value'}]
     # select-field reads as an arrow in the compact view (no `full` override).
     assert meta['select-field']['compact'] == [
         {'text': '->', 'role': 'arrow'},
@@ -207,6 +211,13 @@ def test_literal_value_arg_is_typed():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
     value_args = {a['name']: a for a in meta['literal']['args']}
     assert value_args['value']['type'] == 'literal-value'
+    assert value_args['value']['required'] is True
+
+
+def test_literal_from_json_value_arg_is_text():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    value_args = {a['name']: a for a in meta['literal-from-json']['args']}
+    assert value_args['value']['type'] == 'text'
     assert value_args['value']['required'] is True
 
 

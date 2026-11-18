@@ -458,6 +458,17 @@ read their input from ``args``). Currently implemented:
   ``IsSystem``, ``HasCaseData``, ``IsGrid``, ``MinValue``/``MaxValue`` and, for
   shared-list references, ``IsReference``/``ReferenceName``).
 
+- **`literal`** — put a fixed constant on one side of a rule. Args: ``value``
+  (required; a typed constant — text, number, boolean, path, date, or raw JSON).
+  The piped value is ignored.
+
+- **`literal-from-json`** — parse an exact JSON string into an internal value.
+  Args: ``value`` (required; the exact JSON text — a string, number, boolean,
+  ``null``, array, or object). Parsed with the stdlib ``json.loads``, which maps
+  JSON onto the internal runtime representation one-to-one (``null`` ->
+  `sysmissing`, object -> block, array -> array, string/number/boolean -> their
+  native forms); no pip dependency. The piped value is ignored.
+
 ## Network cmdlets
 
 - **`get-content-network-fetch`** — fetch a URL taken from the **piped value** and
