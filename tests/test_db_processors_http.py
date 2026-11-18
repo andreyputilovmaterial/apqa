@@ -19,7 +19,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.db_processors import DBFile
-from src.db_processors.http import parse_http_resource
+from src.db_processors.http.dbfile import parse_http_resource
 from src.db_processors.rule_base import Rule
 
 import http_db_server
@@ -169,7 +169,7 @@ def test_404_opens_empty():
 
 
 def test_open_error_maps_to_valueerror(server, monkeypatch):
-    import src.db_processors.http as http_mod
+    import src.db_processors.http.dbfile as http_mod
     url, _doc, _log = server
     monkeypatch.setattr(http_mod, "_http_request", lambda *a, **k: (500, {"error": "boom"}))
     with pytest.raises(ValueError):
@@ -177,7 +177,7 @@ def test_open_error_maps_to_valueerror(server, monkeypatch):
 
 
 def test_save_error_maps_to_valueerror(server, monkeypatch):
-    import src.db_processors.http as http_mod
+    import src.db_processors.http.dbfile as http_mod
     url, _doc, _log = server
     dbfile = DBFile(_credentialed(url))
     monkeypatch.setattr(http_mod, "_http_request", lambda *a, **k: (400, {"error": "rejected"}))

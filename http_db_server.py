@@ -2,7 +2,7 @@
 """Standalone dev fixture: a minimal HTTP database for the APQA rules store.
 
 Serves the single-document wire protocol spoken by ``DBFileHttp``
-(``src/db_processors/http.py``):
+(``src/db_processors/http/dbfile.py``):
 
     GET <url>  -> 200 + {"project": {...}, "groups": [...], "rules": [...]}
                   (404 when the document has not been created yet)

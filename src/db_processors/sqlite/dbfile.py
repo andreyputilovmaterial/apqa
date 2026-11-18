@@ -5,11 +5,11 @@ import sqlite3
 import threading
 from pathlib import Path
 
-from .dbfile_base import DBFile as DBFileBase
-from .group_base import Group
-from .ids import ensure_unique, unique_slug
-from .project_base import Project
-from .rule_base import Rule
+from ..dbfile_base import DBFile as DBFileBase
+from ..group_base import Group
+from ..ids import ensure_unique, unique_slug
+from ..project_base import Project
+from ..rule_base import Rule
 
 
 class _RuleEncoder(json.JSONEncoder):

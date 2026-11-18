@@ -26,8 +26,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
-from .dbfile_base import DBFile as DBFileBase
-from .document_base import DBFileDocument
+from ..dbfile_base import DBFile as DBFileBase
+from ..document_base import DBFileDocument
 
 
 _DEFAULT_TIMEOUT = 30

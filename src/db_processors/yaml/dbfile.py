@@ -3,9 +3,9 @@
 from pathlib import Path
 import yaml
 
-from .dbfile_base import DBFile as DBFileBase
-from .document_base import DBFileDocument
-from .rule_base import Rule
+from ..dbfile_base import DBFile as DBFileBase
+from ..document_base import DBFileDocument
+from ..rule_base import Rule
 
 
 class IndexedProperty:

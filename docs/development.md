@@ -482,7 +482,7 @@ The rules database is a format-agnostic interface
   group may carry an `aliases` list. A legacy top-level list of
   rules is still accepted (read as rules only).
 - **HTTP/HTTPS** (`http://`/`https://`) — a remote database addressed by URL.
-  The client (`src/db_processors/http.py`, `DBFileHttp`) keeps the whole
+  The client (`src/db_processors/http/dbfile.py`, `DBFileHttp`) keeps the whole
   database as a single JSON document with the same shape as the YAML file and
   talks to the server via `GET <url>` (fetch the document; `404` = empty) and
   `PUT <url>` (persist it). Credentials may be embedded as
