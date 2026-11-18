@@ -95,9 +95,8 @@ const RulesTree = {
               <div class="apqa-rules-tree-group-run-result-status" :class="runSummaryClass(node)">{{ runSummaryText(node) }}</div>
             </div>
 
-            <div v-if="(node.tags && node.tags.length) || node.markers.length || node.marks.length" class="apqa-record-meta">
+            <div v-if="(node.tags && node.tags.length) || node.marks.length" class="apqa-record-meta">
               <span v-if="node.tags && node.tags.length" class="apqa-record-tags">{{ node.tags.join(', ') }}</span>
-              <marks-badges v-if="node.markers.length" :marks="node.markers" />
               <span v-if="node.marks.length" class="apqa-rules-tree-group-marks">
                 <span class="apqa-rules-tree-group-marks-label">includes rules marked</span>
                 <marks-badges :marks="node.marks" />

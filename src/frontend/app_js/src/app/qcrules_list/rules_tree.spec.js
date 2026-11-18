@@ -23,7 +23,7 @@ function rule(name, group = '', extra = {}) {
 }
 
 function group(name, parent = '', aliases = [], comment = '', extra = {}) {
-  return { id: name, name, parent, aliases, comment, tags: [], markers: [], ...extra };
+  return { id: name, name, parent, aliases, comment, tags: [], ...extra };
 }
 
 // `rules_tree` renders cmdlets through the globally-registered display
@@ -289,17 +289,17 @@ describe('RulesTree', () => {
     expect(wrapper.emitted('add-rule')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
   });
 
-  it("shows a folder's own tags and markers in its meta row", () => {
+  it("shows a folder's own tags in its meta row", () => {
     const wrapper = mountTree({
       props: {
-        groups: [group('Data', '', [], '', { tags: ['counts'], markers: ['skip'] })],
+        groups: [group('Data', '', [], '', { tags: ['counts'] })],
         records: [],
       },
     });
 
     const meta = wrapper.find('.apqa-rules-tree-group .apqa-record-meta');
     expect(meta.find('.apqa-record-tags').text()).toBe('counts');
-    expect(meta.find('.apqa-mark-badge').text()).toBe('skip');
+    expect(meta.find('.apqa-mark-badge').exists()).toBe(false);
   });
 
   it('assigns mark classes to rule leaves', () => {

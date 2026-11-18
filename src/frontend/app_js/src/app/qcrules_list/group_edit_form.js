@@ -1,7 +1,6 @@
 import { ref } from 'vue';
 
 import InputQcruleTags from '@/common_components/input_types/qcrules/tags/index';
-import InputQcruleMarks from '@/common_components/input_types/qcrules/marks/index';
 
 import './group_form.css';
 import './group_edit_form.css';
@@ -22,7 +21,6 @@ const GroupEditForm = {
 
   components: {
     'input-qcrule-tags': InputQcruleTags,
-    'input-qcrule-marks': InputQcruleMarks,
   },
 
   template: `
@@ -65,11 +63,6 @@ const GroupEditForm = {
           <span class="apqa-group-form-field-label">Tags</span>
           <input-qcrule-tags v-model="tags" :suggestions="tagSuggestions" />
         </label>
-
-        <label class="apqa-group-form-field">
-          <span class="apqa-group-form-field-label">Markers</span>
-          <input-qcrule-marks v-model="markers" />
-        </label>
       </div>
     </div>
 
@@ -87,7 +80,6 @@ const GroupEditForm = {
     const name = ref(group.name || '');
     const comment = ref(group.comment || '');
     const tags = ref(Array.isArray(group.tags) ? group.tags.slice() : []);
-    const markers = ref(Array.isArray(group.markers) ? group.markers.slice() : []);
     const error = ref('');
 
     function submit() {
@@ -102,7 +94,6 @@ const GroupEditForm = {
         name: trimmedName,
         comment: comment.value.trim(),
         tags: tags.value.slice(),
-        markers: markers.value.slice(),
       });
     }
 
@@ -110,7 +101,7 @@ const GroupEditForm = {
       emit('cancel');
     }
 
-    return { name, comment, tags, markers, error, submit, cancel };
+    return { name, comment, tags, error, submit, cancel };
   },
 };
 

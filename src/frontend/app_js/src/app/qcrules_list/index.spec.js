@@ -255,7 +255,6 @@ describe('QcRulesList', () => {
       name: 'Data',
       comment: 'old',
       tags: ['wave'],
-      markers: [],
     });
     await flushPromises();
 

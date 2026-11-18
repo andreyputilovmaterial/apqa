@@ -59,7 +59,6 @@ function toGroupRecord(group) {
     order: meta.order ?? 0,
     comment: meta.comment || '',
     tags: Array.isArray(meta.tags) ? meta.tags.slice() : [],
-    markers: Array.isArray(meta.markers) ? meta.markers : [],
     aliases: Array.isArray(group.aliases) ? group.aliases.map(toAlias) : [],
     meta,
   };
@@ -567,8 +566,6 @@ const QcRulesList = {
       else delete meta.comment;
       if (Array.isArray(changes.tags) && changes.tags.length) meta.tags = changes.tags.slice();
       else delete meta.tags;
-      if (Array.isArray(changes.markers) && changes.markers.length) meta.markers = changes.markers.slice();
-      else delete meta.markers;
 
       const payload = {
         name: changes.name,

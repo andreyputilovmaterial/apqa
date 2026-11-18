@@ -9,7 +9,6 @@ function makeGroup(overrides = {}) {
     name: 'Data checks',
     comment: 'Rules about data',
     tags: ['counts'],
-    markers: ['skip'],
     ...overrides,
   };
 }
@@ -61,7 +60,6 @@ describe('GroupEditForm', () => {
       name: 'Renamed checks',
       comment: 'Rules about data',
       tags: ['counts'],
-      markers: ['skip'],
     });
   });
 

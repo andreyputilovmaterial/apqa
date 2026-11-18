@@ -27,7 +27,7 @@ function rule(name, group = '', order = 0, extra = {}) {
 }
 
 function group(name, parent = '', order = 0, aliases = [], comment = '', extra = {}) {
-  return { id: name, name, parent, order, aliases, comment, tags: [], markers: [], ...extra };
+  return { id: name, name, parent, order, aliases, comment, tags: [], ...extra };
 }
 
 describe('buildGroupNodes', () => {
@@ -105,14 +105,13 @@ describe('buildGroupNodes', () => {
     expect(node.comment).toBe('Wave 69 checks');
   });
 
-  it('carries folder tags and markers onto group nodes', () => {
+  it('carries folder tags onto group nodes', () => {
     const nodes = buildGroupNodes(
-      [group('Data', '', 0, [], '', { tags: ['counts'], markers: ['skip'] })],
+      [group('Data', '', 0, [], '', { tags: ['counts'] })],
       [],
     );
     const node = nodes.find((n) => n.kind === 'group');
     expect(node.tags).toEqual(['counts']);
-    expect(node.markers).toEqual(['skip']);
   });
 
   it('treats a group with a missing parent as a root', () => {
