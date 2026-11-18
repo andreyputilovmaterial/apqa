@@ -34,11 +34,11 @@ const GroupEditForm = {
   </div>
 
   <div class="apqa-record-actions">
-    <button type="button" class="apqa-record-action apqa-record-action-save" title="Save" aria-label="Save folder" @click="submit">
-      <i class="ri-save-3-line" aria-hidden="true"></i>
-    </button>
     <button type="button" class="apqa-record-action apqa-record-action-cancel" title="Close" aria-label="Close editing" @click="cancel">
       <i class="ri-close-circle-line" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="apqa-record-action apqa-record-action-save" title="Save" aria-label="Save folder" @click="submit">
+      <i class="ri-save-3-line" aria-hidden="true"></i>
     </button>
   </div>
 

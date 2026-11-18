@@ -102,6 +102,11 @@ describe('RuleEditForm', () => {
     expect(wrapper.find('.apqa-rule-card-comment').text()).toBe('check the count');
     expect(wrapper.find('.apqa-record-action-save i.ri-save-3-line').exists()).toBe(true);
     expect(wrapper.find('.apqa-record-action-cancel i.ri-close-circle-line').exists()).toBe(true);
+
+    // Cancel is the left-most icon, so a repeated click on the same spot as
+    // Edit cancels instead of saving.
+    const html = wrapper.html();
+    expect(html.indexOf('apqa-record-action-cancel')).toBeLessThan(html.indexOf('apqa-record-action-save'));
   });
 
   it('shows full-size Save and Close buttons at the bottom', () => {
