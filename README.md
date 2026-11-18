@@ -45,7 +45,10 @@ no installation beyond Python.
 
 The project to work on is selected by pointing the program at its **rules database
 file** — a SQLite database by default (`.sqlite3`/`.sqlite`); YAML is also
-supported (`.yaml`/`.yml`). The format is chosen by the file extension:
+supported (`.yaml`/`.yml`). The format is chosen by the file extension. Any other
+`scheme://` address is treated as a SQLAlchemy URL, so remote databases
+(PostgreSQL, MySQL, Microsoft SQL Server/OLEDB, Oracle, …) are reached directly
+through `src/db_processors/sqlalchemy/`:
 
 - Desktop app: `--db-file <path>` (see `run_ui.sh`).
 - Run tests: the `APQA_DB_FILE` environment variable (see `run_tests.sh`).

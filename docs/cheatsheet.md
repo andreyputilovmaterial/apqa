@@ -32,19 +32,21 @@ python dev_backend.py logs      # tail .dev_backend.log (default: last 50 lines)
 Flags: `--db-file PATH` (default `tests-real-sensitive-data/projects.sqlite3`),
 `--port N` (default 5280), `--json` (status/health), `--lines N` (logs).
 
-## HTTP database fixture (`http_db_server.py`)
+## Remote SQL database (`SQLAlchemy` backend)
 
-Serve the rules database as a single JSON document over HTTP (the `http(s)://`
-backend), so the UI can be pointed at a remote database:
+Point the UI at any database SQLAlchemy can reach by passing a SQLAlchemy URL as
+the `--db-file`:
 
 ```bash
-python http_db_server.py --port 4001 --username user --password pass
-# then, in another terminal:
-./.venv/bin/python -m src.launcher --program ui --db-file http://user:pass@localhost:4001
+./.venv/bin/python -m src.launcher --program ui \
+  --db-file 'postgresql+psycopg2://user:pass@localhost:5432/myproject'
 ```
 
-Flags: `--seed PATH` (seed from any sqlite/yaml file), `--save-to PATH` (persist
-PUTs to YAML), `--host`, `--port`, `--username`/`--password` (optional Basic auth).
+Any `scheme://` address is routed to the SQLAlchemy processor
+(`src/db_processors/sqlalchemy/`), so PostgreSQL, MySQL/MariaDB, Microsoft SQL
+Server (via ODBC/OLEDB, e.g. `mssql+pyodbc://`), Oracle and SQLite URLs all use
+the same `rules`/`groups`/`project` schema. Dialect drivers are optional and
+installed best-effort from `src/db_processors/sqlalchemy/requirements.txt`.
 
 ## Development tests
 

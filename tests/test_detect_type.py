@@ -4,7 +4,8 @@ See ``.clinerules/07-resource-paths.md``. Only physical-file resources
 (yaml/sqlite) are resolved to an absolute path, and this happens exactly once,
 inside the physical-file DB processor's ``__init__`` — the only place that knows
 the resource is a filesystem path. Non-file resource addresses (e.g.
-``oledb://``) are detected as such and never resolved.
+``postgresql://`` or ``mssql+pyodbc://``) are detected as SQLAlchemy URLs and
+never resolved.
 """
 
 import sys
@@ -23,9 +24,14 @@ from src.db_processors.detect_type import detect_type
 def test_detect_type_distinguishes_physical_files_from_resource_addresses():
     assert detect_type('projects.yaml') == 'yaml'
     assert detect_type('projects.sqlite3') == 'sqlite'
-    assert detect_type('oledb://server/database') == 'oledb'
-    assert detect_type('http://localhost:4001') == 'http'
-    assert detect_type('https://localhost:4001') == 'https'
+    assert detect_type('postgresql://user:pass@localhost/db') == 'sqlalchemy'
+    assert detect_type('mssql+pyodbc://localhost/db') == 'sqlalchemy'
+    # oledb:// is no longer a distinct type: it is routed to SQLAlchemy, which
+    # validates the URL (and rejects the unknown `oledb` dialect with a readable
+    # error when it is opened).
+    assert detect_type('oledb://server/database') == 'sqlalchemy'
+    assert detect_type('http://localhost:4001') == 'sqlalchemy'
+    assert detect_type('https://localhost:4001') == 'sqlalchemy'
 
 
 def test_yaml_resolves_relative_path(tmp_path, monkeypatch):
@@ -71,8 +77,14 @@ def test_physical_file_processor_init_runs_once(tmp_path):
 
 
 def test_non_file_resource_address_is_not_resolved():
-    # No oledb processor is registered, so opening one must fail at detection
-    # rather than treating it as a filesystem path and resolving it.
-    with pytest.raises(NotImplementedError):
+    # A SQLAlchemy URL is opaque to the filesystem: opening an unknown dialect
+    # must fail at engine creation with a readable error, not be treated as a
+    # filesystem path and resolved.
+    with pytest.raises(ValueError):
         DBFile('oledb://server/database')
+
+
+def test_sqlalchemy_url_keeps_password_hidden():
+    dbfile = DBFile('sqlite://')
+    assert 'sqlite://' == dbfile.resource_path
 

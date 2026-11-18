@@ -7,3 +7,4 @@ rjsmin>=1
 csscompressor>=0.9
 markdown-it-py>=4
 rich>=15
+SQLAlchemy>=2

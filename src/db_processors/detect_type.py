@@ -12,15 +12,14 @@ def detect_type(resource_path: Path | str | None) -> str | None:
     if is_empty(resource_path):
         return None
     resource_path = f'{resource_path}' # to make sure it's string
-    protocol_str_matches = re.match(r'^(\w+)://(.*)$',resource_path,flags=re.I|re.DOTALL)
+    # The scheme part of a SQLAlchemy URL is a dialect, optionally with a
+    # ``+driver`` suffix (e.g. ``postgresql+psycopg2``), so it may contain
+    # ``+``/``.``/``-`` in addition to letters and digits.
+    protocol_str_matches = re.match(r'^([A-Za-z0-9_.+-]+)://(.*)$',resource_path,flags=re.I|re.DOTALL)
     if protocol_str_matches:
-        str_protocol_part = protocol_str_matches[1]
+        str_protocol_part = protocol_str_matches[1].lower()
         # str_rest = protocol_str_matches[2]
-        if str_protocol_part=='oledb':
-            return 'oledb'
-        elif str_protocol_part.lower() in ('http','https'):
-            return str_protocol_part.lower()
-        elif str_protocol_part=='file':
+        if str_protocol_part=='file':
             resource_path = Path(resource_path).resolve()
             if resource_path.suffix.lower() in ('.yaml','.yml',):
                 return 'yaml'
@@ -30,7 +29,10 @@ def detect_type(resource_path: Path | str | None) -> str | None:
                 return 'sqlite'
             else:
                 return None
-        return None
+        # Any other scheme (postgresql://, mysql://, mssql+pyodbc://, oledb://,
+        # …) is a SQLAlchemy URL. The SQLAlchemy processor validates it and
+        # raises a readable error for schemes/dialects it doesn't know.
+        return 'sqlalchemy'
     else:
         # I'd love to have better validation that path is a file, but can't think
         # of any good way to detect it - physical path can start with a slash, with

@@ -42,14 +42,14 @@ def main(*argcs,**kwargs):
         '--db-file',
         type=str,
         required=True,
-        help='path of the new QC-rules storage to create (e.g. project.sqlite3 or project.yaml)',
+        help='path of the new QC-rules storage to create (e.g. project.sqlite3 or project.yaml), or a SQLAlchemy URL',
     )
     parser.add_argument(
         '--db-format',
         type=str,
         required=False,
         default=None,
-        help='storage format (e.g. yaml, sqlite); defaults to the format detected from --db-file',
+        help='storage format (e.g. yaml, sqlite, sqlalchemy); defaults to the format detected from --db-file',
     )
     args = parser.parse_args(*argcs,**kwargs)
 

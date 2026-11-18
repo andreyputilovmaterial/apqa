@@ -492,21 +492,28 @@ def _parse_requirements(text):
 
 
 def collect_optional_dependencies():
-    """Scan ``src/cmdlets/**/requirements.txt`` and return ``[(name, specs), ...]``.
+    """Scan per-component ``requirements.txt`` files and return ``[(name, specs), ...]``.
 
-    ``name`` is the cmdlet folder name and ``specs`` the list of installable
-    requirement specifiers. Comment-only files (stdlib-only cmdlets) are dropped:
-    there is nothing to install for them. The scan runs on the real source tree,
-    so it works both during ``build.sh`` and from a test run.
+    Both ``src/cmdlets/**`` and ``src/db_processors/**`` are scanned (one level
+    deep), so cmdlet extras and per-processor extras (e.g. optional DB dialect
+    drivers) are discovered the same way. ``name`` is the component folder name
+    and ``specs`` the list of installable requirement specifiers. Comment-only
+    files (stdlib-only components) are dropped: there is nothing to install for
+    them. The scan runs on the real source tree, so it works both during
+    ``build.sh`` and from a test run.
     """
-    root = Path(__file__).resolve().parent / 'src' / 'cmdlets'
+    roots = [
+        Path(__file__).resolve().parent / 'src' / 'cmdlets',
+        Path(__file__).resolve().parent / 'src' / 'db_processors',
+    ]
     result = []
-    if not root.is_dir():
-        return result
-    for requirements_file in sorted(root.glob('*/requirements.txt')):
-        specs = _parse_requirements(requirements_file.read_text(encoding='utf-8'))
-        if specs:
-            result.append((requirements_file.parent.name, specs))
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for requirements_file in sorted(root.glob('*/requirements.txt')):
+            specs = _parse_requirements(requirements_file.read_text(encoding='utf-8'))
+            if specs:
+                result.append((requirements_file.parent.name, specs))
     return result
 
 
@@ -522,10 +529,11 @@ def _bat_quote(spec):
 
 def _render_sh_optional_deps(entries):
     lines = [
-        '# Optional per-cmdlet dependencies (inlined by build.sh from',
-        '# src/cmdlets/**/requirements.txt). Each install is best-effort: a missing',
-        '# optional dependency must not fail the whole init — the affected cmdlet is',
-        '# imported as "unavailable" and raises its import error only when used.',
+        '# Optional per-component dependencies (inlined by build.sh from',
+        '# src/cmdlets/**/requirements.txt and src/db_processors/**/requirements.txt).',
+        '# Each install is best-effort: a missing optional dependency must not fail',
+        '# the whole init — the affected cmdlet/processor reports its import error',
+        '# only when used.',
     ]
     for name, specs in entries:
         quoted = ' '.join(_sh_quote(spec) for spec in specs)
@@ -542,10 +550,11 @@ def _render_sh_optional_deps(entries):
 
 def _render_bat_optional_deps(entries):
     lines = [
-        '@REM Optional per-cmdlet dependencies (inlined by build.sh from',
-        '@REM src\\cmdlets\\**\\requirements.txt). Each install is best-effort: a missing',
-        '@REM optional dependency must not fail the whole init — the affected cmdlet is',
-        '@REM imported as "unavailable" and raises its import error only when used.',
+        '@REM Optional per-component dependencies (inlined by build.sh from',
+        '@REM src\\cmdlets\\**\\requirements.txt and src\\db_processors\\**\\requirements.txt).',
+        '@REM Each install is best-effort: a missing optional dependency must not fail',
+        '@REM the whole init - the affected cmdlet/processor reports its import error',
+        '@REM only when used.',
     ]
     for name, specs in entries:
         quoted = ' '.join(_bat_quote(spec) for spec in specs)

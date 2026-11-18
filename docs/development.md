@@ -468,8 +468,8 @@ the marker then just checks that variable. Placeholder only.
 ### Rules database storage
 
 The rules database is a format-agnostic interface
-(`src/db_processors/dbfile_base.py`) with backends selected by file extension via
-`detect_type`:
+(`src/db_processors/dbfile_base.py`) with backends selected via `detect_type`
+(by file extension for physical files, and by URL scheme for database addresses):
 
 - **SQLite** (`.sqlite3`/`.sqlite`) — the default. Each rule is one row; `meta`,
   `left` and `right` are stored as JSON text, `id`/`name`/`op`/`group` as plain
@@ -481,19 +481,18 @@ The rules database is a format-agnostic interface
   `rules`, plus an optional `project` mapping (`name`, `comment`, `meta`); each
   group may carry an `aliases` list. A legacy top-level list of
   rules is still accepted (read as rules only).
-- **HTTP/HTTPS** (`http://`/`https://`) — a remote database addressed by URL.
-  The client (`src/db_processors/http/dbfile.py`, `DBFileHttp`) keeps the whole
-  database as a single JSON document with the same shape as the YAML file and
-  talks to the server via `GET <url>` (fetch the document; `404` = empty) and
-  `PUT <url>` (persist it). Credentials may be embedded as
-  `http://user:pass@host:port`; they are parsed into an
-  `Authorization: Basic ...` header and stripped from the stored/served path, so
-  `config['db_file']`, the page header, and `GET /qc/project` carry only the
-  clean URL (never a resolved filesystem path). The in-memory document CRUD is
-  shared with YAML via `src/db_processors/document_base.py`. A stdlib-only dev
-  fixture server lives at `http_db_server.py` (repo root):
-  `python http_db_server.py --port 4001 --username user --password pass`, then
-  open the app with `--db-file http://user:pass@localhost:4001`.
+- **SQLAlchemy** (any SQLAlchemy URL) — `postgresql://`, `mysql://`,
+  `mssql+pyodbc://`, `oracle+oracledb://`, `sqlite:///path`, … The processor
+  (`src/db_processors/sqlalchemy/dbfile.py`, `DBFileSqlalchemy`) describes the
+  same `rules`/`groups`/`project` schema with portable SQLAlchemy Core types and
+  implements the same CRUD contract, so one backend reaches every SQL database
+  SQLAlchemy supports (OLEDB/ODBC access goes through the `mssql+pyodbc` /
+  `mssql+adodbapi` dialects rather than a dedicated `oledb://` type). Dialect
+  drivers are optional and installed best-effort from
+  `src/db_processors/sqlalchemy/requirements.txt`; a missing driver is reported
+  with a readable error when that dialect's URL is opened. Credentials embedded
+  in the URL stay in the engine, while the served `resource_path` has the
+  password hidden.
 
 Rules and groups have an **id/name split**: `id` is the stable technical
 identity — an ASCII alphanumeric slug auto-generated from the display `name`

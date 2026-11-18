@@ -1,0 +1,7 @@
+# Optional per-dialect drivers for the SQLAlchemy DB processor. SQLAlchemy itself
+# is an app-wide dependency (requirements.txt); these DB-API drivers are optional
+# and are installed best-effort by run_init. A missing driver is reported by
+# SQLAlchemy only when a URL for that dialect is opened.
+# psycopg2-binary>=2.9
+pymysql>=1.1
+pyodbc>=5.2

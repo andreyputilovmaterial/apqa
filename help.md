@@ -46,13 +46,17 @@ Your changes are saved to the project's rules database file.
 
 ## Project database file
 
-Rules are stored in the project's **database file**, in one of two formats:
+Rules are stored in the project's **database file**, in one of these formats:
 
 - **SQLite** (`.sqlite3` or `.sqlite`) — the default. A small local database file.
 - **YAML** (`.yaml` or `.yml`) — a plain text file you can read and edit by hand.
+- **SQLAlchemy URL** (any `scheme://` address) — a remote SQL database such as
+  PostgreSQL, MySQL, or Microsoft SQL Server, e.g.
+  `postgresql://user:pass@host:5432/myproject`.
 
-The format is chosen by the file extension. To start a new project, create an
-empty file with the extension you want (for example, `project.sqlite3`).
+The format is chosen by the file extension for local files; anything else is
+treated as a SQLAlchemy URL. To start a new project, create an empty file with
+the extension you want (for example, `project.sqlite3`).
 
 The database file also stores the **project's metadata**: a project name, a
 comment, and any other project-level notes. In a YAML file this is the top-level

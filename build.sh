@@ -166,8 +166,9 @@ cp "requirements.txt" "$DIST_DIR/"
 # Optional per-cmdlet/per-processor dependencies are not copied as files:
 # build_templates.py --program transform-run-script inlines them as pip install
 # statements into dist/run_init.sh / dist/run_init.bat (it scans
-# src/cmdlets/**/requirements.txt, the real source tree). A missing one is not
-# fatal: the corresponding cmdlets simply report their import error when used.
+# src/cmdlets/**/requirements.txt and src/db_processors/**/requirements.txt, the
+# real source tree). A missing one is not fatal: the corresponding
+# cmdlet/processor simply reports its import error when used.
 cp LICENSE "$DIST_DIR/"
 cp README.md "$DIST_DIR/"
 cp help.md "$DIST_DIR/"

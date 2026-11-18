@@ -43,6 +43,8 @@ def test_collect_optional_dependencies_only_includes_installables():
     assert 'get_content_text' not in entries
     assert 'get_content_network_fetch' not in entries
     assert 'validate_xml_compatible' not in entries
+    # per-processor extras are discovered next to the cmdlet extras
+    assert entries['sqlalchemy'] == ['psycopg2-binary>=2.9', 'pymysql>=1.1', 'pyodbc>=5.2']
 
 
 def test_transform_run_init_sh_inlines_optional_deps(tmp_path):
@@ -54,6 +56,7 @@ def test_transform_run_init_sh_inlines_optional_deps(tmp_path):
     assert "pip install 'openpyxl>=3'" in out
     assert "pip install 'pywin32'" in out
     assert "pip install 'beautifulsoup4>=4'" in out
+    assert "pip install 'psycopg2-binary>=2.9'" in out
     assert 'apqa_bundle.py --program done' in out
 
 
@@ -67,6 +70,7 @@ def test_transform_run_init_bat_inlines_optional_deps(tmp_path):
     assert 'pip install "openpyxl>=3"' in out
     assert 'pip install "pywin32"' in out
     assert 'pip install "beautifulsoup4>=4"' in out
+    assert 'pip install "psycopg2-binary>=2.9"' in out
     assert 'apqa_bundle.py --program done' in out
 
 
