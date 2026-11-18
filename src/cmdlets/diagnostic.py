@@ -32,6 +32,7 @@ __all__ = [
     'current_notes',
     'record_note',
     'collect_notes',
+    'note_path_prefix',
     'format_path',
     'format_note',
     'format_notes',
@@ -39,7 +40,18 @@ __all__ = [
 
 _NOTES = ContextVar('apqa_notes', default=None)
 
+_PATH_PREFIX = ContextVar('apqa_notes_path_prefix', default=None)
+
 _IDENTIFIER = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
+
+
+def _prefixed(path):
+    """Return ``path`` with the active path prefix prepended (if any)."""
+    path = list(path)
+    prefix = _PATH_PREFIX.get()
+    if prefix:
+        return prefix + path
+    return path
 
 
 class Notes:
@@ -49,7 +61,7 @@ class Notes:
         self.items = []
 
     def note(self, path, message):
-        self.items.append({'path': list(path), 'message': f'{message}'})
+        self.items.append({'path': _prefixed(path), 'message': f'{message}'})
 
 
 def current_notes():
@@ -81,6 +93,28 @@ def collect_notes():
         yield notes
     finally:
         _NOTES.reset(token)
+
+
+@contextmanager
+def note_path_prefix(prefix):
+    """Run the block with ``prefix`` prepended to every recorded note path.
+
+    ``prefix`` is a list of path segments (block keys / array indices) leading to
+    the value being processed. Nested prefixes accumulate, so a validator running
+    inside ``foreach-deep-node`` records the full data path even though it starts
+    its own walk at ``[]``.
+    """
+    if not prefix:
+        yield
+        return
+    prefix = list(prefix)
+    current = _PATH_PREFIX.get()
+    combined = current + prefix if current else prefix
+    token = _PATH_PREFIX.set(combined)
+    try:
+        yield
+    finally:
+        _PATH_PREFIX.reset(token)
 
 
 def format_path(path):

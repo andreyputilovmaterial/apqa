@@ -2,6 +2,10 @@
 
 This sections is to capture everything that comes to mind that should ideally be updated. Tasks listed here are not necessarily the highest priority.
 
+- When creating a new qc rule, pre-fill the cmp op to cmp-eq and prefill the right side to logical/boolean/true
+
+- Logical-all: update so that it can handle objects of different shape, not just plain collections, and evaluate for every field traversing the tree.
+
 - Library of typical patterns - already predefined chain of cmdlets, where the user must only add missing defs, like path to input file
 
 - Finally, develop the pattern for "aliases"

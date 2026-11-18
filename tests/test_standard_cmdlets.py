@@ -145,11 +145,25 @@ def test_all():
     assert cmdlets.get('logical-all')([1, ''], {}) is False
 
 
-def test_any_and_all_require_array():
-    with pytest.raises(TypeError):
-        cmdlets.get('logical-any')('abc', {})
-    with pytest.raises(TypeError):
-        cmdlets.get('logical-all')(5, {})
+def test_any_and_all_traverse_compound_trees():
+    assert cmdlets.get('logical-all')({'a': [1, 2], 'b': {'c': 'x'}}, {}) is True
+    assert cmdlets.get('logical-all')({'a': [1, 0], 'b': {'c': 'x'}}, {}) is False
+    assert cmdlets.get('logical-any')({'a': [0, ''], 'b': {'c': 'x'}}, {}) is True
+    assert cmdlets.get('logical-any')({'a': [0, ''], 'b': {'c': ''}}, {}) is False
+
+
+def test_any_and_all_accept_scalar():
+    assert cmdlets.get('logical-all')(5, {}) is True
+    assert cmdlets.get('logical-all')('', {}) is False
+    assert cmdlets.get('logical-any')(0, {}) is False
+    assert cmdlets.get('logical-any')('abc', {}) is True
+
+
+def test_any_and_all_empty_compounds():
+    assert cmdlets.get('logical-all')([], {}) is True
+    assert cmdlets.get('logical-all')({}, {}) is True
+    assert cmdlets.get('logical-any')([], {}) is False
+    assert cmdlets.get('logical-any')({}, {}) is False
 
 
 # ---- logical (three-valued) -------------------------------------------------
@@ -194,11 +208,22 @@ def test_tristate_all():
     assert cmdlets.get('logical-tristate-all')([], {}) is True
 
 
-def test_tristate_any_and_all_require_array():
-    with pytest.raises(TypeError):
-        cmdlets.get('logical-tristate-any')('abc', {})
-    with pytest.raises(TypeError):
-        cmdlets.get('logical-tristate-all')(5, {})
+def test_tristate_any_and_all_traverse_compound_trees():
+    assert cmdlets.get('logical-tristate-all')({'a': [1, 2], 'b': {'c': 'x'}}, {}) is True
+    assert cmdlets.get('logical-tristate-all')({'a': [1, 0], 'b': {'c': 'x'}}, {}) is False
+    assert cmdlets.get('logical-tristate-all')({'a': [1, None], 'b': {'c': 'x'}}, {}) is None
+    assert cmdlets.get('logical-tristate-any')({'a': [0, ''], 'b': {'c': 'x'}}, {}) is True
+    assert cmdlets.get('logical-tristate-any')({'a': [0, ''], 'b': {'c': ''}}, {}) is False
+    assert cmdlets.get('logical-tristate-any')({'a': [0, None], 'b': {'c': ''}}, {}) is None
+
+
+def test_tristate_any_and_all_accept_scalar():
+    assert cmdlets.get('logical-tristate-all')(5, {}) is True
+    assert cmdlets.get('logical-tristate-all')('', {}) is False
+    assert cmdlets.get('logical-tristate-all')(None, {}) is None
+    assert cmdlets.get('logical-tristate-any')(0, {}) is False
+    assert cmdlets.get('logical-tristate-any')('abc', {}) is True
+    assert cmdlets.get('logical-tristate-any')(None, {}) is None
 
 
 # ---- bitwise ---------------------------------------------------------------

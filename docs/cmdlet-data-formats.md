@@ -245,7 +245,11 @@ Logical operators coerce operands to boolean and always return a boolean:
 - `logical-and` / `logical-or` — combine operand cmdlet chains in `args['operands']` (each chain
   starts with a source reader and does not depend on the piped value); a
   `sysmissing` operand counts as `false`.
-- `logical-any` / `logical-all` — reduce an array's iterations to a boolean.
+- `logical-any` / `logical-all` — reduce the piped value's **scalar leaves** to a
+  boolean, traversing blocks and arrays recursively; a scalar value counts as a
+  single leaf. `logical-all` is `true` when every leaf is truthy (an empty block
+  or array is vacuously `true`); `logical-any` is `true` when at least one leaf
+  is truthy (empty compounds are `false`).
 
 The `logical-tristate-*` variants mirror these with SQL three-valued logic, so
 `sysmissing` is *unknown* rather than `false` and the result may itself be
@@ -257,8 +261,8 @@ The `logical-tristate-*` variants mirror these with SQL three-valued logic, so
   in `args['operands']`; the result is the dominant truth value when one
   dominates (`false` for AND, `true` for OR), otherwise `sysmissing` when any
   operand is `sysmissing`, otherwise the remaining value.
-- `logical-tristate-any` / `logical-tristate-all` — reduce an array's iterations
-  with the same OR / AND three-valued rules.
+- `logical-tristate-any` / `logical-tristate-all` — reduce the piped value's
+  scalar leaves with the same OR / AND three-valued rules.
 
 Bitwise operators require integer operands (bool excluded) and use
 `args['operands']` for the binary/n-ary ones: `bitwise-not` (unary), `bitwise-and`,

@@ -13,6 +13,7 @@ This is the generic, chain-parameterized form of the recursive walk
 """
 
 from ..chain_runner import run_chain
+from ..diagnostic import note_path_prefix
 from ..registry import cmdlets
 from ..value_types import PipeValue
 
@@ -38,12 +39,19 @@ def foreach_deep_node(value: PipeValue, args: dict) -> PipeValue:
             "foreach-deep-node: missing required arg 'transform' (a non-empty cmdlet chain)"
         )
 
-    return _map_leaves(value, transform)
+    return _map_leaves(value, transform, [])
 
 
-def _map_leaves(value, transform):
+def _map_leaves(value, transform, path):
     if isinstance(value, dict):
-        return {key: _map_leaves(child, transform) for key, child in value.items()}
+        return {
+            key: _map_leaves(child, transform, path + [key])
+            for key, child in value.items()
+        }
     if isinstance(value, list):
-        return [_map_leaves(child, transform) for child in value]
-    return run_chain(transform, initial=value)
+        return [
+            _map_leaves(child, transform, path + [index])
+            for index, child in enumerate(value)
+        ]
+    with note_path_prefix(path):
+        return run_chain(transform, initial=value)

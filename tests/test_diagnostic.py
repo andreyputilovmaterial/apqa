@@ -14,6 +14,7 @@ from src.cmdlets.diagnostic import (
     format_note,
     format_notes,
     format_path,
+    note_path_prefix,
     record_note,
 )
 
@@ -74,3 +75,18 @@ def test_notes_note_stores_path_copy():
     notes.note(path, 'm')
     path.append('b')
     assert notes.items[0]['path'] == ['a']
+
+
+def test_note_path_prefix_prepends_path():
+    with collect_notes() as notes:
+        with note_path_prefix(['a', 1]):
+            record_note(['b'], 'inside')
+    assert notes.items == [{'path': ['a', 1, 'b'], 'message': 'inside'}]
+
+
+def test_note_path_prefix_nests():
+    with collect_notes() as notes:
+        with note_path_prefix(['a']):
+            with note_path_prefix([2]):
+                record_note([], 'leaf')
+    assert notes.items == [{'path': ['a', 2], 'message': 'leaf'}]
