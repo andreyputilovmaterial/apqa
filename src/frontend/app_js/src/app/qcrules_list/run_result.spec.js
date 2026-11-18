@@ -43,7 +43,7 @@ describe('groupRunSummary', () => {
   it('renders passed and failed counts like pytest', () => {
     expect(
       groupRunSummary({ total: 5, passed: 3, failed: 1, errored: 0, running: 0, blank: 1 }),
-    ).toBe('3 passed, 1 failed, 1 not run');
+    ).toBe('3 passed, 1 failed, 1 queued');
   });
 
   it('omits zero counts', () => {
@@ -58,10 +58,10 @@ describe('groupRunSummary', () => {
     ).toBe('1 failed, 1 error');
   });
 
-  it('shows running and not run counts', () => {
+  it('shows running and queued counts', () => {
     expect(
       groupRunSummary({ total: 4, passed: 1, failed: 0, errored: 0, running: 1, blank: 2 }),
-    ).toBe('1 passed, 1 running, 2 not run');
+    ).toBe('1 passed, 1 running, 2 queued');
   });
 
   it('returns an empty string when there are no rules', () => {

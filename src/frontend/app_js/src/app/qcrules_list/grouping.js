@@ -279,7 +279,7 @@ export function buildGroupNodes(groups, records, cmdlets = [], ops = [], runResu
   // Combined run summary for a folder, so its tick (and its last-run banner)
   // mirrors the rules (and nested folders) inside it. Aggregates counts over the
   // whole subtree and keeps the counts the "run results" section displays:
-  // `passed`/`failed`/`errored`/`running`/`blank` (blank = not run yet). `failed`
+  // `passed`/`failed`/`errored`/`running`/`blank` (blank = queued, not run yet). `failed`
   // counts false comparisons, `errored` counts runs that raised. Memoized per
   // node; `seen` guards against parent cycles.
   const groupRunAggregateCache = new Map();

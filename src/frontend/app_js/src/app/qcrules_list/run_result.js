@@ -58,7 +58,7 @@ export function runTickFor(status) {
 }
 
 // Render a folder's aggregated run counts as a short, pytest-like summary, e.g.
-// `3 passed, 1 failed, 2 not run`. Zero counts are omitted. `counts` is the
+// `3 passed, 1 failed, 2 queued`. Zero counts are omitted. `counts` is the
 // `runAggregate` object produced by `buildGroupNodes`.
 export function groupRunSummary(counts) {
   if (!counts || !counts.total) return '';
@@ -67,6 +67,6 @@ export function groupRunSummary(counts) {
   if (counts.failed) parts.push(`${counts.failed} failed`);
   if (counts.errored) parts.push(`${counts.errored} error`);
   if (counts.running) parts.push(`${counts.running} running`);
-  if (counts.blank) parts.push(`${counts.blank} not run`);
+  if (counts.blank) parts.push(`${counts.blank} queued`);
   return parts.join(', ');
 }
