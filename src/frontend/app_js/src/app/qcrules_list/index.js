@@ -87,7 +87,7 @@ const QcRulesList = {
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
       <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
         <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
+          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
           <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
         </template>
       </component-records-filter>
@@ -235,14 +235,17 @@ const QcRulesList = {
       return cmdletMetadata.value;
     }
 
-    async function createRule() {
+    // Open the create-rule modal and resolve with the submitted payload, or null
+    // when the user dismisses it. Shared by the top-level "Create new QC rule"
+    // button and the per-folder "add" action so both open the same dialog.
+    async function openCreateRuleModal() {
       let metadata;
       try {
         metadata = await ensureCmdletMetadata();
       } catch (e) {
         window.alert(`Failed to load cmdlet metadata: ${e}`);
         logError(`Failed to load cmdlet metadata: ${e}`);
-        return;
+        return null;
       }
 
       const MyForm = defineComponent({
@@ -256,13 +259,27 @@ const QcRulesList = {
           }),
       });
 
-      let payload;
       try {
-        payload = await createModal(MyForm);
+        return await createModal(MyForm);
       } catch (e) {
         // Modal dismissed — nothing to create.
-        return;
+        return null;
       }
+    }
+
+    async function postNewRule(payload) {
+      try {
+        await postJson('/qc/rules', payload);
+        await load();
+      } catch (e) {
+        window.alert(`Failed to create QC rule: ${e}`);
+        logError(`Failed to create QC rule: ${e}`);
+      }
+    }
+
+    async function createRule() {
+      const payload = await openCreateRuleModal();
+      if (!payload) return;
 
       // Append the new rule at the end of the top-level list: give it an order
       // just past the largest existing order (rules and folders share one order
@@ -276,13 +293,29 @@ const QcRulesList = {
       }
       payload.meta = { ...(payload.meta || {}), order: maxOrder + 1 };
 
-      try {
-        await postJson('/qc/rules', payload);
-        await load();
-      } catch (e) {
-        window.alert(`Failed to create QC rule: ${e}`);
-        logError(`Failed to create QC rule: ${e}`);
+      await postNewRule(payload);
+    }
+
+    // Same dialog as "Create new QC rule", but the new rule belongs to the
+    // clicked folder and is placed last among that folder's direct children
+    // (rules in the folder and sub-folders are one interleaved, order-sorted
+    // sequence).
+    async function onAddRuleToGroup(group) {
+      const payload = await openCreateRuleModal();
+      if (!payload) return;
+
+      payload.group = group.id;
+
+      let maxOrder = 0;
+      for (const record of records.value) {
+        if (record.group === group.id && record.order > maxOrder) maxOrder = record.order;
       }
+      for (const child of groups.value) {
+        if (child.parent === group.id && child.order > maxOrder) maxOrder = child.order;
+      }
+      payload.meta = { ...(payload.meta || {}), order: maxOrder + 1 };
+
+      await postNewRule(payload);
     }
 
     async function createFolder() {
@@ -633,6 +666,7 @@ const QcRulesList = {
       onDeleteRule,
       onEditGroup,
       onRunGroup,
+      onAddRuleToGroup,
       onDeleteGroup,
       onSaveRule,
       onCancelEdit,

@@ -278,6 +278,17 @@ describe('RulesTree', () => {
     expect(wrapper.emitted('delete-group')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
   });
 
+  it('forwards add-rule actions from a folder', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [] },
+    });
+
+    await wrapper.find('.apqa-record-action-add').trigger('click');
+
+    expect(wrapper.emitted('add-rule')).toHaveLength(1);
+    expect(wrapper.emitted('add-rule')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
+  });
+
   it("shows a folder's own tags and markers in its meta row", () => {
     const wrapper = mountTree({
       props: {

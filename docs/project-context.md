@@ -5,6 +5,8 @@
 ## Last state
 
 
+- **Added an "add QC rule" button to each folder in the QC-rules list (frontend).** A folder's icon action row is now Edit / Run / **Add** / Delete — the new Add button (`<i class="ri-add-large-fill">`, `apqa-record-action-add`, `aria-label="Add QC rule to folder"`) sits to the left of Delete and opens the *same* create-rule dialog as the top-level "Create new QC rule" button, but the resulting rule is assigned to that folder (`group` = folder id) and placed last among the folder's direct children. `rules_tree.js` emits a new `add-rule` event; `index.js` wires `@add-rule="onAddRuleToGroup"` and extracted the shared dialog/POST logic into `openCreateRuleModal()` + `postNewRule()` (also used by `createRule`). The folder-scoped order is `max(order of rules with group === folder.id, order of sub-folders with parent === folder.id) + 1` (siblings are one interleaved, order-sorted sequence). Added a `rules_tree` spec for the new event. Frontend Vitest: 187 passed in `qcrules_list` (all 13 specs).
+
 - **Clarified commit ordering in `.clinerules`: update `docs/project-context.md` before committing, not after.** `00-project-context.md` now says to update the context doc **before creating the task's commit(s)** (was "before finishing"), so it lands in the same commit as the work it describes — never as a separate follow-up commit; `22-when-making-commits.md` adds a matching bullet (commit code / submodule-pointer bump and the context-doc update together in one commit, after pushing any submodule commits per `21`). No change needed to `20-git-commit-messages-wording.md` — it already carries the same example bullet here.
 
 
