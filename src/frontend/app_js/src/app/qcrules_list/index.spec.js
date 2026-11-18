@@ -6,7 +6,7 @@ import RulesTree from './rules_tree.js';
 import { cmdletComponents } from '@/common_components/cmdlet_components/index.js';
 
 // `QcRulesList` loads rules + groups in its `onMounted` hook and renders the
-// `records-filter` -> `rules-tree` pipeline. Stub `fetch` so the page renders
+// rules tree from the loaded records. Stub `fetch` so the page renders
 // records without a backend.
 function stubFetch(rules, groups = []) {
   vi.stubGlobal(

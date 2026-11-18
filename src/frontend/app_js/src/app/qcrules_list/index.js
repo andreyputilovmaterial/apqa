@@ -1,6 +1,5 @@
 import { computed, ref, reactive, onMounted, defineComponent, h } from 'vue';
 
-import RecordsFilter from '@/common_components/records_filter/index';
 import { makeFetchResponseErrorMessage } from '@/common_defs/helper_functions';
 import logError from '@/common_components/log_error';
 import { createModal } from '@/common_components/modals/modals';
@@ -12,16 +11,6 @@ import RuleDeleteConfirm from './rule_delete_confirm';
 import { rulesForGroup } from './grouping';
 
 import './styles.css';
-
-const COLUMNS = {
-  name: { label: 'Name', type: 'text', description: 'Display name of the QC rule.' },
-  op: { label: 'Operator', type: 'text', description: 'Comparison operator between the left and right chains.' },
-  comment: { label: 'Comment', type: 'text', description: 'Short human-readable note about the rule.' },
-  tags: { label: 'Tags', type: 'multipunch', description: 'Tags attached to the rule; a rule must have all selected tags.' },
-  markers: { label: 'Markers', type: 'multipunch', description: 'Pytest markers that change how the rule runs, e.g. skip or xfail.' },
-  created_at: { label: 'Created', type: 'text', description: 'When the rule was created.' },
-  modified_at: { label: 'Modified', type: 'text', description: 'When the rule was last modified.' },
-};
 
 function toRecord(rule) {
   const meta = rule.meta || {};
@@ -66,7 +55,6 @@ function toGroupRecord(group) {
 
 const QcRulesList = {
   components: {
-    'component-records-filter': RecordsFilter,
     'rule-record': RuleRecord,
     'rules-tree': RulesTree,
   },
@@ -84,12 +72,7 @@ const QcRulesList = {
 
     <section class="apqa-qcrules-page-section">
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
-      <component-records-filter :columns="columns" :records="records" key-field="id" need-sort :records-per-page="0">
-        <template #default="{ records: visibleRecords }">
-          <rules-tree v-if="visibleRecords.length" :records="visibleRecords" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
-          <div v-else class="apqa-qcrules-page-empty">No QC rules match the current filter.</div>
-        </template>
-      </component-records-filter>
+      <rules-tree :records="records" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
     </section>
   </template>
 </div>
@@ -105,10 +88,9 @@ const QcRulesList = {
     const editingGroupId = ref('');
 
     // Per-rule run results, cached in the UI (keyed by rule id). Kept here, on
-    // the page, rather than on the record objects themselves: the records filter
-    // passes shallow copies of records down to the tree, so a result written onto
-    // a copied record would be lost on the next recompute. Keying by id also keeps
-    // the result visible across list reloads until the rule is edited/deleted.
+    // the page, rather than on the record objects themselves, so the cached
+    // result survives list reloads and tree recomputes until the rule is
+    // edited/deleted.
     const runResults = reactive({});
 
     // Folder ids whose "Run" was clicked while the folder contained no QC rules
@@ -120,23 +102,6 @@ const QcRulesList = {
     // lazily on first use. These computed refs keep the template readable.
     const cmdlets = computed(() => (cmdletMetadata.value && cmdletMetadata.value.cmdlets) || []);
     const ops = computed(() => (cmdletMetadata.value && cmdletMetadata.value.ops) || []);
-
-    // Tags and markers are multi-punch columns, so their allowed values depend
-    // on the loaded records. Start from the static column shape and fill in the
-    // distinct values as the `options` for the `component-input-multipunch` drop downs.
-    const columns = computed(() => {
-      const tags = new Set();
-      const markers = new Set();
-      for (const record of records.value) {
-        for (const tag of record.tags) tags.add(tag);
-        for (const marker of record.markers) markers.add(marker);
-      }
-      return {
-        ...COLUMNS,
-        tags: { ...COLUMNS.tags, options: Array.from(tags).sort() },
-        markers: { ...COLUMNS.markers, options: Array.from(markers).sort() },
-      };
-    });
 
     const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
 
@@ -641,7 +606,6 @@ const QcRulesList = {
     onMounted(load);
 
     return {
-      columns,
       records,
       groups,
       loading,
