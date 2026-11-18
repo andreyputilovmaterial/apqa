@@ -8,7 +8,8 @@ import RulesTree from './rules_tree';
 import RuleForm from './rule_form';
 import GroupForm from './group_form';
 import RuleDeleteConfirm from './rule_delete_confirm';
-import { rulesForGroup } from './grouping';
+import { allRulesInOrder, rulesForGroup } from './grouping';
+import { groupRunSummary } from './run_result';
 
 import './styles.css';
 
@@ -64,15 +65,32 @@ const QcRulesList = {
   <div v-if="loading" class="apqa-qcrules-page-state">Loading QC rules...</div>
   <div v-else-if="loadError" class="apqa-qcrules-page-state apqa-qcrules-page-state-error">{{ loadError }}</div>
   <template v-else>
-    <div class="apqa-qcrules-page-toolbar">
-      <button type="button" class="apqa-qcrules-page-button apqa-qcrules-page-button-primary" @click="createRule">Create new QC rule</button>
-      <button type="button" class="apqa-qcrules-page-button" @click="createFolder">Create folder</button>
-      <button type="button" class="apqa-qcrules-page-button" @click="createAlias">Add alias</button>
+    <div class="apqa-qcrules-page-intro">
+      <p>Define QC tests once and reuse them across projects.</p>
+      <p>Run tests manually or automatically.</p>
+      <p>Compare data and metadata across different sources and deliverables. Detect unexpected changes, inconsistencies, missing information, and violations of predefined rules.</p>
     </div>
 
     <section class="apqa-qcrules-page-section">
       <h2 class="apqa-qcrules-page-section-title">QC rules</h2>
-      <rules-tree :records="records" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
+
+      <div class="apqa-qcrules-page-actions">
+        <button type="button" class="apqa-record-action apqa-record-action-create-rule" title="Create new QC rule" aria-label="Create new QC rule" @click="createRule">
+          <i class="ri-add-large-fill" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="apqa-record-action apqa-record-action-create-folder" title="Create folder" aria-label="Create folder" @click="createFolder">
+          <i class="ri-folder-add-line" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="apqa-record-action apqa-record-action-run-all" title="Run all tests" aria-label="Run all tests" @click="onRunAll">
+          <i class="ri-play-large-line" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div v-if="hasAllRunSummary" class="apqa-qcrules-page-all-run-result">
+        <div class="apqa-qcrules-page-all-run-result-status" :class="allRunSummaryClass">{{ allRunSummaryText }}</div>
+      </div>
+
+      <rules-tree :records="records" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @add-subfolder="onAddSubfolder" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
     </section>
   </template>
 </div>
@@ -98,12 +116,70 @@ const QcRulesList = {
     // note in the folder's run-result area instead of a browser alert.
     const emptyRunGroups = reactive({});
 
+    // Whether "Run all" was clicked while there were no rules to run; turns the
+    // all-rules summary into a "no tests ran" note (mirrors emptyRunGroups).
+    const allRunEmpty = ref(false);
+
+    // Combined run summary over every rule in the list, so the "run all" result
+    // area mirrors a folder's last-run summary. Aggregates the same counts as
+    // `groupRunAggregate` but over the whole list (ungrouped rules included).
+    const allRunAggregate = computed(() => {
+      let total = 0;
+      let passed = 0;
+      let failed = 0;
+      let errored = 0;
+      let running = 0;
+      let blank = 0;
+      for (const record of records.value) {
+        total += 1;
+        const result = runResults[record.id];
+        const status = result && result.status ? result.status : 'blank';
+        if (status === 'passed') passed += 1;
+        else if (status === 'failed') failed += 1;
+        else if (status === 'error') errored += 1;
+        else if (status === 'running') running += 1;
+        else blank += 1;
+      }
+      return { total, passed, failed, errored, running, blank };
+    });
+
+    const allRunStatus = computed(() => {
+      const agg = allRunAggregate.value;
+      if (agg.total === 0) return 'empty';
+      if (agg.failed || agg.errored) return 'failed';
+      if (agg.running) return 'running';
+      if (agg.passed && !agg.blank) return 'passed';
+      if (agg.passed) return 'indeterminate';
+      return 'blank';
+    });
+
+    const hasAllRunSummary = computed(() => {
+      if (allRunEmpty.value && allRunStatus.value === 'empty') return true;
+      const agg = allRunAggregate.value;
+      return agg.total > 0 && agg.passed + agg.failed + agg.errored + agg.running > 0;
+    });
+
+    const allRunSummaryText = computed(() => {
+      if (allRunEmpty.value && allRunStatus.value === 'empty') return 'no tests ran';
+      return groupRunSummary(allRunAggregate.value);
+    });
+
+    const allRunSummaryClass = computed(() => {
+      if (allRunEmpty.value && allRunStatus.value === 'empty') return 'apqa-rule-run-result-running';
+      switch (allRunStatus.value) {
+        case 'passed':
+          return 'apqa-rule-run-result-passed';
+        case 'failed':
+          return 'apqa-rule-run-result-failed';
+        default:
+          return 'apqa-rule-run-result-running';
+      }
+    });
+
     // The create/edit forms need the cmdlet + comparison-op metadata, fetched
     // lazily on first use. These computed refs keep the template readable.
     const cmdlets = computed(() => (cmdletMetadata.value && cmdletMetadata.value.cmdlets) || []);
     const ops = computed(() => (cmdletMetadata.value && cmdletMetadata.value.ops) || []);
-
-    const groupNames = computed(() => groups.value.map((group) => group.name).sort().join(', '));
 
     // Distinct tags across loaded rules and folders, used as suggestions in the
     // create/edit forms.
@@ -282,18 +358,53 @@ const QcRulesList = {
       await postNewRule(payload);
     }
 
-    async function createFolder() {
+    // Same dialog as "Create folder", but the new folder is nested under the
+    // clicked folder and placed last among its direct children (rules and
+    // sub-folders are one interleaved, order-sorted sequence).
+    async function onAddSubfolder(group) {
+      const payload = await openCreateFolderModal();
+      if (!payload) return;
+
+      payload.parent = group.id;
+
+      let maxOrder = 0;
+      for (const record of records.value) {
+        if (record.group === group.id && record.order > maxOrder) maxOrder = record.order;
+      }
+      for (const child of groups.value) {
+        if (child.parent === group.id && child.order > maxOrder) maxOrder = child.order;
+      }
+      payload.meta = { ...(payload.meta || {}), order: maxOrder + 1 };
+
+      await postNewFolder(payload);
+    }
+
+    async function openCreateFolderModal() {
       const MyForm = defineComponent({
         setup: (_, { attrs }) => () => h(GroupForm, { ...attrs }),
       });
 
-      let payload;
       try {
-        payload = await createModal(MyForm);
+        return await createModal(MyForm);
       } catch (e) {
         // Modal dismissed — nothing to create.
-        return;
+        return null;
       }
+    }
+
+    async function postNewFolder(payload) {
+      try {
+        await postJson('/qc/groups', payload);
+        await load();
+      } catch (e) {
+        window.alert(`Failed to create folder: ${e}`);
+        logError(`Failed to create folder: ${e}`);
+      }
+    }
+
+    async function createFolder() {
+      const payload = await openCreateFolderModal();
+      if (!payload) return;
 
       // Append the new folder at the end of the top-level list: give it an order
       // just past the largest existing order (rules and folders share one order
@@ -307,54 +418,7 @@ const QcRulesList = {
       }
       payload.meta = { ...(payload.meta || {}), order: maxOrder + 1 };
 
-      try {
-        await postJson('/qc/groups', payload);
-        await load();
-      } catch (e) {
-        window.alert(`Failed to create folder: ${e}`);
-        logError(`Failed to create folder: ${e}`);
-      }
-    }
-
-    async function createAlias() {
-      const groupName = window.prompt(
-        `Folder (group) to add the alias to.\nExisting groups: ${groupNames.value}`,
-      );
-      if (groupName == null || groupName.trim() === '') return;
-      const group = groups.value.find(
-        (g) => g.name === groupName.trim() || g.id === groupName.trim(),
-      );
-      if (!group) {
-        window.alert(`Group not found: ${groupName.trim()}`);
-        return;
-      }
-      const name = window.prompt('Alias name');
-      if (name == null || name.trim() === '') return;
-      const chainText = window.prompt(
-        'Cmdlet chain as a JSON array of {cmdlet, args} objects',
-        '[{"cmdlet":"get-content-mdd","args":{"path":"s:\\\\..."}}]',
-      );
-      if (chainText == null) return;
-      let chain;
-      try {
-        chain = JSON.parse(chainText);
-      } catch (e) {
-        window.alert(`Failed to parse cmdlet chain: ${e}`);
-        return;
-      }
-      if (!Array.isArray(chain)) {
-        window.alert('Cmdlet chain must be a JSON array');
-        return;
-      }
-      const aliases = group.aliases.filter((alias) => alias.name !== name.trim());
-      aliases.push({ name: name.trim(), chain });
-      try {
-        await putJson(`/qc/groups/${encodeURIComponent(group.id)}`, { aliases });
-        await load();
-      } catch (e) {
-        window.alert(`Failed to add alias: ${e}`);
-        logError(`Failed to add alias: ${e}`);
-      }
+      await postNewFolder(payload);
     }
 
     // Open the inline edit form for a rule. Only one rule can be edited at a
@@ -433,6 +497,22 @@ const QcRulesList = {
 
     async function onRunRule(record) {
       await runRuleRecord(record);
+    }
+
+    // Run every rule in the list one at a time, in the same depth-first order
+    // the tree renders them (ungrouped rules and every folder, nested sub-folders
+    // included). Each rule updates its own cached result, and the all-rules
+    // summary (and each folder tick) re-aggregates as they finish.
+    async function onRunAll() {
+      const rules = allRulesInOrder(groups.value, records.value);
+      if (rules.length === 0) {
+        allRunEmpty.value = true;
+        return;
+      }
+      allRunEmpty.value = false;
+      for (const record of rules) {
+        await runRuleRecord(record);
+      }
     }
 
     // Persist the edits from the inline form. Only the fields the form manages
@@ -617,10 +697,13 @@ const QcRulesList = {
       cmdlets,
       ops,
       tagSuggestions,
+      hasAllRunSummary,
+      allRunSummaryText,
+      allRunSummaryClass,
       load,
       createRule,
       createFolder,
-      createAlias,
+      onRunAll,
       onEditRule,
       onRunRule,
       onDuplicateRule,
@@ -628,6 +711,7 @@ const QcRulesList = {
       onEditGroup,
       onRunGroup,
       onAddRuleToGroup,
+      onAddSubfolder,
       onDeleteGroup,
       onSaveRule,
       onCancelEdit,

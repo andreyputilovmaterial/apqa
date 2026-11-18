@@ -437,3 +437,63 @@ export function rulesForGroup(groups, records, groupId) {
   if (start) walk(start);
   return result;
 }
+
+// All rule records in the full depth-first order the tree renders them:
+// ungrouped rules and root groups are interleaved at the top level, then each
+// group's direct rules and sub-folders are interleaved (order-sorted, ties keep
+// sub-folders before rules) and walked depth-first. The page uses this to run
+// every rule in the list sequentially ("Run all"), including ungrouped rules.
+export function allRulesInOrder(groups, records) {
+  const byId = new Map();
+  for (const group of groups) {
+    byId.set(group.id, {
+      id: group.id,
+      parent: group.parent || '',
+      order: orderOf(group.order),
+      children: [],
+      rules: [],
+    });
+  }
+
+  const roots = [];
+  byId.forEach((node) => {
+    if (node.parent && byId.has(node.parent)) {
+      byId.get(node.parent).children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  const ungrouped = [];
+  for (const record of records) {
+    const group = record.group;
+    if (group && byId.has(group)) byId.get(group).rules.push(record);
+    else ungrouped.push(record);
+  }
+
+  const result = [];
+  const walk = (node, seen = new Set()) => {
+    if (seen.has(node.id)) return;
+    seen.add(node.id);
+
+    const entries = [];
+    for (const child of node.children) entries.push({ order: child.order, group: child });
+    for (const rule of node.rules) entries.push({ order: orderOf(rule.order), rule });
+    entries.sort((a, b) => a.order - b.order);
+    for (const entry of entries) {
+      if (entry.group) walk(entry.group, seen);
+      else result.push(entry.rule);
+    }
+  };
+
+  const top = [];
+  for (const rule of ungrouped) top.push({ order: orderOf(rule.order), rule });
+  for (const root of roots) top.push({ order: root.order, group: root });
+  top.sort((a, b) => a.order - b.order);
+  for (const entry of top) {
+    if (entry.group) walk(entry.group);
+    else result.push(entry.rule);
+  }
+
+  return result;
+}

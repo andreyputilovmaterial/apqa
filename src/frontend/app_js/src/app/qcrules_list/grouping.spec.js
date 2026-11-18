@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+  allRulesInOrder,
   buildGroupNodes,
   isInvalid,
   isUnfinished,
@@ -185,6 +186,49 @@ describe('rulesForGroup', () => {
   it('returns an empty list for an unknown group id', () => {
     expect(rulesForGroup([group('Data')], [rule('r1', 'Data')], 'Ghost')).toEqual([]);
     expect(rulesForGroup([group('Data')], [rule('r1', 'Data')], '')).toEqual([]);
+  });
+});
+
+describe('allRulesInOrder', () => {
+  it('returns ungrouped rules and root groups interleaved by order, depth-first', () => {
+    const groups = [group('Data', '', 1), group('Metadata', 'Data', 1)];
+    const records = [
+      rule('r-ungrouped', '', 0),
+      rule('r2', 'Metadata', 0),
+      rule('r1', 'Data', 0),
+    ];
+
+    const rules = allRulesInOrder(groups, records);
+
+    expect(rules.map((r) => r.name)).toEqual(['r-ungrouped', 'r1', 'r2']);
+  });
+
+  it('walks nested sub-folders depth-first before moving to the next sibling', () => {
+    const groups = [group('A', '', 1), group('A-1', 'A', 0), group('B', '', 2)];
+    const records = [
+      rule('r-b', 'B'),
+      rule('r-a', 'A', 1),
+      rule('r-a1', 'A-1'),
+      rule('r-ungrouped', '', 0),
+    ];
+
+    expect(allRulesInOrder(groups, records).map((r) => r.name)).toEqual([
+      'r-ungrouped',
+      'r-a1',
+      'r-a',
+      'r-b',
+    ]);
+  });
+
+  it('treats rules in an unknown group as ungrouped and returns them at top level', () => {
+    expect(allRulesInOrder([group('Data')], [rule('r1', 'Ghost'), rule('r2')]).map((r) => r.name)).toEqual([
+      'r1',
+      'r2',
+    ]);
+  });
+
+  it('returns an empty list when there are no rules', () => {
+    expect(allRulesInOrder([group('Data')], [])).toEqual([]);
   });
 });
 

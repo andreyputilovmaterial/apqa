@@ -13,38 +13,50 @@
   color: #cc0000;
 }
 
-.apqa-qcrules-page-toolbar {
+/* Intro copy shown under the page heading instead of the old create/alias
+   toolbar buttons. */
+.apqa-qcrules-page-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: #666;
+  font-size: 0.9rem;
+  /* Pull the block a touch closer to the page heading above, and add a little
+     extra breathing room before the "QC rules" section below. */
+  margin-top: -3px;
+  margin-bottom: 4px;
+}
+
+.apqa-qcrules-page-intro p {
+  margin: 0;
+}
+
+/* Icon-only action row under the "QC rules" section heading: create rule,
+   create folder, run all. Mirrors the per-folder action row. */
+.apqa-qcrules-page-actions {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px;
 }
 
-.apqa-qcrules-page-button {
-  padding: 6px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 7px;
-  background: #fff;
-  color: #333;
-  cursor: pointer;
-  font: inherit;
+/* Run-all icon swaps its outline play glyph for the filled one on hover, the
+   same as the per-folder Run button. */
+.apqa-record-action-run-all:hover .ri-play-large-line::before {
+  content: "\f507";
+}
+
+/* All-rules run summary shown under the page actions after "Run all" (or after
+   any rule has been run). Mirrors the folder last-run summary banner. */
+.apqa-qcrules-page-all-run-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 0.9rem;
-  transition: 500ms all ease;
 }
 
-.apqa-qcrules-page-button:hover {
-  border-color: #999;
-}
-
-.apqa-qcrules-page-button-primary {
-  background: #385;
-  border-color: #385;
-  color: #fff;
-}
-
-.apqa-qcrules-page-button-primary:hover {
-  background: #1c6b3e;
-  border-color: #1c6b3e;
+.apqa-qcrules-page-all-run-result-status {
+  font-weight: 400;
 }
 
 .apqa-qcrules-page-section {

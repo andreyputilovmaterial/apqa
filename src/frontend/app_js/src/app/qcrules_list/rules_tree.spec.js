@@ -289,6 +289,22 @@ describe('RulesTree', () => {
     expect(wrapper.emitted('add-rule')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
   });
 
+  it('forwards add-subfolder actions from a folder with the folder-add icon', async () => {
+    const wrapper = mountTree({
+      props: { groups: [group('Data')], records: [] },
+    });
+
+    const button = wrapper.find('.apqa-record-action-add-subfolder');
+    expect(button.exists()).toBe(true);
+    expect(button.find('i.ri-folder-add-line').exists()).toBe(true);
+    expect(button.attributes('aria-label')).toBe('Add subfolder to folder');
+
+    await button.trigger('click');
+
+    expect(wrapper.emitted('add-subfolder')).toHaveLength(1);
+    expect(wrapper.emitted('add-subfolder')[0][0]).toMatchObject({ id: 'Data', name: 'Data' });
+  });
+
   it("shows a folder's own tags in its meta row", () => {
     const wrapper = mountTree({
       props: {

@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 
+import { createModal } from '@/common_components/modals/modals';
 import QcRulesList from './index.js';
 import RulesTree from './rules_tree.js';
 import { cmdletComponents } from '@/common_components/cmdlet_components/index.js';
+
+vi.mock('@/common_components/modals/modals', () => ({
+  createModal: vi.fn(),
+}));
 
 // `QcRulesList` loads rules + groups in its `onMounted` hook and renders the
 // rules tree from the loaded records. Stub `fetch` so the page renders
@@ -21,6 +26,7 @@ function stubFetch(rules, groups = []) {
 describe('QcRulesList', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    createModal.mockReset();
   });
 
   it('passes distinct tag suggestions down to the rules tree', async () => {
@@ -74,7 +80,7 @@ describe('QcRulesList', () => {
     await wrapper.find('.apqa-record-action-run').trigger('click');
     await flushPromises();
 
-    expect(wrapper.find('.apqa-rule-run-result-failed').text()).toBe('Failed');
+    expect(wrapper.find('.apqa-rule-run-result .apqa-rule-run-result-failed').text()).toBe('Failed');
     expect(wrapper.find('.apqa-rule-run-result-notes li').text()).toContain(
       'Fields.A.Label: not XML-compatible',
     );
@@ -267,5 +273,103 @@ describe('QcRulesList', () => {
 
     expect(putPayload).toMatchObject({ name: 'Data v2', parent: '' });
     expect(putPayload.meta).toEqual({ comment: 'old', tags: ['wave'] });
+  });
+
+  it('renders intro copy and icon actions instead of the old toolbar buttons', async () => {
+    stubFetch([]);
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    expect(wrapper.find('.apqa-qcrules-page-toolbar').exists()).toBe(false);
+    expect(wrapper.find('.apqa-qcrules-page-intro').exists()).toBe(true);
+    expect(wrapper.find('.apqa-qcrules-page-intro').text()).toContain('Define QC tests once and reuse them across projects');
+    expect(wrapper.find('.apqa-qcrules-page-intro').text()).toContain('Run tests manually or automatically');
+    expect(wrapper.find('.apqa-record-action-create-rule i.ri-add-large-fill').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-create-folder i.ri-folder-add-line').exists()).toBe(true);
+    expect(wrapper.find('.apqa-record-action-run-all i.ri-play-large-line').exists()).toBe(true);
+  });
+
+  it('runs all rules in tree order on run-all click and shows the summary', async () => {
+    const rules = [
+      { id: 'r-ungrouped', name: 'Ungrouped', group: '', left: [], op: 'eq', op_args: {}, right: [], meta: { order: 0 } },
+      { id: 'r-a', name: 'Rule A', group: 'a', left: [], op: 'eq', op_args: {}, right: [], meta: { order: 1 } },
+      { id: 'r-a1', name: 'Rule A1', group: 'a1', left: [], op: 'eq', op_args: {}, right: [], meta: { order: 0 } },
+      { id: 'r-b', name: 'Rule B', group: 'b', left: [], op: 'eq', op_args: {}, right: [], meta: { order: 0 } },
+    ];
+    const groups = [
+      { id: 'a', name: 'A', parent: '', meta: { order: 1 } },
+      { id: 'a1', name: 'A-1', parent: 'a', meta: { order: 0 } },
+      { id: 'b', name: 'B', parent: '', meta: { order: 2 } },
+    ];
+
+    const runOrder = [];
+    vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups }) });
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/tests/run') {
+        runOrder.push(JSON.parse(options.body).id);
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: true }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    await wrapper.find('.apqa-record-action-run-all').trigger('click');
+
+    await vi.waitFor(() => {
+      expect(runOrder).toEqual(['r-ungrouped', 'r-a1', 'r-a', 'r-b']);
+    });
+
+    expect(wrapper.find('.apqa-qcrules-page-all-run-result-status').text()).toBe('4 passed');
+  });
+
+  it('shows a "no tests ran" note when run-all is clicked with no rules', async () => {
+    stubFetch([]);
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    await wrapper.find('.apqa-record-action-run-all').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('.apqa-qcrules-page-all-run-result-status').text()).toBe('no tests ran');
+  });
+
+  it('creates a subfolder with the clicked parent and last-child order on add-subfolder', async () => {
+    const rules = [
+      { id: 'r1', name: 'Rule one', group: 'data', left: [], op: '', right: [], meta: { order: 2 } },
+    ];
+    const groups = [
+      { id: 'data', name: 'Data', parent: '', meta: { order: 5 } },
+      { id: 'other', name: 'Other', parent: '', meta: {} },
+    ];
+
+    createModal.mockResolvedValueOnce({ name: 'Sub', parent: '' });
+
+    let posted = null;
+    vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
+      const method = options.method || 'GET';
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules }) });
+      if (url === '/qc/groups' && method === 'GET') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups }) });
+      if (url === '/qc/groups' && method === 'POST') {
+        posted = JSON.parse(options.body);
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      }
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    wrapper.findComponent(RulesTree).vm.$emit('add-subfolder', { id: 'data', name: 'Data' });
+    await flushPromises();
+
+    expect(posted).toMatchObject({ name: 'Sub', parent: 'data' });
+    expect(posted.meta).toEqual({ order: 3 });
   });
 });

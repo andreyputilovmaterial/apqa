@@ -31,7 +31,7 @@ const RulesTree = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel', 'reorder', 'edit-group', 'run-group', 'add-rule', 'delete-group', 'save-group', 'cancel-group'],
+  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel', 'reorder', 'edit-group', 'run-group', 'add-rule', 'add-subfolder', 'delete-group', 'save-group', 'cancel-group'],
 
   components: {
     'alias-record': AliasRecord,
@@ -85,6 +85,9 @@ const RulesTree = {
               </button>
               <button type="button" class="apqa-record-action apqa-record-action-add" title="Add QC rule" aria-label="Add QC rule to folder" @click="$emit('add-rule', node)">
                 <i class="ri-add-large-fill" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apqa-record-action apqa-record-action-add-subfolder" title="Add subfolder" aria-label="Add subfolder to folder" @click="$emit('add-subfolder', node)">
+                <i class="ri-folder-add-line" aria-hidden="true"></i>
               </button>
               <button type="button" class="apqa-record-action apqa-record-action-delete" title="Delete" aria-label="Delete folder" @click="$emit('delete-group', node)">
                 <i class="ri-delete-bin-6-line" aria-hidden="true"></i>
