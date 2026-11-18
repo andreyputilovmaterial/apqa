@@ -16,7 +16,7 @@ nothing is kept.
 
 from ..path_rules import iter_child_paths, normalize_rules, path_matches
 from ..registry import cmdlets
-from ..value_types import Collection, PipeValue
+from ..value_types import Block, Collection, PipeValue
 
 
 _REMOVED = object()
@@ -53,7 +53,7 @@ def _keep(value, index_path, name_path, rules):
     if path_matches(index_path, name_path, rules):
         return value
     if isinstance(value, dict):
-        kept = {}
+        kept = Block()
         for key, child in value.items():
             child_result = _keep(child, index_path + [key], name_path + [key], rules)
             if child_result is not _REMOVED:

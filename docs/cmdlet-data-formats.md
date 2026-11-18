@@ -3,14 +3,14 @@
 > Status: **agreed specification.** The runner (`src/rule_runner.py`), the cmdlet
 > registry, and the comparison ops are implemented and follow this spec. The
 > value-type *taxonomy* is spelled out in `src/cmdlets/value_types.py` — a root
-> `Value` base type plus `Scalar`/`Compound`/`Block` structural `Protocol` types,
-> the scalar-category aliases, a runtime `Collection` type, and a `from_plain`
-> coercion helper — and is used for cmdlet annotations. Runtime values are plain
-> Python (`None` for `sysmissing`, `dict` for a block, `Collection` — a `list`
-> subclass — for a collection): a plain `list` **never** flows through the pipe,
-> every compound sequence is a `Collection`. Full *runtime* value objects for
-> categoricals are **not yet implemented**. Source readers and the full cmdlet
-> set are built on top of this spec.
+> `Value` base type plus `Scalar`/`Compound` ABC base types, the
+> scalar-category aliases, and the runtime `Block`/`Collection` classes — and is
+> used for cmdlet annotations. Runtime values are plain Python (`None` for
+> `sysmissing`, `Block` — a `dict` subclass — for a block, `Collection` — a
+> `list` subclass — for a collection): a plain `list` **never** flows through the
+> pipe, every compound sequence is a `Collection`, and every block is a `Block`.
+> Full *runtime* value objects for categoricals are **not yet implemented**.
+> Source readers and the full cmdlet set are built on top of this spec.
 
 ## Goal
 
@@ -82,9 +82,9 @@ Two compound types, which may nest (a field may itself be scalar or compound):
    scalar or compound type. Fields are selected by name (like
    `record.field["state"]`). Field order is **not** significant: two blocks are
    equal when they have the same field names with equal values, regardless of
-   order. Python representation: `dict` (which preserves insertion order, so a
-   field can also be read by position — a positional convenience that never
-   affects equality).
+   order. Python representation: `Block` — a `dict` subclass (which preserves
+   insertion order, so a field can also be read by position via `child_at` — a
+   positional convenience that never affects equality).
 
 2. **collection** — an ordered sequence of elements (a block repeated per
    iteration). Every element is addressable **both** by zero-based index and by
@@ -406,10 +406,10 @@ them as follows:
 ## Representation (Python / JSON / DB / UI)
 
 - **Python**: scalar → native (`str`, `int`, `float`, `bool`, `datetime`, `date`);
-  `sysmissing` → `None`; block → `dict`; collection → `Collection` (a `list`
-  subclass carrying per-element `names` and a `name → index` map); categorical →
-  value object carrying `value` + `options` (to define when categoricals are
-  implemented).
+  `sysmissing` → `None`; block → `Block` (a `dict` subclass); collection →
+  `Collection` (a `list` subclass carrying per-element `names` and a
+  `name → index` map); categorical → value object carrying `value` + `options`
+  (to define when categoricals are implemented).
 - **JSON / DB / UI**: scalars → JSON primitives; date/time → ISO-8601 (UTC);
   `sysmissing` → `null`; block → object; collection → array; categorical →
   `{ value, options }` (future).
@@ -608,9 +608,9 @@ value a cmdlet can return — rather than a plain path.
 ## Remaining to implement
 
 - Full *runtime* value objects for categoricals. The value-type *taxonomy* (names
-  + a root `Value` base type + the runtime `Collection`) already exists as
-  `src/cmdlets/value_types.py` and is used for cmdlet annotations; until the
-  categorical wrappers are added, the plain-Python rules above apply.
+  + a root `Value` base type + the runtime `Block`/`Collection` classes) already
+  exists as `src/cmdlets/value_types.py` and is used for cmdlet annotations;
+  until the categorical wrappers are added, the plain-Python rules above apply.
 - Source readers beyond `get-content-excel` and `get-content-mdd` (CSV, SPSS, DB,
   …) and the rest of the middle/terminal cmdlet set (`select-properties`,
   `to-string`, comparison-as-cmdlet `cmp-eq`/`cmp-ne`/…, …).

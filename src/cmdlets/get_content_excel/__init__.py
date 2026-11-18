@@ -51,10 +51,10 @@ def get_content_excel(value: PipeValue, args: dict) -> Block:
 
     workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
     try:
-        return {
+        return Block({
             sheet_name: _read_sheet(workbook[sheet_name])
             for sheet_name in workbook.sheetnames
-        }
+        })
     finally:
         close = getattr(workbook, 'close', None)
         if callable(close):
@@ -68,7 +68,7 @@ def _read_sheet(sheet) -> Collection:
     if header is None:
         return Collection([])
     names = _deduplicate_headers(header)
-    return Collection([dict(zip(names, row)) for row in rows])
+    return Collection([Block(zip(names, row)) for row in rows])
 
 
 def _deduplicate_headers(header) -> list:

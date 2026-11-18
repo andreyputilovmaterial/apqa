@@ -36,4 +36,4 @@ def foreach_field(value: PipeValue, args: dict) -> Block:
             "foreach-field: missing required arg 'transform' (a non-empty cmdlet chain)"
         )
 
-    return {key: run_chain(transform, initial=field) for key, field in value.items()}
+    return Block({key: run_chain(transform, initial=field) for key, field in value.items()})

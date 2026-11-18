@@ -172,7 +172,7 @@ def _index_category(cat, result):
 
 
 def _category_map(category_blocks):
-    result = {}
+    result = Block()
     for cat in category_blocks:
         _index_category(cat, result)
     return result
@@ -267,14 +267,14 @@ class _MDDReader:
         target = self._context_object(self.context)
         self._set_current_context(target if target is not None else self.context)
         try:
-            return {
+            return Block({
                 'source_file': self.path,
                 'Languages': self._read_languages(),
                 'Types': self._read_types(),
                 'Fields': self._read_fields(),
                 'Pages': self._read_pages(),
                 'Routing': self._read_routing(),
-            }
+            })
         finally:
             self._set_current_context(preserve)
 
@@ -284,10 +284,10 @@ class _MDDReader:
         items = []
         names = []
         for lang in self._languages:
-            block = {
+            block = Block({
                 'Name': _safe_str_get(lang, 'Name'),
                 'LongName': _safe_str_get(lang, 'LongName'),
-            }
+            })
             items.append(block)
             names.append(block.get('Name'))
         return Collection(items, names)
@@ -295,12 +295,12 @@ class _MDDReader:
     def _read_types(self):
         types = _safe_get(self.document, 'Types')
         if types is None:
-            return {}
+            return Block()
         names = sorted(
             name for name in (_safe_str_get(sl, 'Name') for sl in _iter(types))
             if name
         )
-        result = {}
+        result = Block()
         for sl_name in names:
             sl = types[sl_name]
             categories = self._read_category_collection(sl)
@@ -311,7 +311,7 @@ class _MDDReader:
         return result
 
     def _read_fields(self):
-        result = {}
+        result = Block()
         for field in _iter_attr(self.document, 'Fields'):
             name = _safe_str_get(field, 'Name')
             if not name:
@@ -320,12 +320,12 @@ class _MDDReader:
         return result
 
     def _read_pages(self):
-        result = {}
+        result = Block()
         for page in _iter_attr(self.document, 'Pages'):
             name = _safe_str_get(page, 'Name')
             if not name:
                 continue
-            block = self._read_item_meta(page, {})
+            block = self._read_item_meta(page, Block())
             block['Elements'] = self._read_page_entries(page)
             result[name] = block
         return result
@@ -334,7 +334,7 @@ class _MDDReader:
         items = []
         names = []
         for entry in _iter(page):
-            block = self._read_item_meta(entry, {})
+            block = self._read_item_meta(entry, Block())
             block['Elements'] = None
             items.append(block)
             names.append(block.get('Name'))
@@ -347,7 +347,7 @@ class _MDDReader:
         return _safe_str_get(routing, 'Script')
 
     def _shared_list_attributes(self, sl):
-        attrs = {}
+        attrs = Block()
         if _safe_get(sl, 'IsReference'):
             attrs['IsReference'] = True
             ref = _safe_str_get(sl, 'ReferenceName')
@@ -374,7 +374,7 @@ class _MDDReader:
             block = self._read_block_field(field)
         elif object_type_value == 16:
             block = self._read_item_meta(
-                field, {'ObjectTypeValue': 16}
+                field, Block({'ObjectTypeValue': 16})
             )
             block['Elements'] = None
         else:
@@ -403,7 +403,7 @@ class _MDDReader:
         return block
 
     def _read_array_field(self, field, object_type_value):
-        attrs = {'ObjectTypeValue': object_type_value}
+        attrs = Block({'ObjectTypeValue': object_type_value})
         is_grid = _safe_get(field, 'IsGrid')
         if is_grid is not None:
             attrs['IsGrid'] = bool(is_grid)
@@ -418,14 +418,14 @@ class _MDDReader:
 
     def _read_block_field(self, field):
         block = self._read_item_meta(
-            field, {'ObjectTypeValue': 3}
+            field, Block({'ObjectTypeValue': 3})
         )
         block['Elements'] = None
         block['Fields'] = self._read_subfields(field)
         return block
 
     def _scalar_attributes(self, field, data_type):
-        attrs = {'ObjectTypeValue': 0, 'DataType': data_type}
+        attrs = Block({'ObjectTypeValue': 0, 'DataType': data_type})
         if data_type in (1, 2, 3, 6):
             attrs['MinValue'] = _plain(_safe_get(field, 'MinValue'))
             attrs['MaxValue'] = _plain(_safe_get(field, 'MaxValue'))
@@ -439,7 +439,7 @@ class _MDDReader:
             attrs['HasCaseData'] = False
 
     def _read_subfields(self, field):
-        result = {}
+        result = Block()
         for sub in _iter_attr(field, 'Fields'):
             name = _safe_str_get(sub, 'Name')
             if not name:
@@ -448,7 +448,7 @@ class _MDDReader:
         return result
 
     def _read_helper_fields(self, field):
-        result = {}
+        result = Block()
         for helper in _iter_attr(field, 'HelperFields'):
             block = self._read_field(helper)
             name = block.get('Name')
@@ -461,17 +461,17 @@ class _MDDReader:
     # -- common item metadata ----------------------------------------------
 
     def _read_item_meta(self, item, attributes):
-        return {
+        return Block({
             'Name': _safe_str_get(item, 'Name'),
             'Label': _safe_str_get(item, 'Label'),
             '_Attrs': attributes,
             'Labels': self._read_translations(item),
             'Script': _safe_str_get(item, 'Script'),
             'Properties': self._read_properties(item),
-        }
+        })
 
     def _read_translations(self, item):
-        result = {}
+        result = Block()
         for langcode in self.langcodes:
             try:
                 text = item.Labels(self.context, langcode)
@@ -487,7 +487,7 @@ class _MDDReader:
             _safe_get(contexts, 'Current') if contexts is not None else None
         )
 
-        properties = {}
+        properties = Block()
         try:
             for read_context in _iter(contexts):
                 ctx_name = (
@@ -524,7 +524,7 @@ class _MDDReader:
                 except Exception:  # noqa: BLE001
                     pass
 
-        return {key: properties[key] for key in sorted(properties)}
+        return Block({key: properties[key] for key in sorted(properties)})
 
     def _property_name(self, props, index):
         try:
@@ -570,10 +570,10 @@ class _MDDReader:
             else self._is_category_group(cat, cat_type, name)
         )
 
-        attributes = {
+        attributes = Block({
             'Type': cat_type,
             'IsReference': is_reference,
-        }
+        })
         if is_reference:
             ref_name = _safe_str_get(cat, 'ReferenceName')
             if ref_name:

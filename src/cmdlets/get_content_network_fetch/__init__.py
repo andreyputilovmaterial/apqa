@@ -118,7 +118,7 @@ def get_content_network_fetch(value: PipeValue, args: dict) -> Block:
         if callable(close):
             close()
 
-    return {'status': status, 'body': body, 'headers': headers}
+    return Block({'status': status, 'body': body, 'headers': headers})
 
 
 def _normalize_method(method):
@@ -176,7 +176,7 @@ def _decode_body(data, charset):
 
 
 def _headers_block(message):
-    block = {}
+    block = Block()
     for name, value in message.items():
         if name in block:
             block[name] = f'{block[name]}, {value}'

@@ -15,7 +15,7 @@ This is the generic, chain-parameterized form of the recursive walk
 from ..chain_runner import run_chain
 from ..diagnostic import note_path_prefix
 from ..registry import cmdlets
-from ..value_types import Collection, PipeValue
+from ..value_types import Block, Collection, PipeValue
 
 
 @cmdlets.register(
@@ -44,10 +44,10 @@ def foreach_deep_node(value: PipeValue, args: dict) -> PipeValue:
 
 def _map_leaves(value, transform, path):
     if isinstance(value, dict):
-        return {
+        return Block({
             key: _map_leaves(child, transform, path + [key])
             for key, child in value.items()
-        }
+        })
     if isinstance(value, list):
         names = value.names if isinstance(value, Collection) else None
         return Collection(

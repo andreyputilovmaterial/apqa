@@ -5,18 +5,30 @@ produces and receives exactly one value per pipe step; that value is one of the
 scalar or compound types below, or ``sysmissing`` (Python ``None``).
 
 Runtime representation stays plain Python: ``str``/``int``/``float``/``bool``/
-``datetime.date``/``datetime.datetime``/``pathlib.Path`` for scalars, ``dict``
-for a block, and ``Collection`` (a ``list`` subclass carrying per-element names)
-for a collection; ``None`` is sysmissing. ``Block`` is a structural
-``typing.Protocol`` and the scalar names are aliases to the plain Python forms,
-used for type annotations and as living documentation; ``Collection`` is a real
-runtime type (a ``list``) so producers can emit it and consumers can check it
-with ``isinstance``.
+``datetime.date``/``datetime.datetime``/``pathlib.Path`` for scalars, ``Block``
+(a ``dict`` subclass) for a block, and ``Collection`` (a ``list`` subclass
+carrying per-element names) for a collection; ``None`` is sysmissing.
+
+The class hierarchy is::
+
+    Value (ABC)
+    ├── Scalar (ABC)             a scalar leaf — plain Python at runtime
+    │   ├── CategoricalSingle    (marker, future value object)
+    │   └── CategoricalMulti     (marker, future value object)
+    ├── Compound (ABC)
+    │   ├── Block(dict)          a block of named fields
+    │   └── Collection(list)     an ordered, named + indexed collection
+    └── sysmissing               ``None``
+
+The scalar category names (``Text``, ``Integer``, …) are aliases to the plain
+Python forms; ``Block`` and ``Collection`` are real runtime classes so producers
+can emit them and consumers can check them with ``isinstance``.
 """
 
+from abc import ABC
 from datetime import date, datetime
 from pathlib import Path
-from typing import Iterator, Optional, Protocol, Union
+from typing import Optional, Union
 
 __all__ = [
     'Value',
@@ -37,15 +49,15 @@ __all__ = [
 ]
 
 
-class Value(Protocol):
+class Value(ABC):
     """Root base type: anything a cmdlet can produce or receive in a pipe."""
 
 
-class Scalar(Value, Protocol):
-    """A scalar value."""
+class Scalar(Value, ABC):
+    """A scalar value (a leaf). Runtime spelling is plain Python."""
 
 
-class Compound(Value, Protocol):
+class Compound(Value, ABC):
     """A compound value: a block or a collection."""
 
 
@@ -58,23 +70,37 @@ PathValue = Path
 DateTime = Union[date, datetime]
 
 
-class CategoricalSingle(Scalar, Protocol):
+class CategoricalSingle(Scalar):
     """A single-punch categorical (future: a value object carrying options)."""
 
 
-class CategoricalMulti(Scalar, Protocol):
+class CategoricalMulti(Scalar):
     """A multi-punch categorical (future: a value object carrying options)."""
 
 
-class Block(Compound, Protocol):
-    """A block: a mapping of named fields to values (Python ``dict``)."""
+class Block(Compound, dict):
+    """A block: the named fields of an object (a ``dict`` subclass).
 
-    def __getitem__(self, key: str) -> Value: ...
-    def __iter__(self) -> Iterator[str]: ...
-    def __len__(self) -> int: ...
+    Fields are addressed by name (``block['field']``). Because a ``dict``
+    preserves insertion order, a field can also be read by its 0-based position
+    via :meth:`child_at` — a positional convenience that never affects equality
+    (blocks compare order-insensitively).
+    """
+
+    def child_at(self, index):
+        """Return the field value at ``index`` (0-based, insertion order)."""
+        return list(self.values())[index]
+
+    def field_name_at(self, index):
+        """Return the field name at ``index`` (0-based, insertion order)."""
+        return list(self.keys())[index]
+
+    def children(self):
+        """Yield ``(field_name, field_value)`` pairs in insertion order."""
+        yield from self.items()
 
 
-class Collection(list):
+class Collection(Compound, list):
     """A collection: an ordered sequence of elements addressable both by
     zero-based index and by a unique name.
 
@@ -125,6 +151,11 @@ class Collection(list):
             return default
         return self[index]
 
+    def children(self):
+        """Yield ``(index, element)`` pairs in order."""
+        for index, element in enumerate(self):
+            yield index, element
+
 
 def from_plain(value):
     """Coerce plain-Python data (e.g. ``json.loads`` output) into the runtime
@@ -140,7 +171,7 @@ def from_plain(value):
     if isinstance(value, list):
         return Collection([from_plain(item) for item in value])
     if isinstance(value, dict):
-        return {key: from_plain(child) for key, child in value.items()}
+        return Block({key: from_plain(child) for key, child in value.items()})
     return value
 
 

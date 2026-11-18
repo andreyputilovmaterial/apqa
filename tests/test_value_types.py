@@ -63,10 +63,35 @@ def test_collection_rejects_name_length_mismatch():
         vt.Collection([1, 2], ['x'])
 
 
+def test_block_is_a_dict_with_dual_access():
+    block = vt.Block({'a': 1, 'b': 2})
+    assert isinstance(block, dict)
+    assert block['a'] == 1
+    assert block.child_at(1) == 2
+    assert block.field_name_at(0) == 'a'
+    assert list(block.children()) == [('a', 1), ('b', 2)]
+
+
+def test_collection_children():
+    coll = vt.Collection([10, 20], ['x', 'y'])
+    assert list(coll.children()) == [(0, 10), (1, 20)]
+
+
+def test_block_and_collection_subclass_compound():
+    assert issubclass(vt.Block, vt.Compound)
+    assert issubclass(vt.Collection, vt.Compound)
+    assert issubclass(vt.Block, vt.Value)
+    assert issubclass(vt.Collection, vt.Value)
+    assert isinstance(vt.Block(), vt.Compound)
+    assert isinstance(vt.Collection(), vt.Compound)
+
+
 def test_from_plain_converts_lists_recursively():
     value = vt.from_plain({'a': [1, 2], 'b': {'c': [3]}})
+    assert isinstance(value, vt.Block)
     assert isinstance(value['a'], vt.Collection)
     assert value['a'].names == ['1', '2']
+    assert isinstance(value['b'], vt.Block)
     assert isinstance(value['b']['c'], vt.Collection)
     assert value['b']['c'].names == ['1']
 

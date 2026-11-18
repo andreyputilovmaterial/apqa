@@ -13,7 +13,7 @@ same shape as `exclude-deep-node`:
 
 from ..path_rules import iter_child_paths, normalize_rules, path_matches
 from ..registry import cmdlets
-from ..value_types import Collection, PipeValue
+from ..value_types import Block, Collection, PipeValue
 
 
 @cmdlets.register(
@@ -34,11 +34,11 @@ def exclude_child(value: PipeValue, args: dict) -> PipeValue:
     rules = normalize_rules(args.get('rules'))
 
     if isinstance(value, dict):
-        return {
+        return Block({
             key: child
             for key, child in value.items()
             if not path_matches([key], [key], rules)
-        }
+        })
     if isinstance(value, list):
         names = value.names if isinstance(value, Collection) else None
         kept = []
