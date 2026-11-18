@@ -432,7 +432,7 @@ describe('RulesTree', () => {
     const tick = wrapper.find('.apqa-rules-tree-group .apqa-rule-run-tick');
     expect(tick.exists()).toBe(true);
     expect(tick.classes()).toContain('is-passed');
-    expect(tick.find('i.ri-check-double-line').exists()).toBe(true);
+    expect(tick.find('i.ri-check-line').exists()).toBe(true);
   });
 
   it('shows a folder last-run summary with passed/failed/errored counts', () => {

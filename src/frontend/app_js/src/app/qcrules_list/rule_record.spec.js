@@ -210,7 +210,7 @@ describe('RuleRecord', () => {
 
     const tick = wrapper.find('.apqa-rule-run-tick');
     expect(tick.classes()).toContain('is-passed');
-    expect(tick.find('i.ri-check-double-line').exists()).toBe(true);
+    expect(tick.find('i.ri-check-line').exists()).toBe(true);
     expect(tick.find('i.ri-close-fill').exists()).toBe(false);
   });
 

@@ -44,7 +44,7 @@ export function runTickFor(status) {
     case 'running':
       return { cls: 'is-running', icon: 'ri-loader-4-line', title: 'Running...' };
     case 'passed':
-      return { cls: 'is-passed', icon: 'ri-check-double-line', title: 'Passed' };
+      return { cls: 'is-passed', icon: 'ri-check-line', title: 'Passed' };
     case 'failed':
     case 'error':
       return { cls: 'is-failed', icon: 'ri-close-fill', title: 'Failed' };
