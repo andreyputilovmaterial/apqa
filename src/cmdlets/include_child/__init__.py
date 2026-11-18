@@ -13,8 +13,7 @@ same shape as `include-deep-node`:
 Returns ``None`` (sysmissing) when no child is kept.
 """
 
-from ..diagnostic import format_path
-from ..path_rules import matches_any_rule, normalize_rules
+from ..path_rules import iter_child_paths, normalize_rules, path_matches
 from ..registry import cmdlets
 from ..value_types import Collection, PipeValue
 
@@ -33,22 +32,24 @@ from ..value_types import Collection, PipeValue
     ],
 )
 def include_child(value: PipeValue, args: dict) -> PipeValue:
-    """Keep matching direct children of a block or an array."""
+    """Keep matching direct children of a block or a collection."""
     rules = normalize_rules(args.get('rules'))
 
     if isinstance(value, dict):
         kept = {
             key: child
             for key, child in value.items()
-            if matches_any_rule(format_path([key]), rules)
+            if path_matches([key], [key], rules)
         }
         return kept if kept else None
     if isinstance(value, list):
         names = value.names if isinstance(value, Collection) else None
         kept = []
         kept_names = []
-        for index, child in enumerate(value):
-            if matches_any_rule(format_path([index]), rules):
+        for index, (child, child_index, child_name) in enumerate(
+            iter_child_paths(value, [], [])
+        ):
+            if path_matches(child_index, child_name, rules):
                 kept.append(child)
                 if names is not None:
                     kept_names.append(names[index])

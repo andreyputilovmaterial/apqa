@@ -17,8 +17,7 @@ key or an array element removes that whole node; a path naming a leaf removes
 just that leaf; a path matching no node is ignored.
 """
 
-from ..diagnostic import format_path
-from ..path_rules import matches_any_rule, normalize_rules
+from ..path_rules import iter_child_paths, normalize_rules, path_matches
 from ..registry import cmdlets
 from ..value_types import Collection, PipeValue
 
@@ -37,36 +36,38 @@ from ..value_types import Collection, PipeValue
     ],
 )
 def exclude_deep_node(value: PipeValue, args: dict) -> PipeValue:
-    """Remove, in place, every node whose relative path matches a rule."""
+    """Remove every node whose relative path matches a rule."""
     rules = normalize_rules(args.get('rules'))
-    return _prune(value, [], rules)
+    return _prune(value, [], [], rules)
 
 
-def _prune(value, path, rules):
+def _prune(value, index_path, name_path, rules):
     """Remove every child node whose relative path matches a rule.
 
-    ``path`` is the list of segments (keys/indices) leading to ``value``,
-    relative to the value the cmdlet received. A child's path is
-    ``format_path(path + [key])``; when it matches, the child is deleted,
-    otherwise the walk continues into it. List elements are walked from the end
-    so deletions do not shift unprocessed indices.
+    ``index_path``/``name_path`` are the two spellings of the path leading to
+    ``value`` (collection elements are spelled ``[i]`` by index and ``.Name`` by
+    name). A child matches when either spelling matches a rule; otherwise the
+    walk continues into it. Blocks are pruned in place; collections are rebuilt
+    so their names stay consistent.
     """
     if isinstance(value, dict):
         for key in list(value.keys()):
-            child_path = path + [key]
-            if matches_any_rule(format_path(child_path), rules):
+            child_index = index_path + [key]
+            child_name = name_path + [key]
+            if path_matches(child_index, child_name, rules):
                 del value[key]
             else:
-                value[key] = _prune(value[key], child_path, rules)
+                value[key] = _prune(value[key], child_index, child_name, rules)
         return value
     if isinstance(value, list):
         names = value.names if isinstance(value, Collection) else None
         kept = []
         kept_names = []
-        for index, child in enumerate(value):
-            child_path = path + [index]
-            if not matches_any_rule(format_path(child_path), rules):
-                kept.append(_prune(child, child_path, rules))
+        for index, (child, child_index, child_name) in enumerate(
+            iter_child_paths(value, index_path, name_path)
+        ):
+            if not path_matches(child_index, child_name, rules):
+                kept.append(_prune(child, child_index, child_name, rules))
                 if names is not None:
                     kept_names.append(names[index])
         return Collection(kept, kept_names if names is not None else None)

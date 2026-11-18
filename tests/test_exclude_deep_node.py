@@ -11,6 +11,7 @@ import pytest
 
 from src.cmdlets.chain_runner import run_chain
 from src.cmdlets.exclude_deep_node import exclude_deep_node
+from src.cmdlets.value_types import Collection
 
 
 def _literal(value):
@@ -157,10 +158,10 @@ def test_removes_array_element():
 
 def test_removes_nested_array_element():
     result = exclude_deep_node(
-        {'Pages': {'Q1': {'value': [{'Label': 'a'}, {'Label': 'b'}]}}},
-        {'rules': [_rule('Pages.Q1.value[1]')]},
+        {'Pages': {'Q1': {'Elements': [{'Label': 'a'}, {'Label': 'b'}]}}},
+        {'rules': [_rule('Pages.Q1.Elements[1]')]},
     )
-    assert result == {'Pages': {'Q1': {'value': [{'Label': 'a'}]}}}
+    assert result == {'Pages': {'Q1': {'Elements': [{'Label': 'a'}]}}}
 
 
 def test_ignores_path_outside_subtree():
@@ -191,3 +192,35 @@ def test_rejects_rule_without_pattern():
 def test_rejects_unknown_rule_type():
     with pytest.raises(ValueError, match='must be one of'):
         exclude_deep_node({'a': 1}, {'rules': [{'pattern': 'a', 'type': 'bogus'}]})
+
+
+def test_matches_collection_element_by_name():
+    data = {
+        'Pages': {
+            'Q1': {
+                'Elements': Collection(
+                    [{'Label': 'a'}, {'Label': 'b'}], ['first', 'second']
+                ),
+            },
+        },
+    }
+    result = exclude_deep_node(
+        data, {'rules': [_rule('Pages.Q1.Elements.second')]},
+    )
+    assert result == {'Pages': {'Q1': {'Elements': [{'Label': 'a'}]}}}
+
+
+def test_matches_nested_field_below_named_element():
+    data = {
+        'Pages': {
+            'Q1': {
+                'Elements': Collection(
+                    [{'Label': 'a'}, {'Label': 'b'}], ['first', 'second']
+                ),
+            },
+        },
+    }
+    result = exclude_deep_node(
+        data, {'rules': [_rule('Pages.Q1.Elements.second.Label')]},
+    )
+    assert result == {'Pages': {'Q1': {'Elements': [{'Label': 'a'}, {}]}}}

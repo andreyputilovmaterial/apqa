@@ -33,26 +33,27 @@ the COM collection properties (Pascal-style, e.g. ``document.Fields``):
 
 Every item block carries the metadata fields ``Name``, ``Label``, ``_Attrs``,
 ``Labels`` (translations keyed by language code), ``Script`` and ``Properties``,
-plus a ``value`` field whose shape depends on the item kind:
+plus an ``Elements`` field whose shape depends on the item kind:
 
-    scalar (ObjectTypeValue 0)   ``value`` is ``None`` (MDD metadata has no
-                                 data value). A categorical (DataType 3)
+    scalar (ObjectTypeValue 0)   ``Elements`` is ``None`` (a scalar has no
+                                 sub-elements). A categorical (DataType 3)
                                  additionally carries a ``Categories`` block and
-                                 a ``value`` collection of its response options.
+                                 an ``Elements`` collection of its response
+                                 options.
     array/grid (ObjectTypeValue 1/2)
-                                 ``value`` is a collection of iteration blocks
+                                 ``Elements`` is a collection of iteration blocks
                                  (grid/loop iterations), and ``Fields`` holds
                                  the loop's subfields.
     block/class (ObjectTypeValue 3)
-                                 ``Fields`` is a block of subfields and ``value``
-                                 is ``None``.
-    shared list / page           ``value`` is a collection of category/entry
+                                 ``Fields`` is a block of subfields and
+                                 ``Elements`` is ``None``.
+    shared list / page           ``Elements`` is a collection of category/entry
                                  blocks.
 
 Items that own categories (categorical scalars, arrays, shared lists) also carry a
 ``Categories`` block keyed by category name → detailed category block; for a
 categorical scalar the keys of ``Categories`` are the available response options.
-Category groups (``Type`` != 0) nest their children in their own ``value``
+Category groups (``Type`` != 0) nest their children in their own ``Elements``
 collection and are not selectable response options.
 
 ``_Attrs`` mirrors the raw MDD object model: Pascal-cased COM properties such as
@@ -164,9 +165,9 @@ def _index_category(cat, result):
     name = cat.get('Name')
     if name:
         result.setdefault(name, cat)
-    value = cat.get('value')
-    if isinstance(value, list):
-        for child in value:
+    elements = cat.get('Elements')
+    if isinstance(elements, list):
+        for child in elements:
             _index_category(child, result)
 
 
@@ -305,7 +306,7 @@ class _MDDReader:
             categories = self._read_category_collection(sl)
             block = self._read_item_meta(sl, self._shared_list_attributes(sl))
             block['Categories'] = _category_map(categories)
-            block['value'] = categories
+            block['Elements'] = categories
             result[sl_name] = block
         return result
 
@@ -325,7 +326,7 @@ class _MDDReader:
             if not name:
                 continue
             block = self._read_item_meta(page, {})
-            block['value'] = self._read_page_entries(page)
+            block['Elements'] = self._read_page_entries(page)
             result[name] = block
         return result
 
@@ -334,7 +335,7 @@ class _MDDReader:
         names = []
         for entry in _iter(page):
             block = self._read_item_meta(entry, {})
-            block['value'] = None
+            block['Elements'] = None
             items.append(block)
             names.append(block.get('Name'))
         return Collection(items, names)
@@ -375,7 +376,7 @@ class _MDDReader:
             block = self._read_item_meta(
                 field, {'ObjectTypeValue': 16}
             )
-            block['value'] = None
+            block['Elements'] = None
         else:
             raise ValueError(
                 f"get-content-mdd: field {name!r} has unrecognized "
@@ -396,9 +397,9 @@ class _MDDReader:
         if data_type == 3:
             categories = self._read_category_collection(field)
             block['Categories'] = _category_map(categories)
-            block['value'] = categories
+            block['Elements'] = categories
         else:
-            block['value'] = None
+            block['Elements'] = None
         return block
 
     def _read_array_field(self, field, object_type_value):
@@ -409,7 +410,7 @@ class _MDDReader:
         block = self._read_item_meta(field, attrs)
         categories = self._read_category_collection(field)
         block['Categories'] = _category_map(categories)
-        block['value'] = categories
+        block['Elements'] = categories
         subfields = self._read_subfields(field)
         if subfields:
             block['Fields'] = subfields
@@ -419,7 +420,7 @@ class _MDDReader:
         block = self._read_item_meta(
             field, {'ObjectTypeValue': 3}
         )
-        block['value'] = None
+        block['Elements'] = None
         block['Fields'] = self._read_subfields(field)
         return block
 
@@ -579,7 +580,7 @@ class _MDDReader:
                 attributes['ReferenceName'] = ref_name
 
         block = self._read_item_meta(cat, attributes)
-        block['value'] = (
+        block['Elements'] = (
             self._read_category_collection(cat) if is_group else None
         )
         return block

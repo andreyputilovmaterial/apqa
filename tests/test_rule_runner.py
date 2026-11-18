@@ -155,7 +155,7 @@ def test_run_rule_with_report_records_validation_notes():
 
 
 def test_run_rule_with_report_records_array_index_paths():
-    block = {'Pages': {'Q1': {'value': ['ok', 'a & b']}}}
+    block = {'Pages': {'Q1': {'Elements': ['ok', 'a & b']}}}
     rule = {
         'left': [
             {'cmdlet': 'literal', 'args': {'value': block}},
@@ -166,4 +166,4 @@ def test_run_rule_with_report_records_array_index_paths():
     }
     result, notes = run_rule_with_report(rule)
     assert result is False
-    assert notes[0]['path'] == ['Pages', 'Q1', 'value', 1]
+    assert notes[0]['path'] == ['Pages', 'Q1', 'Elements', 1]

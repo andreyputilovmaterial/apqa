@@ -11,8 +11,7 @@ same shape as `exclude-deep-node`:
     get-content-mdd path=… -> exclude-child rules=[{type: eq, pattern: Fields}] -> validate-xml-compatible cmp-eq literal(True)
 """
 
-from ..diagnostic import format_path
-from ..path_rules import matches_any_rule, normalize_rules
+from ..path_rules import iter_child_paths, normalize_rules, path_matches
 from ..registry import cmdlets
 from ..value_types import Collection, PipeValue
 
@@ -31,21 +30,23 @@ from ..value_types import Collection, PipeValue
     ],
 )
 def exclude_child(value: PipeValue, args: dict) -> PipeValue:
-    """Remove matching direct children of a block or an array."""
+    """Remove matching direct children of a block or a collection."""
     rules = normalize_rules(args.get('rules'))
 
     if isinstance(value, dict):
         return {
             key: child
             for key, child in value.items()
-            if not matches_any_rule(format_path([key]), rules)
+            if not path_matches([key], [key], rules)
         }
     if isinstance(value, list):
         names = value.names if isinstance(value, Collection) else None
         kept = []
         kept_names = []
-        for index, child in enumerate(value):
-            if not matches_any_rule(format_path([index]), rules):
+        for index, (child, child_index, child_name) in enumerate(
+            iter_child_paths(value, [], [])
+        ):
+            if not path_matches(child_index, child_name, rules):
                 kept.append(child)
                 if names is not None:
                     kept_names.append(names[index])

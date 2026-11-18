@@ -153,7 +153,9 @@ collection is a workbook, a sheet, a table, or a query result:
 The `exclude-*` and `include-*` families remove or keep nodes of the piped value
 by matching their **data path** — the `format_path` notation used by diagnostic
 notes: block keys joined with `.`, collection indices as `[i]`, non-identifier keys
-quoted (`['None of the above']`).
+quoted (`['None of the above']`). A collection element may also be addressed by
+its **element name** — `.Elements[2]` and `.Elements.<Name>` name the same item
+when the collection carries names (an unnamed element falls back to its index).
 
 - `exclude-child` / `include-child` — **shallow** processors acting only on the
   direct children of the received block/collection: `exclude-child` removes the
@@ -455,11 +457,11 @@ read their input from ``args``). Currently implemented:
   ``Types`` (block keyed by name), ``Fields`` (block keyed by name),
   ``Pages`` (block keyed by name), ``Routing`` (text). Every item block carries
   ``Name``/``Label``/``_Attrs``/``Labels``/``Script``/``Properties`` plus
-  ``value`` (``None`` for scalars and classes/blocks, a named ``Collection`` of
+  ``Elements`` (``None`` for scalars and classes/blocks, a named ``Collection`` of
   iteration blocks for arrays/grids) and, for items that own categories, a
   ``Categories`` block keyed by category name → detailed category block (for a
   categorical scalar its keys are the available response options, and its
-  ``value`` is a named ``Collection`` of those options). Blocks that contain
+  ``Elements`` is a named ``Collection`` of those options). Blocks that contain
   other fields (a class/block's sub-fields, and the columns of an array/grid)
   put them in a ``Fields`` block keyed by name. ``_Attrs`` mirrors the raw MDD
   object model (Pascal-cased COM properties such as ``ObjectTypeValue``,

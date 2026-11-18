@@ -21,6 +21,9 @@ A rule is a mapping::
 
 import re
 
+from .diagnostic import format_path
+from .value_types import Collection
+
 RULE_TYPES = ('eq', 'startswith', 'endswith', 'contains', 'regex')
 
 
@@ -91,4 +94,37 @@ def matches_any_rule(path_text, rules):
             rule['pattern'], rule['type'], rule['case_insensitive'], path_text
         ):
             return True
+    return False
+
+
+def iter_child_paths(value, index_prefix, name_prefix):
+    """Yield ``(child, index_path, name_path)`` for each child of a block/collection.
+
+    A block (``dict``) child has one spelling — its key. A collection (``list``)
+    child has two spellings: its 0-based index (``[i]``) and, when the
+    collection carries element names, its name (``.Name``); an unnamed element
+    falls back to its index spelling.
+
+    ``index_prefix``/``name_prefix`` are the two spellings of the path leading to
+    ``value``, threaded through recursion so a name-spelled path works at any
+    depth.
+    """
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield child, index_prefix + [key], name_prefix + [key]
+    elif isinstance(value, list):
+        names = value.names if isinstance(value, Collection) else None
+        for index, child in enumerate(value):
+            child_index = index_prefix + [index]
+            name = names[index] if names is not None else None
+            child_name = name_prefix + [name] if name is not None else child_index
+            yield child, child_index, child_name
+
+
+def path_matches(index_path, name_path, rules):
+    """Return ``True`` when either spelling of a node's data path matches a rule."""
+    if matches_any_rule(format_path(index_path), rules):
+        return True
+    if name_path != index_path:
+        return matches_any_rule(format_path(name_path), rules)
     return False

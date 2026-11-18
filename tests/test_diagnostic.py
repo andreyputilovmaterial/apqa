@@ -26,13 +26,13 @@ def test_format_path_identifier_chain():
 
 
 def test_format_path_array_index():
-    assert format_path(['Pages', 'Q1', 'value', 2]) == 'Pages.Q1.value[2]'
+    assert format_path(['Pages', 'Q1', 'Elements', 2]) == 'Pages.Q1.Elements[2]'
 
 
 def test_format_path_quotes_non_identifier_keys():
     assert format_path([
-        'Pages', 'Q1', 'value', 2, 'Categories', 'None of the above', 'Label',
-    ]) == "Pages.Q1.value[2].Categories['None of the above'].Label"
+        'Pages', 'Q1', 'Elements', 2, 'Categories', 'None of the above', 'Label',
+    ]) == "Pages.Q1.Elements[2].Categories['None of the above'].Label"
 
 
 def test_format_path_empty():

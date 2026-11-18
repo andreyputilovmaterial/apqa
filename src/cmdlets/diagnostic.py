@@ -121,9 +121,9 @@ def format_path(path):
     """Render a data path as a short, human-readable address.
 
     ``['Fields', 'BrandAwareness', 'Label']`` becomes
-    ``Fields.BrandAwareness.Label``; array indices become ``[i]``; a key that is
-    not a plain identifier is quoted, e.g.
-    ``Pages.Q1.value[2].Categories['None of the above'].Label``.
+    ``Fields.BrandAwareness.Label``; collection indices become ``[i]``; a key
+    that is not a plain identifier is quoted, e.g.
+    ``Pages.Q1.Elements[2].Categories['None of the above'].Label``.
     """
     result = ''
     for part in path:

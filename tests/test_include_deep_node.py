@@ -11,6 +11,7 @@ import pytest
 
 from src.cmdlets.chain_runner import run_chain
 from src.cmdlets.include_deep_node import include_deep_node
+from src.cmdlets.value_types import Collection
 
 
 def _literal(value):
@@ -170,3 +171,19 @@ def test_rejects_rule_without_pattern():
 def test_rejects_unknown_rule_type():
     with pytest.raises(ValueError, match='must be one of'):
         include_deep_node({'a': 1}, {'rules': [{'pattern': 'a', 'type': 'bogus'}]})
+
+
+def test_keeps_collection_element_by_name():
+    data = {
+        'Pages': {
+            'Q1': {
+                'Elements': Collection(
+                    [{'Label': 'a'}, {'Label': 'b'}], ['first', 'second']
+                ),
+            },
+        },
+    }
+    result = include_deep_node(
+        data, {'rules': [_rule('Pages.Q1.Elements.second')]},
+    )
+    assert result == {'Pages': {'Q1': {'Elements': [{'Label': 'b'}]}}}

@@ -83,12 +83,12 @@ failed record a **note**. A note is a small JSON-safe mapping:
 {"path": ["Fields", "BrandAwareness", "Label"], "message": "not XML-compatible: …"}
 ```
 
-`path` is the **data path** — the sequence of block keys and array indices that
+`path` is the **data path** — the sequence of block keys and collection indices that
 leads from the top-level piped value to the offending leaf. It is the "which
 component, which field, during which iteration" answer:
 
 - `Fields.BrandAwareness.Label` — field → subfield → leaf;
-- `Pages.Q1.value[2].Categories['None of the above'].Label` — section → page →
+- `Pages.Q1.Elements[2].Categories['None of the above'].Label` — section → page →
   iteration → categories → category → leaf.
 
 Notes are collected per rule run in a `Notes` instance held in a
@@ -194,7 +194,7 @@ stays `{"result": <bool>}` with no `notes` key, preserving the previous contract
 `format_path` renders a path as a short, human-readable address:
 
 - a key that is a plain identifier joins with `.` — `Fields.BrandAwareness.Label`;
-- an array index becomes `[i]` — `Pages.Q1.value[2]`;
+- a collection index becomes `[i]` — `Pages.Q1.Elements[2]`;
 - a key that is not a plain identifier is quoted — `Categories['None of the above']`.
 
 Examples:
@@ -202,8 +202,8 @@ Examples:
 | path | rendered |
 | --- | --- |
 | `['Fields', 'BrandAwareness', 'Label']` | `Fields.BrandAwareness.Label` |
-| `['Pages', 'Q1', 'value', 2]` | `Pages.Q1.value[2]` |
-| `['Pages', 'Q1', 'value', 2, 'Categories', 'None of the above', 'Label']` | `Pages.Q1.value[2].Categories['None of the above'].Label` |
+| `['Pages', 'Q1', 'Elements', 2]` | `Pages.Q1.Elements[2]` |
+| `['Pages', 'Q1', 'Elements', 2, 'Categories', 'None of the above', 'Label']` | `Pages.Q1.Elements[2].Categories['None of the above'].Label` |
 
 ## Authoring guidance for cmdlet authors
 

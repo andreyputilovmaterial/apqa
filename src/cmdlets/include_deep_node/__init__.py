@@ -14,8 +14,7 @@ receives, so it can sit anywhere in a chain. Returns ``None`` (sysmissing) when
 nothing is kept.
 """
 
-from ..diagnostic import format_path
-from ..path_rules import matches_any_rule, normalize_rules
+from ..path_rules import iter_child_paths, normalize_rules, path_matches
 from ..registry import cmdlets
 from ..value_types import Collection, PipeValue
 
@@ -39,23 +38,24 @@ _REMOVED = object()
 def include_deep_node(value: PipeValue, args: dict) -> PipeValue:
     """Keep matching nodes (and their scaffolding), dropping everything else."""
     rules = normalize_rules(args.get('rules'))
-    kept = _keep(value, [], rules)
+    kept = _keep(value, [], [], rules)
     return None if kept is _REMOVED else kept
 
 
-def _keep(value, path, rules):
+def _keep(value, index_path, name_path, rules):
     """Return ``value`` pruned to matching nodes, or ``_REMOVED`` when empty.
 
-    A node whose path matches a rule is kept whole; a container that does not
-    match is kept only when it has at least one kept descendant, and then only
-    with those kept descendants. Scalars that do not match are removed.
+    ``index_path``/``name_path`` are the two spellings of the path leading to
+    ``value``; a node matches when either spelling matches a rule. A matched
+    node is kept whole; a container that does not match is kept only when it has
+    at least one kept descendant. Scalars that do not match are removed.
     """
-    if matches_any_rule(format_path(path), rules):
+    if path_matches(index_path, name_path, rules):
         return value
     if isinstance(value, dict):
         kept = {}
         for key, child in value.items():
-            child_result = _keep(child, path + [key], rules)
+            child_result = _keep(child, index_path + [key], name_path + [key], rules)
             if child_result is not _REMOVED:
                 kept[key] = child_result
         return kept if kept else _REMOVED
@@ -63,8 +63,10 @@ def _keep(value, path, rules):
         names = value.names if isinstance(value, Collection) else None
         kept = []
         kept_names = []
-        for index, child in enumerate(value):
-            child_result = _keep(child, path + [index], rules)
+        for index, (child, child_index, child_name) in enumerate(
+            iter_child_paths(value, index_path, name_path)
+        ):
+            child_result = _keep(child, child_index, child_name, rules)
             if child_result is not _REMOVED:
                 kept.append(child_result)
                 if names is not None:

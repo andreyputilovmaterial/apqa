@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.cmdlets.include_child import include_child
+from src.cmdlets.value_types import Collection
 
 
 def _rule(pattern, **kwargs):
@@ -62,3 +63,10 @@ def test_rejects_non_list_rules():
 def test_rejects_rule_without_pattern():
     with pytest.raises(ValueError, match='non-empty "pattern"'):
         include_child({'a': 1}, {'rules': [{'type': 'eq'}]})
+
+
+def test_keeps_collection_element_by_name():
+    value = Collection([{'name': 'a'}, {'name': 'b'}], ['first', 'second'])
+    result = include_child(value, {'rules': [_rule('second')]})
+    assert result == [{'name': 'b'}]
+    assert result.names == ['second']

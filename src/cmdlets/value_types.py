@@ -110,6 +110,10 @@ class Collection(list):
                 )
             self.by_name[name] = index
 
+    def name_at(self, index):
+        """Return the element name at ``index`` (0-based)."""
+        return self.names[index]
+
     def index_of(self, name):
         """Return the 0-based index of the element named ``name``."""
         return self.by_name[name]

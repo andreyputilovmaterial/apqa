@@ -90,19 +90,19 @@ def test_iter_attr():
 
 def test_category_map_indexes_leaves_and_nested_groups():
     categories = [
-        {'Name': 'A', 'value': None},
+        {'Name': 'A', 'Elements': None},
         {
             'Name': 'Group',
-            'value': [
-                {'Name': 'B', 'value': None},
-                {'Name': 'C', 'value': None},
+            'Elements': [
+                {'Name': 'B', 'Elements': None},
+                {'Name': 'C', 'Elements': None},
             ],
         },
     ]
     mapped = _category_map(categories)
     assert set(mapped) == {'A', 'Group', 'B', 'C'}
-    assert mapped['A']['value'] is None
-    assert mapped['Group']['value'][0]['Name'] == 'B'
+    assert mapped['A']['Elements'] is None
+    assert mapped['Group']['Elements'][0]['Name'] == 'B'
     assert mapped['B']['Name'] == 'B'
 
 
@@ -124,7 +124,7 @@ def test_block_field_stores_subfields_in_Fields_bucket(monkeypatch):
 
     assert block['Name'] == 'SnifferData'
     assert block['Fields'] is subfields
-    assert block['value'] is None
+    assert block['Elements'] is None
 
 
 def test_read_category_collection_returns_named_collection(monkeypatch):
@@ -169,7 +169,7 @@ def test_read_category_collection_flattens_references_into_named_collection(monk
     assert result.by_name == {'A': 0, 'X': 1}
 
 
-def test_scalar_categorical_field_emits_value_collection(monkeypatch):
+def test_scalar_categorical_field_emits_elements_collection(monkeypatch):
     reader = _MDDReader.__new__(_MDDReader)
     monkeypatch.setattr(
         _MDDReader, '_read_item_meta',
@@ -186,12 +186,12 @@ def test_scalar_categorical_field_emits_value_collection(monkeypatch):
 
     block = reader._read_scalar_field(_Stub(DataType=3))
 
-    assert isinstance(block['value'], Collection)
-    assert block['value'].names == ['Yes']
+    assert isinstance(block['Elements'], Collection)
+    assert block['Elements'].names == ['Yes']
     assert block['Categories'] == {'Yes': {'Name': 'Yes'}}
 
 
-def test_non_categorical_scalar_field_value_is_none(monkeypatch):
+def test_non_categorical_scalar_field_elements_is_none(monkeypatch):
     reader = _MDDReader.__new__(_MDDReader)
     monkeypatch.setattr(
         _MDDReader, '_read_item_meta',
@@ -204,5 +204,5 @@ def test_non_categorical_scalar_field_value_is_none(monkeypatch):
 
     block = reader._read_scalar_field(_Stub(DataType=0))
 
-    assert block['value'] is None
+    assert block['Elements'] is None
     assert 'Categories' not in block
