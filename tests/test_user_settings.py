@@ -103,7 +103,7 @@ def test_nested_chain_cmdlet_is_gated():
         'left': [
             _literal([1]),
             {
-                'cmdlet': 'map',
+                'cmdlet': 'foreach-item',
                 'args': {
                     'transform': [
                         {'cmdlet': 'get-content-text', 'args': {'path': '/does/not/exist'}},

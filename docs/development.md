@@ -385,7 +385,8 @@ Three cmdlet types:
 1. **Source readers** — read source data (Excel, SPSS, CSV, text, databases, …).
 2. **Middle processors** — `select-field`, `select-item`, `select-range`,
    `exclude-child`, `exclude-deep-node`, `include-child`, `include-deep-node`,
-   `where`, `map`, `sort`, `count`, `to-string`, …
+   `where`, `foreach-item`, `foreach-field`, `foreach-deep-node`,
+   `sort`, `count`, `to-string`, …
 3. **Terminal** — produce a value for comparison.
 
 Cmdlets are defined through a **global registry** (plugin-like) and are
@@ -398,12 +399,6 @@ single-punch categorical, multi-punch categorical. Compound types: **block**
 (named fields), **named collection** (provisional — see
 `cmdlet-data-formats.md`), and **array** (a block repeated per iteration).
 
-**`map` (ForEach-Object).** `map` transforms each iteration of an array. Its
-argument is a **cmdlet chain** (`args.transform`, arg type `cmdlet-chain`) run
-once per iteration, with the iteration threaded through as the piped value:
-
-    { "cmdlet": "map", "args": { "transform": [ { "cmdlet": "select-field", "args": { "field": "B" } } ] } }
-
 **`where` (Where-Object / filter).** `where` keeps the iterations of an array for
 which a **cmdlet chain** (`args.predicate`, arg type `cmdlet-chain`) returns a
 truthy value; the iteration is threaded through as the piped value and the result
@@ -415,6 +410,14 @@ or truthiness of a field); comparison-as-cmdlet (`cmp-eq`/`cmp-ne`/…) is track
 **`sort`.** `sort` reorders an array: `args.by` (optional) sorts blocks by a
 field, without it an array of scalars sorts naturally, and
 `args.descending: true` reverses the result. See `cmdlet-data-formats.md`.
+
+**The `foreach-*` family.** Three processors generalize ForEach-Object over the
+three "collection" shapes, each taking a **cmdlet chain** (`args.transform`, arg
+type `cmdlet-chain`) run once per element, with the element threaded through as
+the piped value: `foreach-item` maps each *item* of an array (the former `map`);
+`foreach-field` maps each *own field* of a block and returns a block with the
+same keys; `foreach-deep-node` maps each *scalar leaf* of the whole block/array
+tree and returns the same shape.
 
 **`sysmissing`:** every value may be `sysmissing`, regardless of type. In comparison,
 `sysmissing` is undefined/uncertain — it equals only another `sysmissing`. Comparing

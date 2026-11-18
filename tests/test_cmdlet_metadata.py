@@ -106,7 +106,7 @@ def test_cmdlet_permission_groups():
 
 def test_shape_cmdlet_kinds_and_args():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
-    for name in ('select-field', 'select-item', 'select-range', 'map', 'where'):
+    for name in ('select-field', 'select-item', 'select-range', 'foreach-item', 'where'):
         assert meta[name]['kind'] == 'processor'
 
     select_field_args = {a['name']: a for a in meta['select-field']['args']}
@@ -120,8 +120,8 @@ def test_shape_cmdlet_kinds_and_args():
     assert select_range_args['start']['type'] == 'number'
     assert select_range_args['stop']['type'] == 'number'
 
-    map_args = {a['name']: a for a in meta['map']['args']}
-    assert map_args['transform']['type'] == 'cmdlet-chain'
+    foreach_item_args = {a['name']: a for a in meta['foreach-item']['args']}
+    assert foreach_item_args['transform']['type'] == 'cmdlet-chain'
 
     where_args = {a['name']: a for a in meta['where']['args']}
     assert where_args['predicate']['type'] == 'cmdlet-chain'

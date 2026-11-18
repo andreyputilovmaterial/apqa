@@ -24,6 +24,9 @@ from . import cmp_ne  # noqa: F401 - import registers the comparison op
 from . import count  # noqa: F401 - import registers the cmdlet
 from . import exclude_child  # noqa: F401 - import registers the cmdlet
 from . import exclude_deep_node  # noqa: F401 - import registers the cmdlet
+from . import foreach_deep_node  # noqa: F401 - import registers the cmdlet
+from . import foreach_field  # noqa: F401 - import registers the cmdlet
+from . import foreach_item  # noqa: F401 - import registers the cmdlet
 from . import get_content_text  # noqa: F401 - import registers the cmdlet
 from . import get_content  # noqa: F401 - import registers the proxy for get-content-text
 from . import get_content_excel  # noqa: F401 - import registers the optional-dep cmdlet
@@ -45,7 +48,6 @@ from . import logical_tristate_and  # noqa: F401 - import registers the cmdlet
 from . import logical_tristate_any  # noqa: F401 - import registers the cmdlet
 from . import logical_tristate_not  # noqa: F401 - import registers the cmdlet
 from . import logical_tristate_or  # noqa: F401 - import registers the cmdlet
-from . import map_  # noqa: F401 - import registers the cmdlet
 from . import select_field  # noqa: F401 - import registers the cmdlet
 from . import select_item  # noqa: F401 - import registers the cmdlet
 from . import select_range  # noqa: F401 - import registers the cmdlet

@@ -89,6 +89,18 @@ def test_migrate_chain_rewrites_matches_to_validate_text_matches():
     assert out[0]['args'] == {'pattern': 'world'}
 
 
+def test_migrate_chain_rewrites_map_to_foreach_item():
+    chain = [
+        {
+            'cmdlet': 'map',
+            'args': {'transform': [{'cmdlet': 'select-field', 'args': {'field': 'B'}}]},
+        },
+    ]
+    out = migrate_chain(chain)
+    assert out[0]['cmdlet'] == 'foreach-item'
+    assert out[0]['args']['transform'][0]['cmdlet'] == 'select-field'
+
+
 def test_migrate_group_dict_rewrites_alias_chains():
     data = {
         'name': 'g',

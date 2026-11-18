@@ -40,6 +40,7 @@ CMDLET_RENAMES = {
     'bit-rshift': 'bitwise-rshift',
     'filter': 'exclude-deep-node',
     'matches': 'validate-text-matches',
+    'map': 'foreach-item',
 }
 
 
@@ -81,7 +82,7 @@ def _migrate_value(value):
     """Recursively rewrite any ``{'cmdlet': <name>, 'args': ...}`` step.
 
     A cmdlet chain (and its nested ``cmdlet-chain`` / ``cmdlet-chains`` args,
-    e.g. ``and``/``or``/``bit-*`` ``operands`` or ``map``'s ``transform``) is a
+    e.g. ``and``/``or``/``bit-*`` ``operands`` or ``foreach-item``'s ``transform``) is a
     tree of mappings/lists; any mapping with a ``cmdlet`` key is a step and has
     its name upgraded. Everything else is passed through unchanged.
     """

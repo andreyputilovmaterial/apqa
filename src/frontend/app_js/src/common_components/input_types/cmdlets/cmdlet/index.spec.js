@@ -7,7 +7,7 @@ const CMDLETS = [
   { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'literal-value', required: true }] },
   { name: 'count', kind: 'processor', args: [{ name: 'fail_on_sysmissing', type: 'boolean', default: false }] },
   { name: 'validate-text-matches', kind: 'terminal', args: [{ name: 'pattern', type: 'text', required: true }] },
-  { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
+  { name: 'foreach-item', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
 ];
 
 // `input_cmdlet` renders its arguments through the globally-registered arg
@@ -75,7 +75,7 @@ describe('InputCmdlet', () => {
   });
 
   it('renders a single chain for a cmdlet-chain arg', () => {
-    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'map', args: {} } });
+    const wrapper = mountCmdlet({ modelValue: { cmdlet: 'foreach-item', args: {} } });
     expect(wrapper.find('.apqa-input-cmdlet-arg-chain').exists()).toBe(true);
     expect(wrapper.find('.apqa-input-cmdlet-arg-chain .apqa-input-cmdlet-chain').exists()).toBe(true);
   });

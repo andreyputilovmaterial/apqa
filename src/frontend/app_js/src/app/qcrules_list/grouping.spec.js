@@ -299,7 +299,7 @@ describe('unfinished detection (deep)', () => {
     { name: 'get-content-excel', kind: 'source', args: [{ name: 'path', type: 'path', required: true }] },
     { name: 'literal', kind: 'source', args: [{ name: 'value', type: 'json', required: true }] },
     { name: 'count', kind: 'processor', args: [{ name: 'fail_on_sysmissing', type: 'boolean', required: false, default: false }] },
-    { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
+    { name: 'foreach-item', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
     { name: 'and', kind: 'source', args: [{ name: 'operands', type: 'cmdlet-chains', required: true }] },
   ];
   const OPS = [{ name: 'eq', op_args: [] }];
@@ -333,7 +333,7 @@ describe('unfinished detection (deep)', () => {
   });
 
   it('flags an empty nested required chain', () => {
-    const record = deepRule({ left: [{ cmdlet: 'map', args: { transform: [] } }] });
+    const record = deepRule({ left: [{ cmdlet: 'foreach-item', args: { transform: [] } }] });
     expect(isUnfinished(record, CMDLETS, OPS)).toBe(true);
   });
 
@@ -365,7 +365,7 @@ describe('invalid detection (deep)', () => {
   const CMDLETS = [
     { name: 'get-content', kind: 'source', args: [{ name: 'path', type: 'path', required: true }] },
     { name: 'count', kind: 'processor', args: [] },
-    { name: 'map', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
+    { name: 'foreach-item', kind: 'processor', args: [{ name: 'transform', type: 'cmdlet-chain', required: true }] },
     { name: 'and', kind: 'source', args: [{ name: 'operands', type: 'cmdlet-chains', required: true }] },
   ];
   const OPS = [{ name: 'eq' }];
@@ -399,7 +399,7 @@ describe('invalid detection (deep)', () => {
 
   it('flags an unknown cmdlet nested inside a cmdlet-chain arg', () => {
     const record = validRule({
-      left: [{ cmdlet: 'map', args: { transform: [{ cmdlet: 'no-such-cmdlet' }] } }],
+      left: [{ cmdlet: 'foreach-item', args: { transform: [{ cmdlet: 'no-such-cmdlet' }] } }],
     });
     expect(isInvalid(record, CMDLETS)).toBe(true);
   });

@@ -141,34 +141,6 @@ def test_select_range_bounds_must_be_integer():
         cmdlets.get('select-range')([0, 1], {'start': 1.5})
 
 
-# ---- map -------------------------------------------------------------------
-
-def test_map_transforms_each_iteration():
-    rows = [{'B': 1}, {'B': 2}]
-    transform = [_field('B')]
-    assert cmdlets.get('map')(rows, {'transform': transform}) == [1, 2]
-
-
-def test_map_transform_can_change_type():
-    assert cmdlets.get('map')(['1', '2'], {'transform': [{'cmdlet': 'as-integer'}]}) == [1, 2]
-
-
-def test_map_empty_array():
-    assert cmdlets.get('map')([], {'transform': [_field('B')]}) == []
-
-
-def test_map_requires_non_empty_transform():
-    with pytest.raises(ValueError):
-        cmdlets.get('map')([1], {})
-    with pytest.raises(ValueError):
-        cmdlets.get('map')([1], {'transform': []})
-
-
-def test_map_rejects_non_array():
-    with pytest.raises(TypeError):
-        cmdlets.get('map')({'a': 1}, {'transform': [_field('a')]})
-
-
 # ---- where -----------------------------------------------------------------
 
 def test_where_keeps_truthy_iterations():
@@ -205,18 +177,6 @@ def test_help_example_pipeline():
         ],
         'op': 'cmp-eq',
         'right': [_literal(2)],
-    }
-    assert run_rule(rule) is True
-
-
-def test_map_pipeline():
-    rule = {
-        'left': [
-            _literal([{'B': 1}, {'B': 2}]),
-            {'cmdlet': 'map', 'args': {'transform': [_field('B')]}},
-        ],
-        'op': 'cmp-eq',
-        'right': [_literal([1, 2])],
     }
     assert run_rule(rule) is True
 

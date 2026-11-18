@@ -130,7 +130,9 @@ array is a workbook, a sheet, a table, or a query result:
 | `obj.field` (JS-style) / `Select-Object -ExpandProperty Name` | extract one field from a block, or one field from every iteration → flat list | `select-field` |
 | `Select-Object -First/-Last/-Skip/-Index` | pick one element by index, or a sub-range | `select-item`, `select-range` |
 | `Where-Object { … }` | filter iterations by a condition | `where` |
-| `ForEach-Object { … }` | map/transform each iteration | `map` |
+| `ForEach-Object { … }` | map/transform each item of an array | `foreach-item` |
+| — | map/transform each own field of a block (no recursion) | `foreach-field` |
+| — | map/transform each scalar leaf, traversing the whole tree | `foreach-deep-node` |
 | `Sort-Object [-Property X]` | order iterations (optionally by a field) | `sort` |
 | — | remove the direct children of a block/array whose key/index matches a rule | `exclude-child` |
 | — | recursively remove nodes whose data path (relative to the received value) matches a rule | `exclude-deep-node` |
@@ -140,12 +142,12 @@ array is a workbook, a sheet, a table, or a query result:
 > **Naming note (unsettled).** `select-field` is a deliberately provisional name
 > for "read one field" — the verb (`select-` vs `get-`/`read-`) and the noun
 > (`field` vs `property`) are still being felt out and may change. Likewise
-> `map`/`where` are the spec names for ForEach-Object/Where-Object;
-> `foreach-object` is an equally valid alternative for `map`. The former
-> path-removal cmdlet `filter` was split into the `exclude-*` / `include-*`
-> pairs (see "Excluding / including nodes by path"); the `exclude-` /
-> `include-` prefixes are still provisional. Treat these as placeholders, not
-> a final API.
+> `foreach-item`/`where` are the spec names for ForEach-Object/Where-Object;
+> `map` was the earlier name for ForEach-Object and has been folded into
+> `foreach-item`. The former path-removal cmdlet `filter` was split into the
+> `exclude-*` / `include-*` pairs (see "Excluding / including nodes by path");
+> the `exclude-` / `include-` prefixes are still provisional. Treat these as
+> placeholders, not a final API.
 
 ## Excluding / including nodes by path (`exclude-*`, `include-*`)
 
@@ -298,8 +300,18 @@ On a **block** (object) or an **array** (collection):
 - `where` (filter iterations) — `args.predicate` is a **cmdlet chain** run once
   per iteration (the iteration is its piped value); an iteration is kept when the
   chain's result is truthy. Returns an array again, same field shape.
-- `map` (transform iterations) — `args.transform` is a **cmdlet chain** run once
-  per iteration; returns an array of the transformed values (any shape).
+- `foreach-item` (transform array items) — `args.transform` is a **cmdlet chain**
+  run once per item (the item is its piped input); returns an array of the
+  transformed values (any shape). This was formerly named `map`.
+- `foreach-field` (transform block fields) — `args.transform` is a **cmdlet
+  chain** run once per *own* field of a block (the field value is its piped
+  input); returns a block with the same field names and the transformed values.
+  It does not recurse.
+- `foreach-deep-node` (transform every leaf) — `args.transform` is a **cmdlet
+  chain** run once per *scalar leaf* (including `sysmissing`), traversing the
+  whole block/array tree; returns the same shape with the transformed leaves.
+  This is the generic, chain-parameterized form of the recursive walk
+  `transform-strip-html` does with a fixed operation.
 - `sort` (reorder iterations) → an array again, same field shape. `args.by`
   (optional) sorts blocks by a field; without it an array of scalars sorts
   naturally. `args.descending: true` reverses the order.
