@@ -277,7 +277,7 @@ try {
         target.append(style);
     }
     async function fetchHelpPage() {
-        const response = await fetch('/functionality/help-pages');
+        const response = await fetch('/app/help-pages');
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }

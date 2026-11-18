@@ -101,7 +101,7 @@ def test_auth_header_sent_on_open_and_save(server):
 # ---- served from backend --------------------------------------------------
 
 def test_served_project_path_is_clean(server):
-    from src.frontend.endpoints_project import handle_project_crud
+    from src.frontend.endpoints_qcrules.project import handle_project_crud
     from src.webserver_engine.webserve.src.common_defs import WebResponse
 
     url, _doc, _log = server
@@ -120,7 +120,7 @@ def test_served_project_path_is_clean(server):
             return b""
 
     config = {"iface": {"WebResponse": WebResponse, "db_file": dbfile}}
-    resp = handle_project_crud(FakeRequest(), config)
+    resp = handle_project_crud(FakeRequest(), config, added_data='/qc/project')
     data = json.loads(resp.body)
     assert data["path"] == url
     assert "user" not in data["path"] and "pass" not in data["path"]

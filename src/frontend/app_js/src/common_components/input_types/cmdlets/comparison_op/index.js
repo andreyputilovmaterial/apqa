@@ -15,7 +15,7 @@ function defaultOpArgValue(arg) {
 // the same cmdlet/chain world as the left/right sides): an op selector plus one
 // input per op-specific option (`op_args`). The value is `{ op, op_args }`, or
 // `null`/`undefined` when empty, following the native input contract. `ops` is
-// the comparison-op metadata list from `/functionality/cmdlet-metadata`.
+// the comparison-op metadata list from `/cmdlets/metadata`.
 //
 // Each `op_args` entry is rendered by the shared `component-input-cmdlet-arg`
 // editor (op_args use the same arg-schema shape as cmdlet args).

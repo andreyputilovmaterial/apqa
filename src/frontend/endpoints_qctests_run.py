@@ -2,14 +2,23 @@
 from urllib.parse import urlparse
 import json
 
-from .common_functions import JSONEncoder
+from .common_functions import JSONEncoder, path_relative_to
 
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
-# POST /functionality/run-rule runs an *arbitrary* rule passed as JSON. It does
-# not address a rule that lives in the rules database (that is the /qc/rules...
-# namespace), so it deliberately lives under /functionality/ instead.
-def handle_rule_run(net_request_handler, config: dict, added_data=None):
+def handle_qcrule_run(net_request_handler, config: dict, added_data=None):
+    """Run an arbitrary QC rule, dispatched from the ``/tests/run`` route.
+
+    Requests (``<mount>`` = the route registered in ``src/endpoints.py`` and
+    passed via ``added_data``; the rule arrives as a JSON request body, nothing
+    in the path or query string):
+
+    - ``POST <mount>`` (JSON body: a rule dict) -> `run_rule_with_report` /
+      `run_rule`: execute the rule, return ``{result, notes?}``.
+
+    Rule execution is delegated to ``config['iface']['run_rule_with_report']`` /
+    ``config['iface']['run_rule']`` (see ``src/rule_runner.py``).
+    """
 
     WebResponse = config.get('iface').get('WebResponse')
     run_rule = (config.get('iface') or {}).get('run_rule')
@@ -26,7 +35,7 @@ def handle_rule_run(net_request_handler, config: dict, added_data=None):
     method = net_request_handler.command
     path = f'{urlparse(net_request_handler.path).path}'
 
-    if path != '/functionality/run-rule' or method != 'POST':
+    if path_relative_to(path, added_data) != '' or method != 'POST':
         return json_response(
             405, {'error': f'renderer for {method} {path} is not recognized'}
         )

@@ -85,6 +85,26 @@ def get_matching_endpoint(path, endpoints):
     return None
 
 
+def path_relative_to(path, base):
+    """Return the part of ``path`` that sits below the ``base`` route prefix.
+
+    Endpoint handlers are mounted at a route registered in ``src/endpoints.py``
+    and passed to the handler as ``added_data``. This helper lets a handler stay
+    agnostic of where it is mounted:
+
+    - ``''`` when ``path`` equals ``base`` (the collection / the exact endpoint);
+    - the remaining part, starting with ``/``, when ``path`` is below ``base``;
+    - ``None`` when ``path`` is not below ``base`` (or ``base`` is falsy).
+    """
+    if not base:
+        return None
+    if path == base:
+        return ''
+    if path.startswith(f'{base}/'):
+        return path[len(base):]
+    return None
+
+
 def read_file_stream_to_chunks(file_object, chunk_size=1024):
     """Reads file stream and yields chunks
 

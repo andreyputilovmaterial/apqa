@@ -11,7 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.cmdlets.meta import get_cmdlet_metadata
-from src.frontend.endpoints_functionality import handle_functionality
+from src.frontend.endpoints_cmdlets import handle_cmdlets
 from src.webserver_engine.webserve.src.common_defs import WebResponse
 
 
@@ -256,7 +256,7 @@ def test_normalize_permissions():
 
 
 def test_endpoint_returns_metadata(config):
-    resp = handle_functionality(FakeRequest('GET', '/functionality/cmdlet-metadata'), config)
+    resp = handle_cmdlets(FakeRequest('GET', '/cmdlets/metadata'), config, added_data='/cmdlets')
     assert resp.status_code == 200
     data = json.loads(resp.body)
     assert set(data) == {'cmdlets', 'ops'}
@@ -265,5 +265,5 @@ def test_endpoint_returns_metadata(config):
 
 def test_endpoint_metadata_unavailable():
     config = {'iface': {'WebResponse': WebResponse}}
-    resp = handle_functionality(FakeRequest('GET', '/functionality/cmdlet-metadata'), config)
+    resp = handle_cmdlets(FakeRequest('GET', '/cmdlets/metadata'), config, added_data='/cmdlets')
     assert resp.status_code == 404

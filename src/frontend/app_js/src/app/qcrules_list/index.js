@@ -183,7 +183,7 @@ const QcRulesList = {
           // args). It is not critical for listing rules, so a failure here only
           // degrades the unfinished detection to the structural check (empty
           // left/op/right) and is retried when the editor is opened.
-          requestJson('/functionality/cmdlet-metadata').catch((e) => {
+          requestJson('/cmdlets/metadata').catch((e) => {
             logError(`Failed to load cmdlet metadata: ${e}`);
             return null;
           }),
@@ -230,7 +230,7 @@ const QcRulesList = {
 
     async function ensureCmdletMetadata() {
       if (!cmdletMetadata.value) {
-        cmdletMetadata.value = await requestJson('/functionality/cmdlet-metadata');
+        cmdletMetadata.value = await requestJson('/cmdlets/metadata');
       }
       return cmdletMetadata.value;
     }
@@ -390,9 +390,8 @@ const QcRulesList = {
 
       // Run the rule exactly like the backend's "run QC tests" mode does:
       // `tstsuite.py` -> `rule.run()` -> `run_rule(self.to_dict())`. The
-      // `/functionality/run-rule` endpoint executes the same
-      // `run_rule_with_report` path and returns `{result, notes?}` (or `{error}`
-      // when a cmdlet raised).
+      // `/tests/run` endpoint executes the same `run_rule_with_report` path and
+      // returns `{result, notes?}` (or `{error}` when a cmdlet raised).
       const payload = {
         name: record.name,
         id: record.id,
@@ -405,7 +404,7 @@ const QcRulesList = {
       };
 
       try {
-        const response = await fetch('/functionality/run-rule', {
+        const response = await fetch('/tests/run', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),

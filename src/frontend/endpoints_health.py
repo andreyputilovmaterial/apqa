@@ -2,35 +2,44 @@
 from urllib.parse import urlparse
 import json
 
+from .common_functions import path_relative_to
 
-# Liveness probe for the backend. Responds 200 to HEAD (what the frontend uses
-# to detect whether the backend process is still up) and to GET (for humans and
-# browsers). It must not depend on the project DB file: this endpoint only
-# answers "is the server running". Project identity ("is the backend still
-# serving the same project file") is verified separately via GET /qc/project,
-# whose `path` field is the absolute path to the project file.
-#
-# net_request_handler is derived from BaseHTTPRequestHandler (python's
-# http.server). The webserver engine already suppresses the response body for
-# HEAD requests (it keeps Content-length but skips writing the body), so the
-# same renderer serves both GET and HEAD.
+
+# net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
 def handle_health(net_request_handler, config: dict, added_data=None):
+    """Liveness probe, dispatched from the ``/health`` route.
+
+    Requests (``<mount>`` = the route registered in ``src/endpoints.py`` and
+    passed via ``added_data``; nothing in the path, query string, or body):
+
+    - ``GET <mount>`` / ``HEAD <mount>`` -> ``{"status": "ok"}`` (self-contained,
+      does not touch the project DB; the webserver suppresses the HEAD body).
+    """
 
     WebResponse = config.get('iface').get('WebResponse')
-
-    def json_response(status_code, data, headers=None):
-        return WebResponse(
-            status_code=status_code,
-            content_type='application/json',
-            body=json.dumps(data),
-            headers=headers or [],
-        )
 
     method = net_request_handler.command
     path_parsed = f'{urlparse(net_request_handler.path).path}'
 
-    if path_parsed == '/health':
-        if method in ('GET', 'HEAD'):
-            return json_response(200, {'status': 'ok'})
+    if path_relative_to(path_parsed, added_data) == '':
+        if method in ('GET',):
+            return WebResponse(
+                status_code=200,
+                content_type='application/json',
+                body=json.dumps({'status': 'ok'}),
+                headers=[],
+            )
+        elif method in ('HEAD',):
+            return WebResponse(
+                status_code=200,
+                content_type='application/json',
+                body=None,
+                headers=[],
+            )
 
-    return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})
+    return WebResponse(
+            status_code=405,
+            content_type='application/json',
+            body=json.dumps({'error': f'renderer for {method} {path_parsed} is not recognized'}),
+            headers=[],
+        )

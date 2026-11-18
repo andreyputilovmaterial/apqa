@@ -177,7 +177,7 @@ The rule **id** and **name** are both present, and the note points at the exact
 field. An error (not a `False`) instead surfaces as a pytest ERROR with the
 `ChainError` message and the chained cause.
 
-### `POST /functionality/run-rule`
+### `POST /tests/run`
 
 The endpoint prefers `run_rule_with_report` when the config provides it and
 returns the notes to the frontend:

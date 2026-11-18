@@ -460,7 +460,7 @@ read their input from ``args``). Currently implemented:
 The rule *editor* needs more than the runtime knows: for each cmdlet, whether it
 can be the first in a chain, and the shape of each argument. This is declared
 next to each `@cmdlets.register(...)` / `@comparisons.register(...)` call and
-served to the frontend by `GET /functionality/cmdlet-metadata` (see
+served to the frontend by `GET /cmdlets/metadata` (see
 `docs/development.md` "Cmdlet & comparison-op editor metadata"):
 
 - a cmdlet carries a `kind` — `source` (needs no piped value, can be first),

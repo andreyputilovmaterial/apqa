@@ -241,8 +241,8 @@ The frontend runs two ways, and **both must keep working**:
   every API call to the backend. `src/frontend/app_js/index.html` is Vite's
   entry point only (the backend never serves it); `vue` resolves from
   `node_modules` (the `vue` alias in `vite.config.js`), so `index.html` needs no
-  importmap. `vite.config.js` proxies the backend paths (e.g. `/qc`,
-  `/functionality`, `/assets`) to `http://localhost:5280`. This is the fast
+  importmap. `vite.config.js` proxies the backend paths (e.g. `/qc`, `/app`,
+  `/cmdlets`, `/functionality`, `/assets`) to `http://localhost:5280`. This is the fast
   hot-reload path (and the one that enables Vitest/lint); use it while iterating
   on UI code.
 
@@ -435,7 +435,7 @@ recursively into nested `cmdlet-chain`/`cmdlet-chains` args — that is missing.
 name is unknown to this environment (or that is not a `{cmdlet, args}` object),
 detected recursively through nested chains too, or a comparison op name unknown
 to the op metadata. This detection is frontend-only
-(in `grouping.js`, driven by the `/functionality/cmdlet-metadata` schemas); a
+(in `grouping.js`, driven by the `/cmdlets/metadata` schemas); a
 piece that is present but unrecognized is *not* missing — it is `invalid`. The
 marks are also rendered as physical badges (a short line at the bottom of every
 rule, and inside each folder heading prefixed with "includes rules marked"); the
@@ -581,7 +581,7 @@ value.
 
 `src/cmdlets/meta.py` snapshots both registries into `{ cmdlets, ops }`, exposed
 as `get_cmdlet_metadata` on `config['iface']` and served by
-`GET /functionality/cmdlet-metadata` (`endpoints_functionality.py`).
+`GET /cmdlets/metadata` (`endpoints_cmdlets.py`).
 
 The frontend consumes this through app-level input components (all plain `.js` +
 `.css`, all following the native input contract — `modelValue` +

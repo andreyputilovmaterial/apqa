@@ -55,8 +55,8 @@ describe('QcRulesList', () => {
     vi.stubGlobal('fetch', vi.fn((url) => {
       if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
       if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
-      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
-      if (url === '/functionality/run-rule') {
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/tests/run') {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({
@@ -91,8 +91,8 @@ describe('QcRulesList', () => {
     vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
       if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules }) });
       if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
-      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
-      if (url === '/functionality/run-rule') {
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/tests/run') {
         runOrder.push(JSON.parse(options.body).id);
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: true }) });
       }
@@ -118,7 +118,7 @@ describe('QcRulesList', () => {
     vi.stubGlobal('fetch', vi.fn((url) => {
       if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
       if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
-      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
     }));
 
@@ -142,7 +142,7 @@ describe('QcRulesList', () => {
       if (url === '/qc/reorder') return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
       if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [group] }) });
-      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
     }));
 
@@ -172,7 +172,7 @@ describe('QcRulesList', () => {
       calls.push({ url, method: options.method || 'GET' });
       if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
       if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
-      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
     }));
 
@@ -200,8 +200,8 @@ describe('QcRulesList', () => {
     vi.stubGlobal('fetch', vi.fn((url) => {
       if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
       if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
-      if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
-      if (url === '/functionality/run-rule') {
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/tests/run') {
         return Promise.resolve({
           ok: false,
           status: 400,
@@ -242,7 +242,7 @@ describe('QcRulesList', () => {
           putPayload = JSON.parse(options.body);
           return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
         }
-        if (url === '/functionality/cmdlet-metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+        if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
         return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       }),
     );

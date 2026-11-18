@@ -5,7 +5,7 @@ The rule form needs to know, for every registered cmdlet, its name, its ``kind``
 flag, default and description), and a short help text — plus the same for the
 comparison ops and their ``op_args``. The registries already collect that
 metadata next to each cmdlet/op; this module just snapshots it into a single
-JSON-serializable structure for the ``/functionality/cmdlet-metadata`` endpoint.
+JSON-serializable structure for the ``/cmdlets/metadata`` endpoint.
 """
 
 from . import cmdlets, comparisons

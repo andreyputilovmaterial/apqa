@@ -9,24 +9,30 @@ from .endpoints_html_paths import (
 from .endpoints_assets_delivery_path import (
     renderer_assets,
 )
-from .endpoints_rule_crud import (
+from .endpoints_qcrules.rule_crud import (
     handle_rule_crud,
 )
-from .endpoints_group_crud import (
+from .endpoints_qcrules.group_crud import (
     handle_group_crud,
+)
+from .endpoints_qcrules.project import (
+    handle_project_crud,
+)
+from .endpoints_qcrules.reorder import (
+    handle_reorder,
+)
+from .endpoints_app import (
+    handle_app,
+)
+from .endpoints_cmdlets import (
+    handle_cmdlets,
 )
 from .endpoints_functionality import (
     handle_functionality,
 )
-from .endpoints_rule_run import (
-    handle_rule_run,
-)
-from .endpoints_project import (
-    handle_project_crud,
-)
 from .endpoints_health import (
     handle_health,
 )
-from .endpoints_reorder import (
-    handle_reorder,
+from .endpoints_qctests_run import (
+    handle_qcrule_run,
 )

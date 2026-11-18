@@ -11,7 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.db_processors import DBFile
-from src.frontend.endpoints_reorder import handle_reorder
+from src.frontend.endpoints_qcrules.reorder import handle_reorder
 from src.webserver_engine.webserve.src.common_defs import WebResponse
 
 
@@ -43,7 +43,7 @@ def call(config, method='POST', path='/qc/reorder', body=None):
         raw = json.dumps(body).encode('utf-8')
     else:
         raw = body
-    resp = handle_reorder(FakeRequest(method, path, raw), config)
+    resp = handle_reorder(FakeRequest(method, path, raw), config, added_data='/qc/reorder')
     data = json.loads(resp.body) if resp.body else None
     return resp.status_code, data
 

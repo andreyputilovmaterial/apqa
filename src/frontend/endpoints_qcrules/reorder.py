@@ -1,14 +1,22 @@
 
+from urllib.parse import urlparse
 import json
 
-from .common_functions import JSONEncoder
+from ..common_functions import JSONEncoder, path_relative_to
 
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
-# A single POST endpoint moves a QC rule or a folder to a new position in the tree:
-# the frontend drag-and-drop sends `{kind, id, parent, before}` and the backend
-# renumbers the affected siblings and persists. Reuses the shared DBFile.reorder.
 def handle_reorder(net_request_handler, config: dict, added_data=None):
+    """Move a rule or group to a new tree position, dispatched from ``/qc/reorder``.
+
+    Requests (``<mount>`` = the route registered in ``src/endpoints.py`` and
+    passed via ``added_data``; everything arrives as a JSON request body):
+
+    - ``POST <mount>`` (JSON body: ``{"kind": "rule"|"group", "id", "parent", "before"}``)
+      -> `db_file.reorder`: move the item and renumber its siblings.
+
+    Reordering is delegated to ``config['iface']['db_file'].reorder`` (see ``src/db_processors``).
+    """
 
     WebResponse = config.get('iface').get('WebResponse')
     db_file = config.get('iface').get('db_file')  # a DBFile instance with CRUD methods
@@ -22,8 +30,9 @@ def handle_reorder(net_request_handler, config: dict, added_data=None):
         )
 
     method = net_request_handler.command
-    if method != 'POST':
-        return json_response(405, {'error': f'renderer for {method} /qc/reorder is not recognized'})
+    path_parsed = f'{urlparse(net_request_handler.path).path}'
+    if path_relative_to(path_parsed, added_data) != '' or method != 'POST':
+        return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})
 
     body = net_request_handler.request_body.read()
     try:

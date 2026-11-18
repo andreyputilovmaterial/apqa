@@ -2,13 +2,21 @@
 from urllib.parse import urlparse
 import json
 
-from .common_functions import JSONEncoder
+from ..common_functions import JSONEncoder, path_relative_to
 
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
-# Requests under /qc/project arrive here (GET/PUT); method+path routing is done
-# below with simple if...elif, following the pattern used in this codebase.
 def handle_project_crud(net_request_handler, config: dict, added_data=None):
+    """Project metadata, dispatched from the ``/qc/project`` route.
+
+    Requests (``<mount>`` = the route registered in ``src/endpoints.py`` and
+    passed via ``added_data``; no path ids and no query/GET params):
+
+    - ``GET <mount>`` -> `handle_get_project`: return the project record + resource path.
+    - ``PUT <mount>`` (JSON body: project fields) -> `handle_update_project`: update the project.
+
+    Persistence is delegated to ``config['iface']['db_file']`` (see ``src/db_processors``).
+    """
 
     WebResponse = config.get('iface').get('WebResponse')
     db_file = config.get('iface').get('db_file')  # a DBFile instance with CRUD methods
@@ -59,7 +67,7 @@ def handle_project_crud(net_request_handler, config: dict, added_data=None):
 
     renderer = None
 
-    if path_parsed == '/qc/project':
+    if path_relative_to(path_parsed, added_data) == '':
         if method == 'GET':
             renderer = handle_get_project
         elif method == 'PUT':

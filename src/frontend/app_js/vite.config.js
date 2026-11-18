@@ -16,7 +16,19 @@ export default defineConfig({
         target: 'http://localhost:5280',
         changeOrigin: true
       },
+      '/app': {
+        target: 'http://localhost:5280',
+        changeOrigin: true
+      },
+      '/cmdlets': {
+        target: 'http://localhost:5280',
+        changeOrigin: true
+      },
       '/qc': {
+        target: 'http://localhost:5280',
+        changeOrigin: true
+      },
+      '/tests': {
         target: 'http://localhost:5280',
         changeOrigin: true
       },

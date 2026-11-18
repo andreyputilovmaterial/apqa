@@ -11,7 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.db_processors import DBFile
-from src.frontend.endpoints_group_crud import handle_group_crud
+from src.frontend.endpoints_qcrules.group_crud import handle_group_crud
 from src.webserver_engine.webserve.src.common_defs import WebResponse
 
 
@@ -43,7 +43,7 @@ def call(config, method, path, body=None):
         raw = json.dumps(body).encode('utf-8')
     else:
         raw = body
-    resp = handle_group_crud(FakeRequest(method, path, raw), config)
+    resp = handle_group_crud(FakeRequest(method, path, raw), config, added_data='/qc/groups')
     data = json.loads(resp.body) if resp.body else None
     return resp.status_code, data
 

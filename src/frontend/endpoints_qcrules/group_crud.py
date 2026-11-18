@@ -2,13 +2,26 @@ from functools import partial
 from urllib.parse import urlparse, unquote
 import json
 
-from .common_functions import JSONEncoder
+from ..common_functions import JSONEncoder, path_relative_to
 
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
-# All requests under /qc/groups... arrive here (any HTTP method); method+path
-# routing is done below with simple if...elif, following the pattern used in this codebase.
 def handle_group_crud(net_request_handler, config: dict, added_data=None):
+    """QC-group (folder) CRUD, dispatched from the ``/qc/groups`` route.
+
+    Requests (``<mount>`` = the route registered in ``src/endpoints.py`` and
+    passed via ``added_data``; ids come from the URL path, the rest from a JSON
+    request body, nothing from query/GET params):
+
+    - ``GET <mount>`` -> `handle_list_groups`: list all groups.
+    - ``POST <mount>`` (JSON body: new group) -> `handle_create_group`: add a group.
+    - ``GET <mount>/<id>`` -> `handle_get_group`: fetch one group.
+    - ``PUT <mount>/<id>`` (JSON body: fields to change) -> `handle_update_group`: patch a group.
+    - ``DELETE <mount>/<id>`` -> `handle_delete_group`: delete a group.
+    - ``POST <mount>/<id>/rename`` (JSON body: ``{"new_name": ...}``) -> `handle_rename_group`: rename a group.
+
+    Persistence is delegated to ``config['iface']['db_file']`` (see ``src/db_processors``).
+    """
 
     WebResponse = config.get('iface').get('WebResponse')
     db_file = config.get('iface').get('db_file')  # a DBFile instance with CRUD methods
@@ -105,26 +118,31 @@ def handle_group_crud(net_request_handler, config: dict, added_data=None):
     method = net_request_handler.command
     path_with_query = net_request_handler.path
     path_parsed = f'{urlparse(path_with_query).path}'
-    path_parts = [unquote(p) for p in path_parsed.split('/')]
+    # `added_data` is the mount point this handler was registered at (see
+    # src/endpoints.py). Route on the path *below* it: '' for the collection,
+    # '/<id>' for an item, '/<id>/rename' for the rename action.
+    relative = path_relative_to(path_parsed, added_data)
+    segments = relative.split('/') if relative is not None else None
 
     renderer = None
 
-    if path_parsed == '/qc/groups':
-        if method == 'GET':
-            renderer = handle_list_groups
-        elif method == 'POST':
-            renderer = handle_create_group
-    elif len(path_parts) == 4 and path_parts[1] == 'qc' and path_parts[2] == 'groups':
-        group_id = path_parts[3]
-        if method == 'GET':
-            renderer = partial(handle_get_group, group_id)
-        elif method == 'PUT':
-            renderer = partial(handle_update_group, group_id)
-        elif method == 'DELETE':
-            renderer = partial(handle_delete_group, group_id)
-    elif len(path_parts) == 5 and path_parts[1] == 'qc' and path_parts[2] == 'groups' and path_parts[4] == 'rename':
-        if method == 'POST':
-            renderer = partial(handle_rename_group, path_parts[3])
+    if segments is not None:
+        if len(segments) == 1 and segments[0] == '':
+            if method == 'GET':
+                renderer = handle_list_groups
+            elif method == 'POST':
+                renderer = handle_create_group
+        elif len(segments) == 2 and segments[0] == '':
+            group_id = unquote(segments[1])
+            if method == 'GET':
+                renderer = partial(handle_get_group, group_id)
+            elif method == 'PUT':
+                renderer = partial(handle_update_group, group_id)
+            elif method == 'DELETE':
+                renderer = partial(handle_delete_group, group_id)
+        elif len(segments) == 3 and segments[0] == '' and segments[2] == 'rename':
+            if method == 'POST':
+                renderer = partial(handle_rename_group, unquote(segments[1]))
 
     if renderer is None:
         return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})

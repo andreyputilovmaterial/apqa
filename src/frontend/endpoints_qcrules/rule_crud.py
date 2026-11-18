@@ -2,13 +2,27 @@ from functools import partial
 from urllib.parse import urlparse, unquote
 import json
 
-from .common_functions import JSONEncoder
+from ..common_functions import JSONEncoder, path_relative_to
 
 
 # net_request_handler is derived from BaseHTTPRequestHandler (python's http.server).
-# All requests under /qc/rules... arrive here (any HTTP method); method+path routing
-# is done below with simple if...elif, following the pattern used in this codebase.
 def handle_rule_crud(net_request_handler, config: dict, added_data=None):
+    """QC-rule CRUD, dispatched from the ``/qc/rules`` route.
+
+    Requests (``<mount>`` = the route registered in ``src/endpoints.py`` and
+    passed via ``added_data``; ids come from the URL path, the rest from a JSON
+    request body, nothing from query/GET params):
+
+    - ``GET <mount>`` -> `handle_list_rules`: list all rules.
+    - ``POST <mount>`` (JSON body: new rule) -> `handle_create_rule`: add a rule.
+    - ``GET <mount>/<id>`` -> `handle_get_rule`: fetch one rule.
+    - ``PUT <mount>/<id>`` (JSON body: fields to change) -> `handle_update_rule`: patch a rule.
+    - ``DELETE <mount>/<id>`` -> `handle_delete_rule`: delete a rule.
+    - ``POST <mount>/<id>/rename`` (JSON body: ``{"new_name": ...}``) -> `handle_rename_rule`: rename a rule.
+    - ``POST <mount>/<id>/duplicate`` -> `handle_duplicate_rule`: copy a rule.
+
+    Persistence is delegated to ``config['iface']['db_file']`` (see ``src/db_processors``).
+    """
 
     WebResponse = config.get('iface').get('WebResponse')
     db_file = config.get('iface').get('db_file')  # a DBFile instance with CRUD methods
@@ -130,29 +144,34 @@ def handle_rule_crud(net_request_handler, config: dict, added_data=None):
     method = net_request_handler.command
     path_with_query = net_request_handler.path
     path_parsed = f'{urlparse(path_with_query).path}'
-    path_parts = [unquote(p) for p in path_parsed.split('/')]
+    # `added_data` is the mount point this handler was registered at (see
+    # src/endpoints.py). Route on the path *below* it: '' for the collection,
+    # '/<id>' for an item, '/<id>/rename' or '/<id>/duplicate' for an action.
+    relative = path_relative_to(path_parsed, added_data)
+    segments = relative.split('/') if relative is not None else None
 
     renderer = None
 
-    if path_parsed == '/qc/rules':
-        if method == 'GET':
-            renderer = handle_list_rules
-        elif method == 'POST':
-            renderer = handle_create_rule
-    elif len(path_parts) == 4 and path_parts[1] == 'qc' and path_parts[2] == 'rules':
-        rule_id = path_parts[3]
-        if method == 'GET':
-            renderer = partial(handle_get_rule, rule_id)
-        elif method == 'PUT':
-            renderer = partial(handle_update_rule, rule_id)
-        elif method == 'DELETE':
-            renderer = partial(handle_delete_rule, rule_id)
-    elif len(path_parts) == 5 and path_parts[1] == 'qc' and path_parts[2] == 'rules' and path_parts[4] == 'rename':
-        if method == 'POST':
-            renderer = partial(handle_rename_rule, path_parts[3])
-    elif len(path_parts) == 5 and path_parts[1] == 'qc' and path_parts[2] == 'rules' and path_parts[4] == 'duplicate':
-        if method == 'POST':
-            renderer = partial(handle_duplicate_rule, path_parts[3])
+    if segments is not None:
+        if len(segments) == 1 and segments[0] == '':
+            if method == 'GET':
+                renderer = handle_list_rules
+            elif method == 'POST':
+                renderer = handle_create_rule
+        elif len(segments) == 2 and segments[0] == '':
+            rule_id = unquote(segments[1])
+            if method == 'GET':
+                renderer = partial(handle_get_rule, rule_id)
+            elif method == 'PUT':
+                renderer = partial(handle_update_rule, rule_id)
+            elif method == 'DELETE':
+                renderer = partial(handle_delete_rule, rule_id)
+        elif len(segments) == 3 and segments[0] == '':
+            rule_id = unquote(segments[1])
+            if segments[2] == 'rename' and method == 'POST':
+                renderer = partial(handle_rename_rule, rule_id)
+            elif segments[2] == 'duplicate' and method == 'POST':
+                renderer = partial(handle_duplicate_rule, rule_id)
 
     if renderer is None:
         return json_response(405, {'error': f'renderer for {method} {path_parsed} is not recognized'})
