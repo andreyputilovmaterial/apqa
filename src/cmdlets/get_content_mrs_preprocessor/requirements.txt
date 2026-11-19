@@ -1,0 +1,5 @@
+# get-content-mrs-preprocessor uses only the Python standard library (re,
+# pathlib), so there is no pip package to install. This file exists so
+# build.sh's optional-dependency discovery still picks it up and documents that
+# this cmdlet is intentionally self-contained (a comment-only requirements file
+# inlines nothing into the run scripts).

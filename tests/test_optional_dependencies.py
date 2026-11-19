@@ -76,6 +76,10 @@ def test_get_content_msmarkitdown_is_always_known():
     assert 'get-content-msmarkitdown' in cmdlets.names()
 
 
+def test_get_content_mrs_preprocessor_is_always_known():
+    assert 'get-content-mrs-preprocessor' in cmdlets.names()
+
+
 def test_optional_dependency_requirements_are_discoverable():
     # build.sh / run_init.* discover every src/cmdlets/**/requirements.txt; the
     # optional-dependency machinery depends on those files sitting next to their
@@ -87,6 +91,7 @@ def test_optional_dependency_requirements_are_discoverable():
     }
     assert 'get_content_excel/requirements.txt' in relative
     assert 'get_content_mdd/requirements.txt' in relative
+    assert 'get_content_mrs_preprocessor/requirements.txt' in relative
     assert 'get_content_msmarkitdown/requirements.txt' in relative
     assert 'get_content_network_fetch/requirements.txt' in relative
     assert 'get_content_text/requirements.txt' in relative

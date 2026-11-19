@@ -55,6 +55,7 @@ def test_source_readers_are_marked_as_sources():
     kinds = {c['name']: c['kind'] for c in get_cmdlet_metadata()['cmdlets']}
     assert kinds['get-content-excel'] == 'source'
     assert kinds['get-content-mdd'] == 'source'
+    assert kinds['get-content-mrs-preprocessor'] == 'source'
     assert kinds['get-content-msmarkitdown'] == 'source'
     assert kinds['get-content-text'] == 'source'
     assert kinds['get-content'] == 'source'
@@ -73,6 +74,18 @@ def test_network_cmdlet_kinds():
     # source reader; the validator is a terminal predicate.
     assert kinds['get-content-network-fetch'] == 'processor'
     assert kinds['validate-network-request-result'] == 'terminal'
+
+
+def test_get_content_mrs_preprocessor_args():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    args = {a['name']: a for a in meta['get-content-mrs-preprocessor']['args']}
+    assert list(args) == ['path', 'current_dir', 'case_insensitive']
+    assert args['path']['required'] is True
+    assert args['path']['type'] == 'path'
+    assert args['current_dir']['required'] is False
+    assert args['current_dir']['type'] == 'path'
+    assert args['case_insensitive']['type'] == 'boolean'
+    assert args['case_insensitive']['default'] is False
 
 
 def test_validate_text_matches_is_terminal():
@@ -114,6 +127,7 @@ def test_cmdlet_permission_groups():
         'deps-extended', 'deps-extended-markitdown', 'filesystem',
     ]
     assert perms['get-content-network-fetch'] == ['deps-stdlib-only', 'network']
+    assert perms['get-content-mrs-preprocessor'] == ['deps-stdlib-only', 'filesystem']
     assert perms['transform-strip-html'] == [
         'deps-extended', 'deps-extended-beautifulsoup4',
     ]
@@ -127,6 +141,7 @@ def test_cmdlet_permission_groups():
         'get-filesystem-obj-info',
         'get-content-excel',
         'get-content-mdd',
+        'get-content-mrs-preprocessor',
         'get-content-msmarkitdown',
         'get-content-network-fetch',
         'transform-strip-html',

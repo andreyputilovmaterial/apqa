@@ -42,6 +42,7 @@ def test_collect_optional_dependencies_only_includes_installables():
     # stdlib-only cmdlets have a comment-only requirements.txt → nothing to install
     assert 'get_content' not in entries
     assert 'get_content_text' not in entries
+    assert 'get_content_mrs_preprocessor' not in entries
     assert 'get_content_network_fetch' not in entries
     assert 'validate_xml_compatible' not in entries
     # per-processor extras are discovered next to the cmdlet extras

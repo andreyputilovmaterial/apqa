@@ -27,6 +27,10 @@ Commands that bring your data into the rule — the first command in a chain.
   readable Markdown text. Needs a `path`.
 - **`get-filesystem-obj-info`** — describe a file or folder (type, size, dates).
   Needs a `path`.
+- **`get-content-mrs-preprocessor`** — run a small C-style preprocessor over a
+  file and return its `#define` definitions as a block. Needs a `path`; you can
+  also set the `#include` root (`current_dir`) and make matching
+  case-insensitive.
 - **`get-content-network-fetch`** — download a web address and return its status
   code, body text, and headers. The address comes from the previous command.
 

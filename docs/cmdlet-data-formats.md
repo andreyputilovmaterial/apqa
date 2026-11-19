@@ -495,6 +495,21 @@ read their input from ``args``). Currently implemented:
   Args: ``path`` (required). Optional dependency: ``markitdown`` with the
   document-format extras (``markitdown[pdf,xlsx,docx,pptx,xls,outlook]``).
 
+- **`get-content-mrs-preprocessor`** — runs a small, intentionally-dumb
+  C-style preprocessor over a file and returns a **block** of the definitions it
+  found (one field per macro, each body stored verbatim as text). Args: ``path``
+  (required), ``current_dir`` (optional; root directory for resolving
+  ``#include`` paths, default = the starting file's directory), and
+  ``case_insensitive`` (optional boolean, default ``false``). Supports
+  ``#define``, ``#include "…"`` / ``#include <…>``, ``#if``/``#elif``/``#else``/
+  ``#endif``, and ``#ifdef``/``#ifndef``; ``#if`` expressions support
+  ``defined(NAME)`` / ``defined NAME``, comparisons, ``&& || !``, and basic
+  integer arithmetic (no string comparison). Unknown directives, function-like
+  macros and recursion are ignored/handled best-effort; unresolved or recursive
+  ``#include`` fails loudly. Files are decoded by their byte-order mark (UTF-8,
+  UTF-16 LE/BE and UTF-32 LE/BE; the BOM is stripped), and a file with no BOM is
+  read as UTF-8. Stdlib only; no pip dependency.
+
 - **`literal`** — put a fixed constant on one side of a rule. Args: ``value``
   (required; a typed constant — text, number, boolean, path, date, or raw JSON).
   A JSON array becomes a collection (with 1-based provisional names) via
