@@ -55,6 +55,7 @@ def test_source_readers_are_marked_as_sources():
     kinds = {c['name']: c['kind'] for c in get_cmdlet_metadata()['cmdlets']}
     assert kinds['get-content-excel'] == 'source'
     assert kinds['get-content-mdd'] == 'source'
+    assert kinds['get-content-msmarkitdown'] == 'source'
     assert kinds['get-content-text'] == 'source'
     assert kinds['get-content'] == 'source'
     assert kinds['get-filesystem-obj-info'] == 'source'
@@ -99,6 +100,9 @@ def test_cmdlet_permission_groups():
     assert perms['get-content-mdd'] == [
         'deps-extended', 'deps-extended-win32com', 'filesystem',
     ]
+    assert perms['get-content-msmarkitdown'] == [
+        'deps-extended', 'deps-extended-markitdown', 'filesystem',
+    ]
     assert perms['get-content-network-fetch'] == ['deps-stdlib-only', 'network']
     assert perms['transform-strip-html'] == [
         'deps-extended', 'deps-extended-beautifulsoup4',
@@ -113,6 +117,7 @@ def test_cmdlet_permission_groups():
         'get-filesystem-obj-info',
         'get-content-excel',
         'get-content-mdd',
+        'get-content-msmarkitdown',
         'get-content-network-fetch',
         'transform-strip-html',
     }

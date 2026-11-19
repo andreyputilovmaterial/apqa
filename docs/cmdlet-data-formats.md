@@ -473,6 +473,11 @@ read their input from ``args``). Currently implemented:
   ``DataType``, ``IsSystem``, ``HasCaseData``, ``IsGrid``, ``MinValue``/
   ``MaxValue`` and, for shared-list references, ``IsReference``/``ReferenceName``).
 
+- **`get-content-msmarkitdown`** — converts a file (Office documents, PDF, and
+  other formats MarkItDown can read) into a single Markdown **text** value.
+  Args: ``path`` (required). Optional dependency: ``markitdown`` with the
+  document-format extras (``markitdown[pdf,xlsx,docx,pptx,xls,outlook]``).
+
 - **`literal`** — put a fixed constant on one side of a rule. Args: ``value``
   (required; a typed constant — text, number, boolean, path, date, or raw JSON).
   A JSON array becomes a collection (with 1-based provisional names) via

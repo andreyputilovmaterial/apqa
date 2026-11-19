@@ -37,6 +37,7 @@ def test_collect_optional_dependencies_only_includes_installables():
     entries = dict(build_templates.collect_optional_dependencies())
     assert entries['get_content_excel'] == ['openpyxl>=3']
     assert entries['get_content_mdd'] == ['pywin32']
+    assert entries['get_content_msmarkitdown'] == ['markitdown[pdf,xlsx,docx,pptx,xls,outlook]>=0.1.8']
     assert entries['transform_strip_html'] == ['beautifulsoup4>=4']
     # stdlib-only cmdlets have a comment-only requirements.txt → nothing to install
     assert 'get_content' not in entries
