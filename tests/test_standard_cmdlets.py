@@ -334,6 +334,87 @@ def test_transform_text_regex_rejects_negative_count():
         )
 
 
+# ---- text code assignment grabbing -------------------------------------------
+
+def test_transform_text_code_grab_assignments_mrs_grabs_basic_assignments():
+    text = (
+        "... something  \n"
+        "   ProgramVersion = 4343 ' set Program Version  \n"
+        " ...\n"
+        ' ProgramVersion = "aaa"\n'
+        " ... "
+    )
+    assert cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        text, {'variable_name': 'ProgramVersion'}
+    ) == ['4343', '"aaa"']
+
+
+def test_transform_text_code_grab_assignments_mrs_returns_a_collection_of_strings():
+    result = cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        'ProgramVersion = 4343\n', {'variable_name': 'ProgramVersion'}
+    )
+    assert isinstance(result, list)
+    assert result[0] == '4343'
+    assert result[0].type_name == 'text'
+
+
+def test_transform_text_code_grab_assignments_mrs_no_match_returns_empty():
+    assert cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        'nothing relevant\n', {'variable_name': 'ProgramVersion'}
+    ) == []
+
+
+def test_transform_text_code_grab_assignments_mrs_ignores_other_variables():
+    text = 'OtherVar = 1\nProgramVersion = 4343\n'
+    assert cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        text, {'variable_name': 'ProgramVersion'}
+    ) == ['4343']
+
+
+def test_transform_text_code_grab_assignments_mrs_keeps_value_verbatim():
+    # The captured group is returned as-is: quotes and inner spacing are kept.
+    text = "ProgramVersion = \"aaa\" ' comment\nProgramVersion = 12 34\n"
+    assert cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        text, {'variable_name': 'ProgramVersion'}
+    ) == ['"aaa"', '12 34']
+
+
+def test_transform_text_code_grab_assignments_mrs_handles_crlf():
+    text = 'ProgramVersion = 4343\r\nProgramVersion = "aaa"\r\n'
+    assert cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        text, {'variable_name': 'ProgramVersion'}
+    ) == ['4343', '"aaa"']
+
+
+def test_transform_text_code_grab_assignments_mrs_escapes_name_metacharacters():
+    # The variable name is matched literally, so regex metacharacters do not act
+    # as a pattern and a name like `a.b` only matches `a.b`.
+    text = 'a.b = 1\naXb = 2\n'
+    assert cmdlets.get('transform-text-code-grab-assignments-mrs')(
+        text, {'variable_name': 'a.b'}
+    ) == ['1']
+
+
+def test_transform_text_code_grab_assignments_mrs_requires_text():
+    with pytest.raises(TypeError):
+        cmdlets.get('transform-text-code-grab-assignments-mrs')(
+            5, {'variable_name': 'ProgramVersion'}
+        )
+    with pytest.raises(TypeError):
+        cmdlets.get('transform-text-code-grab-assignments-mrs')(
+            sysmissing, {'variable_name': 'ProgramVersion'}
+        )
+
+
+def test_transform_text_code_grab_assignments_mrs_requires_variable_name():
+    with pytest.raises(ValueError):
+        cmdlets.get('transform-text-code-grab-assignments-mrs')('x = 1', {})
+    with pytest.raises(ValueError):
+        cmdlets.get('transform-text-code-grab-assignments-mrs')(
+            'x = 1', {'variable_name': ''}
+        )
+
+
 # ---- text cleaning (markup -> plain text) -----------------------------------
 
 def test_transform_strip_html_removes_inline_tags():

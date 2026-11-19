@@ -38,8 +38,9 @@ Sections fall into two groups:
   `Dates & time`.
 - **Cmdlet behaviour** — what individual cmdlets (and the editor around them) do:
   `Cmdlet naming`, `Validation cmdlets`, `Predicate cmdlets`, `Standard scalar
-  cmdlets`, `Text cleaning cmdlets`, `Shape-changing operations`, `Source
-  readers`, `Network cmdlets`, `Editor metadata`, and `Folder aliases`.
+  cmdlets`, `Text cleaning cmdlets`, `Text extraction cmdlets`,
+  `Shape-changing operations`, `Source readers`, `Network cmdlets`,
+  `Editor metadata`, and `Folder aliases`.
 
 So the "names" in `Row & column names (missing or duplicate)` are the
 **row/column (field/record) names inside the data**, not cmdlet names.
@@ -296,6 +297,24 @@ markup/formatting. The common prefix is `transform-` (see
   `beautifulsoup4` is an optional dependency (see the cmdlet's `requirements.txt`);
   the cmdlet is always registered and only raises its import error when run
   without it.
+
+## Text extraction cmdlets
+
+A **text extraction** cmdlet pulls structured pieces out of a text value (the
+common prefix is `transform-text-`, shared with the text cleaning family):
+
+- `transform-text-code-grab-assignments-mrs` — scan a text value line by line
+  for Basic-style assignment statements (`NAME = VALUE`, where a `'` single
+  quote starts an inline comment) and return a **collection** of the captured
+  `VALUE` strings, one element per matching line. `args['variable_name']` is the
+  variable name to look for, matched literally (not as a regular expression).
+  The per-line match is
+
+      ^\s*<variable_name>\s*=\s*([^\n]*?)\s*(?:'[^\n]*?)?\s*?$
+
+  applied with `re.MULTILINE`; the captured value is kept verbatim (so a quoted
+  value stays `"aaa"`), and lines that do not match contribute nothing. A
+  non-text value (including `sysmissing`) raises.
 
 ## Shape-changing operations
 
