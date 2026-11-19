@@ -76,19 +76,31 @@ def normalize_display(parts):
 def normalize_permissions(permissions):
     """Normalize a permission-group declaration into a sorted list of names.
 
-    A cmdlet declares the permission groups it requires to run; most cmdlets
-    require none. ``None`` means no groups and a single string is accepted as a
-    one-group shorthand. The result is de-duplicated and sorted so the metadata
-    stays stable.
+    A cmdlet declares the permission groups it requires to run. The groups fall
+    into two families:
 
-    Group names are free-form strings; the two groups defined today are
-    ``'filesystem'`` (reads/touches physical files) and ``'network'`` (makes a
-    network request). Enforcement happens at run time in
-    ``chain_runner.run_chain`` against the session's ``UserSettings`` (see
-    ``src/user_settings.py``).
+    - **capability** groups — what the cmdlet *does*: ``'filesystem'``
+      (reads/touches physical files) and ``'network'`` (makes a network
+      request);
+    - **dependency** groups — which modules the cmdlet must load to run:
+      ``'deps-stdlib-only'`` (only the Python standard library) or
+      ``'deps-extended'`` plus a specific ``'deps-extended-<lib>'`` (e.g.
+      ``'deps-extended-openpyxl'``, ``'deps-extended-win32com'``,
+      ``'deps-extended-beautifulsoup4'``).
+
+    Most cmdlets only need the standard library, so when no dependency group is
+    declared the list defaults to ``['deps-stdlib-only']``. A cmdlet that loads
+    a non-stdlib module declares both the ``'deps-extended'`` umbrella and the
+    specific ``'deps-extended-<lib>'`` group. Declaring ``'deps-stdlib-only'``
+    together with any ``'deps-extended*'`` group is contradictory and rejected.
+
+    ``None`` means no groups and a single string is accepted as a one-group
+    shorthand. The result is de-duplicated and sorted so the metadata stays
+    stable. Enforcement happens at run time in ``chain_runner.run_chain``
+    against the session's ``UserSettings`` (see ``src/user_settings.py``).
     """
     if permissions is None:
-        return []
+        permissions = []
     if isinstance(permissions, str):
         permissions = [permissions]
     if not isinstance(permissions, (list, tuple)):
@@ -98,7 +110,23 @@ def normalize_permissions(permissions):
         if not isinstance(name, str) or not name:
             raise ValueError('each permission group must be a non-empty string')
         result.append(name)
-    return sorted(set(result))
+    groups = sorted(set(result))
+
+    has_stdlib = 'deps-stdlib-only' in groups
+    has_extended = any(
+        name == 'deps-extended' or name.startswith('deps-extended-')
+        for name in groups
+    )
+
+    if has_stdlib and has_extended:
+        raise ValueError(
+            "cmdlet permissions cannot mix 'deps-stdlib-only' with a "
+            "'deps-extended*' dependency group"
+        )
+    if not has_stdlib and not has_extended:
+        groups.append('deps-stdlib-only')
+
+    return sorted(set(groups))
 
 
 class CmdletRegistry:
@@ -122,9 +150,12 @@ class CmdletRegistry:
     - ``help`` — a short description shown in the editor; defaults to the
       function's docstring.
     - ``permissions`` — an optional list of permission-group names the cmdlet
-      requires (see :func:`normalize_permissions`); empty by default. Enforced
-      at run time by the chain runner against the session's ``UserSettings``
-      allow-list (see ``src/user_settings.py``).
+      requires (see :func:`normalize_permissions`); capability groups such as
+      ``filesystem``/``network`` and dependency groups such as
+      ``deps-stdlib-only`` or ``deps-extended`` + ``deps-extended-<lib>``.
+      Defaults to ``deps-stdlib-only`` when no dependency group is declared.
+      Enforced at run time by the chain runner against the session's
+      ``UserSettings`` allow-list (see ``src/user_settings.py``).
     - ``compact`` / ``full`` — optional display specs (an ordered list of parts,
       see :func:`normalize_display`) describing how the cmdlet is rendered in the
       compact and full views; absent means the default ``name args`` rendering.

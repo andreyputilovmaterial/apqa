@@ -175,7 +175,7 @@ def test_foreach_cmdlet_metadata():
     meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
     for name in ('foreach-item', 'foreach-field', 'foreach-deep-node'):
         assert meta[name]['kind'] == 'processor'
-        assert meta[name]['permissions'] == []
+        assert meta[name]['permissions'] == ['deps-stdlib-only']
         transform = {a['name']: a for a in meta[name]['args']}['transform']
         assert transform['type'] == 'cmdlet-chain'
         assert transform['required'] is True

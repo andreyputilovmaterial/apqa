@@ -43,8 +43,8 @@ class UserSettings:
         """Return ``True`` when every required group is currently granted.
 
         ``required_permissions`` is an iterable of permission-group names (a
-        cmdlet's declared ``permissions`` list, usually empty). An empty/``None``
-        requirement always passes.
+        cmdlet's declared ``permissions`` list). An empty/``None`` requirement
+        always passes.
         """
         for group in _as_set(required_permissions):
             if not self._permissions.get(group, True):

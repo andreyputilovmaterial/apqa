@@ -4,10 +4,10 @@ MDD files (IBM SPSS Data Collection / Unicom Intelligence metadata) are only
 readable through the COM API exposed by MDM/Professional, so running this cmdlet
 requires Windows, MDM/Professional installed, and ``pywin32`` (``win32com.client``).
 
-Optional dependency: ``pywin32`` (see ``requirements.txt``). The import is guarded
-so a missing dependency never breaks loading this module or listing the cmdlet —
-only *running* the cmdlet raises a readable error (chained to the original import
-error).
+Optional dependency: ``pywin32`` (see ``requirements.txt``). It is lazy-imported —
+loaded only when the cmdlet actually runs, never at module import — so a missing
+dependency never breaks loading this module or listing the cmdlet; only *running*
+the cmdlet raises a readable error (chained to the original import error).
 
 Args (stored named mapping):
     path                 required; full path to the ``.mdd`` file.
@@ -68,13 +68,16 @@ import re
 from ..registry import cmdlets
 from ..value_types import Block, Collection, PipeValue, from_plain
 
-try:
-    import win32com.client as _win32com_client
-except Exception as error:  # noqa: BLE001 - any missing-dependency failure
-    _win32com_client = None
-    _import_error = error
-else:
-    _import_error = None
+
+def _get_win32com_client():
+    """Import ``win32com.client`` lazily (only when the cmdlet actually runs)."""
+    try:
+        import win32com.client as client
+    except Exception as error:  # noqa: BLE001 - any missing-dependency failure
+        raise ImportError(
+            "get-content-mdd: missing optional dependency 'pywin32'"
+        ) from error
+    return client
 
 
 _DEFAULT_CONTEXT = 'Analysis'
@@ -176,7 +179,7 @@ def _open_document(path, method):
         raise FileNotFoundError(f'get-content-mdd: file not found: {path}')
 
     try:
-        document = _win32com_client.Dispatch('MDM.Document')
+        document = _get_win32com_client().Dispatch('MDM.Document')
     except Exception as error:  # noqa: BLE001
         raise RuntimeError(
             "get-content-mdd: cannot create 'MDM.Document' COM object "
@@ -625,17 +628,14 @@ class _MDDReader:
             'description': 'Expand shared-list references into their elements.',
         },
     ],
-    permissions=['filesystem'],
+    permissions=['filesystem', 'deps-extended', 'deps-extended-win32com'],
     compact=[
         {'text': '[mdd]', 'role': 'logo'},
         {'arg': 'path'},
     ],
 )
 def get_content_mdd(value: PipeValue, args: dict) -> Block:
-    if _import_error is not None:
-        raise ImportError(
-            "get-content-mdd: missing optional dependency 'pywin32'"
-        ) from _import_error
+    _get_win32com_client()  # fail early with a readable ImportError if pywin32 is missing
 
     path = args.get('path')
     if not path:

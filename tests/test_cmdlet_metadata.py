@@ -87,22 +87,38 @@ def test_every_cmdlet_has_permission_list():
 
 def test_cmdlet_permission_groups():
     perms = {c['name']: c['permissions'] for c in get_cmdlet_metadata()['cmdlets']}
-    filesystem_readers = (
+    # Stdlib file readers keep their `filesystem` capability group and default to
+    # the `deps-stdlib-only` dependency group.
+    for name in ('get-content', 'get-content-text', 'get-filesystem-obj-info'):
+        assert perms[name] == ['deps-stdlib-only', 'filesystem']
+    # Extended-dependency file readers carry the `deps-extended` umbrella plus the
+    # specific library group, alongside `filesystem`.
+    assert perms['get-content-excel'] == [
+        'deps-extended', 'deps-extended-openpyxl', 'filesystem',
+    ]
+    assert perms['get-content-mdd'] == [
+        'deps-extended', 'deps-extended-win32com', 'filesystem',
+    ]
+    assert perms['get-content-network-fetch'] == ['deps-stdlib-only', 'network']
+    assert perms['transform-strip-html'] == [
+        'deps-extended', 'deps-extended-beautifulsoup4',
+    ]
+    # `validate-network-request-result` only inspects an already-fetched block; it
+    # makes no request itself, so it needs no capability group — only the stdlib
+    # default dependency group.
+    assert perms['validate-network-request-result'] == ['deps-stdlib-only']
+    special = {
         'get-content',
         'get-content-text',
+        'get-filesystem-obj-info',
         'get-content-excel',
         'get-content-mdd',
-        'get-filesystem-obj-info',
-    )
-    for name in filesystem_readers:
-        assert perms[name] == ['filesystem']
-    assert perms['get-content-network-fetch'] == ['network']
-    # `validate-network-request-result` only inspects an already-fetched block;
-    # it makes no request itself, so it requires no group.
-    assert perms['validate-network-request-result'] == []
+        'get-content-network-fetch',
+        'transform-strip-html',
+    }
     for name, groups in perms.items():
-        if name not in filesystem_readers and name != 'get-content-network-fetch':
-            assert groups == []
+        if name not in special:
+            assert groups == ['deps-stdlib-only']
 
 
 def test_shape_cmdlet_kinds_and_args():
@@ -254,16 +270,22 @@ def test_normalize_display():
 def test_normalize_permissions():
     from src.cmdlets.registry import normalize_permissions
 
-    assert normalize_permissions(None) == []
-    assert normalize_permissions('network') == ['network']
+    assert normalize_permissions(None) == ['deps-stdlib-only']
+    assert normalize_permissions('network') == ['deps-stdlib-only', 'network']
     assert normalize_permissions(['network', 'filesystem', 'network']) == [
+        'deps-stdlib-only',
         'filesystem',
         'network',
     ]
+    assert normalize_permissions(
+        ['deps-extended', 'deps-extended-openpyxl', 'filesystem'],
+    ) == ['deps-extended', 'deps-extended-openpyxl', 'filesystem']
     with pytest.raises(ValueError):
         normalize_permissions(42)
     with pytest.raises(ValueError):
         normalize_permissions(['ok', ''])
+    with pytest.raises(ValueError):
+        normalize_permissions(['deps-stdlib-only', 'deps-extended'])
 
 
 def test_endpoint_returns_metadata(config):

@@ -96,6 +96,25 @@ def test_denied_cmdlet_does_not_run_with_report():
         run_rule_with_report(rule, settings=settings)
 
 
+def test_denied_extended_dependency_group_blocks_cmdlet():
+    # Denying the `deps-extended` umbrella forbids a cmdlet that loads a
+    # non-stdlib library, before its body (and the lazy import) ever runs.
+    settings = UserSettings()
+    settings.deny('deps-extended')
+    rule = {
+        'left': [
+            {'cmdlet': 'get-content-excel', 'args': {'path': '/does/not/exist.xlsx'}},
+        ],
+        'op': 'cmp-eq',
+        'right': [_literal(1)],
+    }
+    with pytest.raises(ChainError) as excinfo:
+        run_rule(rule, settings=settings)
+    assert 'requires permission group' in str(excinfo.value)
+    assert 'deps-extended' in str(excinfo.value)
+    assert isinstance(excinfo.value.__cause__, PermissionDeniedError)
+
+
 def test_nested_chain_cmdlet_is_gated():
     settings = UserSettings()
     settings.deny('filesystem')

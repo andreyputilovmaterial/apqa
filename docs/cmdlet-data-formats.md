@@ -512,12 +512,19 @@ served to the frontend by `GET /cmdlets/metadata` (see
 - an arg (and an op's `op_args`) carries `{ name, type, required, description }`
   plus optional `default` and `options`;
 - a cmdlet also carries a `permissions` list — the permission groups it requires,
-  sorted and de-duplicated, usually empty. The two groups defined today are
-  `filesystem` (reads/touches physical files) and `network` (makes a network
-  request). It is enforced at run time by the chain runner against the session's
-  in-memory `UserSettings` allow-list (`src/user_settings.py`): a cmdlet whose
-  groups are not granted does not run. By default every group is granted, so all
-  cmdlets run.
+  sorted and de-duplicated. The groups come in two families: *capability* groups
+  — `filesystem` (reads/touches physical files) and `network` (makes a network
+  request) — and *dependency* groups describing which modules the cmdlet loads:
+  `deps-stdlib-only` (only the standard library) or `deps-extended` plus a
+  specific `deps-extended-<lib>` (e.g. `deps-extended-openpyxl`,
+  `deps-extended-win32com`, `deps-extended-beautifulsoup4`). A cmdlet that
+  declares no dependency group defaults to `deps-stdlib-only`. The non-stdlib
+  libraries are lazy-imported — loaded only when the cmdlet actually runs, never
+  at module import — so registering/listing a cmdlet never pulls in its
+  dependency. It is enforced at run time by the chain runner against the
+  session's in-memory `UserSettings` allow-list (`src/user_settings.py`): a
+  cmdlet whose groups are not granted does not run. By default every group is
+  granted, so all cmdlets run.
 
 Arg `type`s: `text` (default), `number`, `boolean`, `path`, `options`, `list`,
 `strings` (a list of strings with add/remove rows), `path-rules` (a list of
