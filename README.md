@@ -59,6 +59,8 @@ Edit it (or pass your own path) to select your project.
 ## Documentation
 
 - **User guide** — the in-app **Help** page (content in [`help.md`](help.md)).
+- **Commands** — [`readme-capabilities.md`](readme-capabilities.md), a grouped list
+  of every available command (reading data, transforming, validating, …).
 - **Developer / architecture guide** — [`docs/development.md`](docs/development.md).
 - **Project state log** — [`docs/project-context.md`](docs/project-context.md).
 
