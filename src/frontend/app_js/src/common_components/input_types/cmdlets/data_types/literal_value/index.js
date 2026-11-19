@@ -9,8 +9,74 @@ import InputArgJson from '../json/index';
 
 import './styles.css';
 
-// Map a stored value to the literal type that best describes it, so existing
-// rules (whose `value` is any JSON scalar/array/object) open in the right editor.
+// A literal `value` arg is stored as a **typed** wrapper — `{ type, value }`, or
+// `{ type: 'sysmissing' }` — so the chosen type survives a save/reopen round trip
+// (a bare JSON string would otherwise reload as "text"). Rules written before the
+// typed form still carry a bare JSON value, which is inferred on open.
+const TYPE_OPTIONS = [
+  { value: 'text', label: 'text' },
+  { value: 'number', label: 'number' },
+  { value: 'boolean', label: 'boolean' },
+  { value: 'path', label: 'path' },
+  { value: 'date', label: 'date' },
+  { value: 'json', label: 'json' },
+];
+
+const EDITORS = {
+  text: InputArgText,
+  number: InputArgNumber,
+  boolean: InputArgBoolean,
+  path: InputArgPath,
+  date: InputArgDate,
+  json: InputArgJson,
+};
+
+function isTyped(value) {
+  return value !== null && typeof value === 'object' && typeof value.type === 'string';
+}
+
+function rawValueOf(value) {
+  if (!isTyped(value)) return value;
+  return value.type === 'sysmissing' ? null : value.value;
+}
+
+function storedTypeToUi(type) {
+  switch (type) {
+    case 'integer':
+    case 'real':
+      return 'number';
+    case 'block':
+    case 'collection':
+      return 'json';
+    case 'sysmissing':
+      return 'text';
+    default:
+      return type;
+  }
+}
+
+function uiTypeToStored(uiType, raw) {
+  switch (uiType) {
+    case 'number':
+      return typeof raw === 'number' && Number.isInteger(raw) ? 'integer' : 'real';
+    case 'json':
+      return Array.isArray(raw) ? 'collection' : 'block';
+    case 'boolean':
+    case 'path':
+    case 'date':
+    case 'text':
+    default:
+      return uiType || 'text';
+  }
+}
+
+function wrap(uiType, raw) {
+  if (raw === null || raw === undefined) return { type: 'sysmissing' };
+  return { type: uiTypeToStored(uiType, raw), value: raw };
+}
+
+// Infer the UI type from a bare (pre-typed-form) JSON value, so old rules open
+// in the right editor.
 function detectType(value) {
   if (value === null || value === undefined) return 'text';
   if (typeof value === 'boolean') return 'boolean';
@@ -19,9 +85,11 @@ function detectType(value) {
   return 'json'; // array or object
 }
 
-// Convert the current value when the user switches type. Rules are explicit and
-// predictable: text stringifies, number parses a numeric value (else blank
-// `sysmissing`), boolean keeps a boolean (else `false`), json keeps the value.
+function uiTypeOf(value) {
+  return isTyped(value) ? storedTypeToUi(value.type) : detectType(value);
+}
+
+// Convert the current raw value when the user switches type.
 function coerceTo(type, value) {
   switch (type) {
     case 'boolean':
@@ -46,29 +114,6 @@ function coerceTo(type, value) {
   }
 }
 
-const TYPE_OPTIONS = [
-  { value: 'text', label: 'text' },
-  { value: 'number', label: 'number' },
-  { value: 'boolean', label: 'boolean' },
-  { value: 'path', label: 'path' },
-  { value: 'date', label: 'date' },
-  { value: 'json', label: 'json' },
-];
-
-const EDITORS = {
-  text: InputArgText,
-  number: InputArgNumber,
-  boolean: InputArgBoolean,
-  path: InputArgPath,
-  date: InputArgDate,
-  json: InputArgJson,
-};
-
-// `literal-value` arg editor: an explicit type selector plus the matching typed
-// input, so a literal is unambiguously text / number / boolean / json instead of
-// guessing from raw JSON syntax. The stored `args.value` stays a single JSON
-// value (no separate type field), so existing rules keep working; the selected
-// type is a view over that value — inferred on open and coerced when changed.
 const InputArgLiteralValue = {
   inheritAttrs: false,
 
@@ -80,11 +125,12 @@ const InputArgLiteralValue = {
   emits: ['update:value'],
 
   setup(props, { emit }) {
-    const selectedType = ref(detectType(props.value));
+    const selectedType = ref(uiTypeOf(props.value));
     // Set on the emit that follows our own edit, so the watcher below does not
     // re-infer the type (and yank the selector) from a coerced/blank value.
     let internal = false;
 
+    const rawValue = computed(() => rawValueOf(props.value));
     const childComponent = computed(() => EDITORS[selectedType.value] || InputArgText);
 
     watch(
@@ -94,26 +140,26 @@ const InputArgLiteralValue = {
           internal = false;
           return;
         }
-        selectedType.value = detectType(value);
+        selectedType.value = uiTypeOf(value);
       },
       { immediate: true },
     );
 
-    function emitValue(value) {
+    function emitValue(raw) {
       internal = true;
-      emit('update:value', value);
+      emit('update:value', wrap(selectedType.value, raw));
     }
 
     function onTypeChange(event) {
       selectedType.value = event.target.value;
-      emitValue(coerceTo(selectedType.value, props.value));
+      emitValue(coerceTo(selectedType.value, rawValue.value));
     }
 
-    function onChildUpdate(value) {
-      emitValue(value);
+    function onChildUpdate(raw) {
+      emitValue(raw);
     }
 
-    return { selectedType, TYPE_OPTIONS, childComponent, onTypeChange, onChildUpdate };
+    return { selectedType, TYPE_OPTIONS, childComponent, rawValue, onTypeChange, onChildUpdate };
   },
 
   template: `
@@ -126,7 +172,7 @@ const InputArgLiteralValue = {
     <option v-for="o in TYPE_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
   </select>
   <div class="apqa-input-literal-value-editor">
-    <component :is="childComponent" :value="value" :name="name" @update:value="onChildUpdate" />
+    <component :is="childComponent" :value="rawValue" :name="name" @update:value="onChildUpdate" />
   </div>
 </div>
 `,

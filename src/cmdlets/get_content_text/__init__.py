@@ -55,7 +55,7 @@ def get_content_text(value: PipeValue, args: dict) -> Text:
     encoding = args.get('encoding') or _DEFAULT_ENCODING
     resolved = Path(path).expanduser().resolve()
     try:
-        return resolved.read_text(encoding=encoding)
+        return Text(resolved.read_text(encoding=encoding))
     except UnicodeDecodeError as error:
         raise ValueError(
             f"get-content-text: cannot decode {str(resolved)!r} as {encoding}"

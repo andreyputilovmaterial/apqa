@@ -13,7 +13,7 @@ original import error).
 """
 
 from ..registry import cmdlets
-from ..value_types import Block, Collection, PipeValue
+from ..value_types import Block, Collection, PipeValue, from_plain
 
 try:
     import openpyxl
@@ -51,10 +51,10 @@ def get_content_excel(value: PipeValue, args: dict) -> Block:
 
     workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
     try:
-        return Block({
+        return from_plain(Block({
             sheet_name: _read_sheet(workbook[sheet_name])
             for sheet_name in workbook.sheetnames
-        })
+        }))
     finally:
         close = getattr(workbook, 'close', None)
         if callable(close):

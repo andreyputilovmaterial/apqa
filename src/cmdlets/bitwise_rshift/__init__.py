@@ -35,4 +35,5 @@ def bitwise_rshift(value: PipeValue, args: dict) -> Integer:
         require_int(result, 'bitwise-rshift')
         for result in eval_operand_chains(args, 'bitwise-rshift')
     ]
-    return reduce(operator.rshift, results)
+    return Integer(reduce(operator.rshift, results))
+

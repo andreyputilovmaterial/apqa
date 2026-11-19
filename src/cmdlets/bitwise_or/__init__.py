@@ -35,4 +35,5 @@ def bitwise_or(value: PipeValue, args: dict) -> Integer:
         require_int(result, 'bitwise-or')
         for result in eval_operand_chains(args, 'bitwise-or')
     ]
-    return reduce(operator.or_, results)
+    return Integer(reduce(operator.or_, results))
+

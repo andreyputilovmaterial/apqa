@@ -35,4 +35,5 @@ def bitwise_and(value: PipeValue, args: dict) -> Integer:
         require_int(result, 'bitwise-and')
         for result in eval_operand_chains(args, 'bitwise-and')
     ]
-    return reduce(operator.and_, results)
+    return Integer(reduce(operator.and_, results))
+

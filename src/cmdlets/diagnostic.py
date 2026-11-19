@@ -25,7 +25,8 @@ multithreaded) never mix their notes.
 
 from contextlib import contextmanager
 from contextvars import ContextVar
-import re
+
+from .value_types import format_path  # noqa: F401 - re-exported for compatibility
 
 __all__ = [
     'Notes',
@@ -41,8 +42,6 @@ __all__ = [
 _NOTES = ContextVar('apqa_notes', default=None)
 
 _PATH_PREFIX = ContextVar('apqa_notes_path_prefix', default=None)
-
-_IDENTIFIER = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 
 
 def _prefixed(path):
@@ -115,29 +114,6 @@ def note_path_prefix(prefix):
         yield
     finally:
         _PATH_PREFIX.reset(token)
-
-
-def format_path(path):
-    """Render a data path as a short, human-readable address.
-
-    ``['Fields', 'BrandAwareness', 'Label']`` becomes
-    ``Fields.BrandAwareness.Label``; collection indices become ``[i]``; a key
-    that is not a plain identifier is quoted, e.g.
-    ``Fields.Gender.Elements['None of the above'].Label``.
-    """
-    result = ''
-    for part in path:
-        if isinstance(part, int):
-            result += f'[{part}]'
-            continue
-        text = f'{part}'
-        if _IDENTIFIER.match(text):
-            if result:
-                result += '.'
-            result += text
-        else:
-            result += f'[{text!r}]'
-    return result
 
 
 def format_note(note):

@@ -1,7 +1,7 @@
 """`as-integer` — convert a value to an integer."""
 
 from ..registry import cmdlets
-from ..value_types import Integer, PipeValue
+from ..value_types import Integer, PipeValue, coerce
 
 
 @cmdlets.register('as-integer', kind='processor')
@@ -10,4 +10,5 @@ def as_integer(value: PipeValue, args: dict) -> Integer:
 
     Native conversion errors propagate (e.g. ``int('3.14')`` or ``int(None)``).
     """
-    return int(value)
+    return Integer(int(coerce(value).value))
+

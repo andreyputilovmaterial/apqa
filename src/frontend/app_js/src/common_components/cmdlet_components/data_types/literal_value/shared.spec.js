@@ -23,4 +23,11 @@ describe('formatLiteralValue', () => {
     expect(formatLiteralValue([1, 2])).toBe('[1,2]');
     expect(formatLiteralValue({ a: 1 })).toBe('{"a":1}');
   });
+
+  it('renders the typed wrapper (stored literal form)', () => {
+    expect(formatLiteralValue({ type: 'path', value: '/x' })).toBe('"/x"');
+    expect(formatLiteralValue({ type: 'integer', value: 42 })).toBe('42');
+    expect(formatLiteralValue({ type: 'sysmissing' })).toBe('null');
+    expect(formatLiteralValue({ type: 'block', value: { a: 1 } })).toBe('{"a":1}');
+  });
 });

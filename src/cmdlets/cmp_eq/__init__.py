@@ -2,7 +2,8 @@
 
 from ..comparison_helpers import is_array, is_block, is_bool, to_number
 from ..registry import comparisons
-from ..sysmissing import is_sysmissing
+from ..value_types import Boolean, coerce
+from ..value_types import is_sysmissing
 
 
 def _arrays_equal_unordered(left, right, args):
@@ -35,6 +36,8 @@ def _arrays_equal_unordered(left, right, args):
     ],
 )
 def eq(left, right, args=None):
+    left = coerce(left)
+    right = coerce(right)
     unordered = bool(args and args.get('unordered_arrays'))
     if is_sysmissing(left) or is_sysmissing(right):
         return is_sysmissing(left) and is_sysmissing(right)
@@ -54,7 +57,7 @@ def eq(left, right, args=None):
             and all(eq(a, b, args) for a, b in zip(left, right))
         )
     if is_bool(left) or is_bool(right):
-        return is_bool(left) and is_bool(right) and left == right
+        return is_bool(left) and is_bool(right) and left.value == right.value
     left_num = to_number(left)
     right_num = to_number(right)
     if left_num is not None and right_num is not None:
@@ -62,3 +65,4 @@ def eq(left, right, args=None):
     if left_num is not None or right_num is not None:
         return False
     return left == right
+

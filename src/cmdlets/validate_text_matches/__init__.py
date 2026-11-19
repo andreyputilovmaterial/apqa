@@ -5,22 +5,21 @@ values are actually matched — each text leaf is searched for ``args['pattern']
 (a case-sensitive literal substring by default, or a regular expression when
 ``args['regex']`` is set). Every other scalar (``sysmissing``, booleans, numbers,
 dates, paths, …) has no text to match, so it simply passes. Compound values
-(blocks and arrays) run the same check on every field/item and combine the
+(blocks and collections) run the same check on every field/item and combine the
 results with a logical ``AND`` (an empty compound value is vacuously valid).
 
 When a text value fails, the cmdlet records a **diagnostic note** (if a run is
 collecting notes) whose path points at the offending leaf — e.g.
 ``['Fields', 'BrandAwareness', 'Label']`` — so the runner can tell the user
 exactly which field of which section did not match (see
-``docs/qc-results-reporting.md``). The cmdlet still returns a plain ``bool``, so a
-rule that compares it to ``literal(True)`` keeps working unchanged.
+``docs/qc-results-reporting.md``). The cmdlet still returns a plain ``bool``.
 """
 
 import re
 
 from ..diagnostic import current_notes
 from ..registry import cmdlets
-from ..value_types import Boolean, PipeValue
+from ..value_types import Boolean, PipeValue, Text, coerce
 
 
 @cmdlets.register(
@@ -50,12 +49,7 @@ from ..value_types import Boolean, PipeValue
     ],
 )
 def validate_text_matches(value: PipeValue, args: dict) -> Boolean:
-    """Return ``True`` when every text leaf matches ``args['pattern']``.
-
-    By default a case-sensitive literal substring search.
-    ``args['case_insensitive']`` ignores case; ``args['regex']`` treats the
-    pattern as a regular expression (``re.search``).
-    """
+    """Return ``True`` when every text leaf matches ``args['pattern']``."""
     pattern = args.get('pattern')
     if pattern is None or str(pattern) == '':
         raise ValueError("validate-text-matches: missing required arg 'pattern'")
@@ -64,31 +58,24 @@ def validate_text_matches(value: PipeValue, args: dict) -> Boolean:
     case_insensitive = bool(args.get('case_insensitive', False))
     regex = bool(args.get('regex', False))
 
-    return _check(value, [], current_notes(), pattern, case_insensitive, regex)
+    return Boolean(_check(coerce(value), current_notes(), pattern, case_insensitive, regex))
 
 
-def _check(value, path, notes, pattern, case_insensitive, regex):
-    """Recursively validate ``value`` and record a note per failing text leaf."""
-    if isinstance(value, str):
-        if _matches(value, pattern, case_insensitive, regex):
-            return True
+def _check(value, notes, pattern, case_insensitive, regex):
+    """Validate every text leaf and record a note per failing one."""
+    result = True
+    for leaf, path in value.iter_leaves_with_paths():
+        if not isinstance(leaf, Text):
+            continue
+        if _matches(leaf.value, pattern, case_insensitive, regex):
+            continue
         if notes is not None:
             notes.note(
                 path,
-                f'text does not match {pattern!r} (value: {_clip(value)!r})',
+                f'text does not match {pattern!r} (value: {_clip(leaf.value)!r})',
             )
-        return False
-    if isinstance(value, dict):
-        return all(
-            _check(field_value, path + [key], notes, pattern, case_insensitive, regex)
-            for key, field_value in value.items()
-        )
-    if isinstance(value, list):
-        return all(
-            _check(item, path + [index], notes, pattern, case_insensitive, regex)
-            for index, item in enumerate(value)
-        )
-    return True
+        result = False
+    return result
 
 
 def _matches(text, pattern, case_insensitive, regex):
@@ -105,3 +92,4 @@ def _clip(value, limit=80):
     if len(text) <= limit:
         return text
     return text[:limit - 3] + '...'
+

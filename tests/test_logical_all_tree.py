@@ -55,7 +55,7 @@ def test_validate_xml_compatible_passes_valid_tree():
         'op': 'cmp-eq',
         'right': [_literal(True)],
     }
-    assert run_rule(rule) is True
+    assert run_rule(rule) == True
 
 
 def test_foreach_deep_node_then_logical_all_passes_valid_tree():
@@ -71,7 +71,7 @@ def test_foreach_deep_node_then_logical_all_passes_valid_tree():
         'op': 'cmp-eq',
         'right': [_literal(True)],
     }
-    assert run_rule(rule) is True
+    assert run_rule(rule) == True
 
 
 def test_validate_xml_compatible_reports_failed_path():
@@ -81,7 +81,7 @@ def test_validate_xml_compatible_reports_failed_path():
         'right': [_literal(True)],
     }
     result, notes = run_rule_with_report(rule)
-    assert result is False
+    assert result == False
     assert len(notes) == 1
     assert notes[0]['path'] == ['Fields', 'BrandAwareness', 'Text']
     assert 'not XML-compatible' in notes[0]['message']
@@ -101,7 +101,7 @@ def test_foreach_deep_node_then_logical_all_reports_same_failed_path():
         'right': [_literal(True)],
     }
     result, notes = run_rule_with_report(rule)
-    assert result is False
+    assert result == False
     assert len(notes) == 1
     assert notes[0]['path'] == ['Fields', 'BrandAwareness', 'Text']
     assert 'not XML-compatible' in notes[0]['message']

@@ -34,7 +34,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from ..registry import cmdlets
-from ..value_types import Block, PipeValue
+from ..value_types import Block, PipeValue, Text, coerce, from_plain
 
 _DEFAULT_METHOD = 'GET'
 _DEFAULT_TIMEOUT = 30
@@ -76,12 +76,13 @@ _ALLOWED_SCHEMES = ('http', 'https')
 )
 def get_content_network_fetch(value: PipeValue, args: dict) -> Block:
     """Fetch ``value`` (a URL) and return a ``{status, body, headers}`` block."""
-    if not isinstance(value, str):
+    value = coerce(value)
+    if not isinstance(value, Text):
         raise TypeError(
             'get-content-network-fetch: expected a URL as text, got '
-            f'{type(value).__name__}'
+            f'{value.type_name}'
         )
-    url = value.strip()
+    url = value.value.strip()
     if url == '':
         raise ValueError('get-content-network-fetch: URL must not be empty')
 
@@ -118,7 +119,7 @@ def get_content_network_fetch(value: PipeValue, args: dict) -> Block:
         if callable(close):
             close()
 
-    return Block({'status': status, 'body': body, 'headers': headers})
+    return from_plain(Block({'status': status, 'body': body, 'headers': headers}))
 
 
 def _normalize_method(method):
@@ -179,7 +180,7 @@ def _headers_block(message):
     block = Block()
     for name, value in message.items():
         if name in block:
-            block[name] = f'{block[name]}, {value}'
+            block[name] = f'{block[name].value}, {value}'
         else:
             block[name] = value
     return block

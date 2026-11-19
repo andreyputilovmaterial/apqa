@@ -29,4 +29,5 @@ def logical_or(value: PipeValue, args: dict) -> Boolean:
     with a source reader); every operand is converted to boolean, so
     ``sysmissing`` counts as ``False``. The piped value is ignored.
     """
-    return any(bool(result) for result in eval_operand_chains(args, 'logical-or'))
+    return Boolean(any(bool(result) for result in eval_operand_chains(args, 'logical-or')))
+

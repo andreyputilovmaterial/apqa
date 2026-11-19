@@ -6,7 +6,7 @@ which is not implemented yet.
 """
 
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import PipeValue, coerce
 
 
 @cmdlets.register(
@@ -24,22 +24,9 @@ from ..value_types import PipeValue
 )
 def select_item(value: PipeValue, args: dict) -> PipeValue:
     """Return ``collection[index]`` (Python indexing semantics, negatives allowed)."""
-    if not isinstance(value, list):
-        raise TypeError(f'select-item: expected a collection, got {type(value).__name__}')
-
     index = args.get('index')
     if index is None:
         raise ValueError("select-item: missing required arg 'index'")
-    if isinstance(index, bool) or not isinstance(index, int):
-        raise TypeError(
-            f'select-item: index must be an integer, got {type(index).__name__}'
-        )
 
-    try:
-        result = value[index]
-    except IndexError:
-        raise ValueError(
-            f'select-item: index {index} out of range for collection of length {len(value)}'
-        ) from None
+    return coerce(value).item(index)
 
-    return result

@@ -35,4 +35,5 @@ def bitwise_xor(value: PipeValue, args: dict) -> Integer:
         require_int(result, 'bitwise-xor')
         for result in eval_operand_chains(args, 'bitwise-xor')
     ]
-    return reduce(operator.xor, results)
+    return Integer(reduce(operator.xor, results))
+

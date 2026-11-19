@@ -10,7 +10,7 @@ if str(REPO_ROOT) not in sys.path:
 import pytest
 
 from src.cmdlets.include_child import include_child
-from src.cmdlets.value_types import Collection
+from src.cmdlets.value_types import Collection, sysmissing
 
 
 def _rule(pattern, **kwargs):
@@ -31,7 +31,7 @@ def test_keeps_multiple_by_startswith():
 def test_does_not_recurse():
     value = {'Fields': {'Cluster': {'Select': 1}}}
     # Only 'Fields' is a direct child; 'Cluster' is not, so nothing is kept.
-    assert include_child(value, {'rules': [_rule('Cluster')]}) is None
+    assert include_child(value, {'rules': [_rule('Cluster')]}) is sysmissing
 
 
 def test_keeps_array_element():
@@ -47,12 +47,12 @@ def test_case_insensitive_key():
 
 
 def test_scalar_root_returns_none():
-    assert include_child(5, {'rules': [_rule('x')]}) is None
+    assert include_child(5, {'rules': [_rule('x')]}) is sysmissing
 
 
 def test_empty_rules_returns_none():
-    assert include_child({'a': 1}, {'rules': []}) is None
-    assert include_child({'a': 1}, {}) is None
+    assert include_child({'a': 1}, {'rules': []}) is sysmissing
+    assert include_child({'a': 1}, {}) is sysmissing
 
 
 def test_rejects_non_list_rules():

@@ -1,7 +1,7 @@
 """`as-boolean` — convert a value to boolean."""
 
 from ..registry import cmdlets
-from ..value_types import Boolean, PipeValue
+from ..value_types import Boolean, PipeValue, coerce
 
 
 @cmdlets.register('as-boolean', kind='processor')
@@ -9,7 +9,7 @@ def as_boolean(value: PipeValue, args: dict) -> Boolean:
     """Convert ``value`` to a boolean using Python's truthiness.
 
     ``sysmissing``, an empty string, an empty array/block, and zero become
-    ``False``; any other stored value becomes ``True``. This matches ``count``,
-    which returns 0 for those same empty cases.
+    ``False``; any other stored value becomes ``True``.
     """
-    return bool(value)
+    return Boolean(bool(coerce(value)))
+

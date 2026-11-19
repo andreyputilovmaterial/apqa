@@ -1,45 +1,44 @@
 """Shared helpers for the ``cmp-*`` comparison ops."""
 
-from datetime import date, datetime
-
-from .sysmissing import is_sysmissing
+from .value_types import Boolean, Collection, DateTime, Integer, Real, Text
+from .value_types import is_sysmissing
 
 
 def is_bool(value):
-    return isinstance(value, bool)
+    return isinstance(value, Boolean)
 
 
 def is_number(value):
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
+    return isinstance(value, (Integer, Real))
 
 
 def is_text(value):
-    return isinstance(value, str)
+    return isinstance(value, Text)
 
 
 def is_datetime_like(value):
-    return isinstance(value, (date, datetime))
+    return isinstance(value, DateTime)
 
 
 def is_block(value):
-    return isinstance(value, dict)
+    from .value_types import Block
+    return isinstance(value, Block)
 
 
 def is_array(value):
-    return isinstance(value, list)
+    return isinstance(value, Collection)
 
 
 def to_number(value):
     """Return the numeric value of ``value`` if it is a number or a numeric
-    string (e.g. ``"42"``, ``"3.14"``), otherwise ``None``.
+    string (e.g. ``Text('42')``, ``Text('3.14')``), otherwise ``None``.
 
-    Booleans and non-numeric text are deliberately excluded (``True`` and
-    ``"abc"`` are not numbers).
+    Booleans and non-numeric text are deliberately excluded.
     """
     if is_number(value):
-        return value
+        return value.value
     if is_text(value):
-        text = value.strip()
+        text = value.value.strip()
         if text == '':
             return None
         try:
@@ -73,7 +72,8 @@ def ordered_compare(op, left, right):
     left_dt = is_datetime_like(left)
     right_dt = is_datetime_like(right)
     if left_dt or right_dt:
-        return op(left, right) if (left_dt and right_dt) else False
+        return op(left.value, right.value) if (left_dt and right_dt) else False
     if is_text(left) and is_text(right):
-        return op(left, right)
+        return op(left.value, right.value)
     return False
+

@@ -51,14 +51,14 @@ def test_as_real():
 
 def test_as_boolean():
     b = cmdlets.get('as-boolean')
-    assert b(sysmissing, {}) is False
-    assert b('', {}) is False
-    assert b([], {}) is False
-    assert b({}, {}) is False
-    assert b(0, {}) is False
-    assert b('x', {}) is True
-    assert b(1, {}) is True
-    assert b([0], {}) is True
+    assert b(sysmissing, {}) == False
+    assert b('', {}) == False
+    assert b([], {}) == False
+    assert b({}, {}) == False
+    assert b(0, {}) == False
+    assert b('x', {}) == True
+    assert b(1, {}) == True
+    assert b([0], {}) == True
 
 
 def test_as_path():
@@ -94,15 +94,15 @@ def test_as_date_uses_tz_arg_for_naive_datetime():
     result = cmdlets.get('as-date')(
         datetime(2025, 7, 15, 10, 0), {'tz': 'Europe/Berlin'}
     )
-    assert result.hour == 10
-    assert result.tzinfo is not None
+    assert result.value.hour == 10
+    assert result.value.tzinfo is not None
 
 
 def test_as_date_uses_tz_arg_for_naive_text():
     result = cmdlets.get('as-date')(
         '2025-07-15T10:00:00', {'tz': '+02:00'}
     )
-    assert result.utcoffset() == timedelta(hours=2)
+    assert result.value.utcoffset() == timedelta(hours=2)
 
 
 def test_as_date_rejects_invalid_tz_arg():
@@ -116,114 +116,114 @@ def test_as_date_rejects_invalid_tz_arg():
 
 def test_not():
     n = cmdlets.get('logical-not')
-    assert n(False, {}) is True
-    assert n('', {}) is True
-    assert n(sysmissing, {}) is True
-    assert n(1, {}) is False
+    assert n(False, {}) == True
+    assert n('', {}) == True
+    assert n(sysmissing, {}) == True
+    assert n(1, {}) == False
 
 
 def test_and():
     a = cmdlets.get('logical-and')
-    assert a(None, _operands(True, 1, 'x')) is True
-    assert a(None, _operands(True, 0)) is False
-    assert a(None, _operands(True, sysmissing)) is False
+    assert a(None, _operands(True, 1, 'x')) == True
+    assert a(None, _operands(True, 0)) == False
+    assert a(None, _operands(True, sysmissing)) == False
 
 
 def test_or():
     o = cmdlets.get('logical-or')
-    assert o(None, _operands(False, '', 2)) is True
-    assert o(None, _operands(False, '', 0)) is False
+    assert o(None, _operands(False, '', 2)) == True
+    assert o(None, _operands(False, '', 0)) == False
 
 
 def test_any():
-    assert cmdlets.get('logical-any')([0, '', 3], {}) is True
-    assert cmdlets.get('logical-any')([0, '', None], {}) is False
+    assert cmdlets.get('logical-any')([0, '', 3], {}) == True
+    assert cmdlets.get('logical-any')([0, '', None], {}) == False
 
 
 def test_all():
-    assert cmdlets.get('logical-all')([1, 'x'], {}) is True
-    assert cmdlets.get('logical-all')([1, ''], {}) is False
+    assert cmdlets.get('logical-all')([1, 'x'], {}) == True
+    assert cmdlets.get('logical-all')([1, ''], {}) == False
 
 
 def test_any_and_all_traverse_compound_trees():
-    assert cmdlets.get('logical-all')({'a': [1, 2], 'b': {'c': 'x'}}, {}) is True
-    assert cmdlets.get('logical-all')({'a': [1, 0], 'b': {'c': 'x'}}, {}) is False
-    assert cmdlets.get('logical-any')({'a': [0, ''], 'b': {'c': 'x'}}, {}) is True
-    assert cmdlets.get('logical-any')({'a': [0, ''], 'b': {'c': ''}}, {}) is False
+    assert cmdlets.get('logical-all')({'a': [1, 2], 'b': {'c': 'x'}}, {}) == True
+    assert cmdlets.get('logical-all')({'a': [1, 0], 'b': {'c': 'x'}}, {}) == False
+    assert cmdlets.get('logical-any')({'a': [0, ''], 'b': {'c': 'x'}}, {}) == True
+    assert cmdlets.get('logical-any')({'a': [0, ''], 'b': {'c': ''}}, {}) == False
 
 
 def test_any_and_all_accept_scalar():
-    assert cmdlets.get('logical-all')(5, {}) is True
-    assert cmdlets.get('logical-all')('', {}) is False
-    assert cmdlets.get('logical-any')(0, {}) is False
-    assert cmdlets.get('logical-any')('abc', {}) is True
+    assert cmdlets.get('logical-all')(5, {}) == True
+    assert cmdlets.get('logical-all')('', {}) == False
+    assert cmdlets.get('logical-any')(0, {}) == False
+    assert cmdlets.get('logical-any')('abc', {}) == True
 
 
 def test_any_and_all_empty_compounds():
-    assert cmdlets.get('logical-all')([], {}) is True
-    assert cmdlets.get('logical-all')({}, {}) is True
-    assert cmdlets.get('logical-any')([], {}) is False
-    assert cmdlets.get('logical-any')({}, {}) is False
+    assert cmdlets.get('logical-all')([], {}) == True
+    assert cmdlets.get('logical-all')({}, {}) == True
+    assert cmdlets.get('logical-any')([], {}) == False
+    assert cmdlets.get('logical-any')({}, {}) == False
 
 
 # ---- logical (three-valued) -------------------------------------------------
 
 def test_tristate_not():
     n = cmdlets.get('logical-tristate-not')
-    assert n(False, {}) is True
-    assert n(True, {}) is False
-    assert n(sysmissing, {}) is None
-    assert n('', {}) is True
-    assert n(1, {}) is False
+    assert n(False, {}) == True
+    assert n(True, {}) == False
+    assert n(sysmissing, {}) is sysmissing
+    assert n('', {}) == True
+    assert n(1, {}) == False
 
 
 def test_tristate_and():
     a = cmdlets.get('logical-tristate-and')
-    assert a(None, _operands(True, 1, 'x')) is True
-    assert a(None, _operands(True, 0)) is False
-    assert a(None, _operands(True, sysmissing)) is None
-    assert a(None, _operands(True, 0, sysmissing)) is False
+    assert a(None, _operands(True, 1, 'x')) == True
+    assert a(None, _operands(True, 0)) == False
+    assert a(None, _operands(True, sysmissing)) is sysmissing
+    assert a(None, _operands(True, 0, sysmissing)) == False
 
 
 def test_tristate_or():
     o = cmdlets.get('logical-tristate-or')
-    assert o(None, _operands(False, '', 2)) is True
-    assert o(None, _operands(False, '', 0)) is False
-    assert o(None, _operands(False, '', sysmissing)) is None
-    assert o(None, _operands(False, '', 2, sysmissing)) is True
+    assert o(None, _operands(False, '', 2)) == True
+    assert o(None, _operands(False, '', 0)) == False
+    assert o(None, _operands(False, '', sysmissing)) is sysmissing
+    assert o(None, _operands(False, '', 2, sysmissing)) == True
 
 
 def test_tristate_any():
-    assert cmdlets.get('logical-tristate-any')([0, '', 3], {}) is True
-    assert cmdlets.get('logical-tristate-any')([0, '', None], {}) is None
-    assert cmdlets.get('logical-tristate-any')([0, ''], {}) is False
-    assert cmdlets.get('logical-tristate-any')([], {}) is False
+    assert cmdlets.get('logical-tristate-any')([0, '', 3], {}) == True
+    assert cmdlets.get('logical-tristate-any')([0, '', None], {}) is sysmissing
+    assert cmdlets.get('logical-tristate-any')([0, ''], {}) == False
+    assert cmdlets.get('logical-tristate-any')([], {}) == False
 
 
 def test_tristate_all():
-    assert cmdlets.get('logical-tristate-all')([1, 'x'], {}) is True
-    assert cmdlets.get('logical-tristate-all')([1, ''], {}) is False
-    assert cmdlets.get('logical-tristate-all')([1, None], {}) is None
-    assert cmdlets.get('logical-tristate-all')([1, '', None], {}) is False
-    assert cmdlets.get('logical-tristate-all')([], {}) is True
+    assert cmdlets.get('logical-tristate-all')([1, 'x'], {}) == True
+    assert cmdlets.get('logical-tristate-all')([1, ''], {}) == False
+    assert cmdlets.get('logical-tristate-all')([1, None], {}) is sysmissing
+    assert cmdlets.get('logical-tristate-all')([1, '', None], {}) == False
+    assert cmdlets.get('logical-tristate-all')([], {}) == True
 
 
 def test_tristate_any_and_all_traverse_compound_trees():
-    assert cmdlets.get('logical-tristate-all')({'a': [1, 2], 'b': {'c': 'x'}}, {}) is True
-    assert cmdlets.get('logical-tristate-all')({'a': [1, 0], 'b': {'c': 'x'}}, {}) is False
-    assert cmdlets.get('logical-tristate-all')({'a': [1, None], 'b': {'c': 'x'}}, {}) is None
-    assert cmdlets.get('logical-tristate-any')({'a': [0, ''], 'b': {'c': 'x'}}, {}) is True
-    assert cmdlets.get('logical-tristate-any')({'a': [0, ''], 'b': {'c': ''}}, {}) is False
-    assert cmdlets.get('logical-tristate-any')({'a': [0, None], 'b': {'c': ''}}, {}) is None
+    assert cmdlets.get('logical-tristate-all')({'a': [1, 2], 'b': {'c': 'x'}}, {}) == True
+    assert cmdlets.get('logical-tristate-all')({'a': [1, 0], 'b': {'c': 'x'}}, {}) == False
+    assert cmdlets.get('logical-tristate-all')({'a': [1, None], 'b': {'c': 'x'}}, {}) is sysmissing
+    assert cmdlets.get('logical-tristate-any')({'a': [0, ''], 'b': {'c': 'x'}}, {}) == True
+    assert cmdlets.get('logical-tristate-any')({'a': [0, ''], 'b': {'c': ''}}, {}) == False
+    assert cmdlets.get('logical-tristate-any')({'a': [0, None], 'b': {'c': ''}}, {}) is sysmissing
 
 
 def test_tristate_any_and_all_accept_scalar():
-    assert cmdlets.get('logical-tristate-all')(5, {}) is True
-    assert cmdlets.get('logical-tristate-all')('', {}) is False
-    assert cmdlets.get('logical-tristate-all')(None, {}) is None
-    assert cmdlets.get('logical-tristate-any')(0, {}) is False
-    assert cmdlets.get('logical-tristate-any')('abc', {}) is True
-    assert cmdlets.get('logical-tristate-any')(None, {}) is None
+    assert cmdlets.get('logical-tristate-all')(5, {}) == True
+    assert cmdlets.get('logical-tristate-all')('', {}) == False
+    assert cmdlets.get('logical-tristate-all')(None, {}) is sysmissing
+    assert cmdlets.get('logical-tristate-any')(0, {}) == False
+    assert cmdlets.get('logical-tristate-any')('abc', {}) == True
+    assert cmdlets.get('logical-tristate-any')(None, {}) is sysmissing
 
 
 # ---- bitwise ---------------------------------------------------------------

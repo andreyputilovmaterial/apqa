@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from ..registry import cmdlets
-from ..value_types import DateTime, PipeValue
+from ..value_types import DateTime, PipeValue, coerce
 
 
 @cmdlets.register(
@@ -31,19 +31,21 @@ def as_date(value: PipeValue, args: dict) -> DateTime:
     compared or ordered. A bare calendar date (a ``date`` with no time-of-day)
     always fails.
     """
-    if isinstance(value, datetime):
-        return _with_timezone(value, args)
-    if isinstance(value, date):
+    raw = coerce(value).value
+    if isinstance(raw, datetime):
+        return DateTime(_with_timezone(raw, args))
+    if isinstance(raw, date):
         raise ValueError(
             'as-date: a calendar date has no time-of-day; provide a full '
             'date/time (e.g. "2025-07-15T10:00:00" with a \'tz\' arg)'
         )
-    if isinstance(value, str):
-        parsed = datetime.fromisoformat(value)
-        return _with_timezone(parsed, args)
+    if isinstance(raw, str):
+        parsed = datetime.fromisoformat(raw)
+        return DateTime(_with_timezone(parsed, args))
     raise TypeError(
-        f'as-date: cannot convert {type(value).__name__} to a date/time'
+        f'as-date: cannot convert {type(raw).__name__} to a date/time'
     )
+
 
 
 def _with_timezone(dt, args):

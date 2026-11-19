@@ -3,8 +3,8 @@
 `foreach-deep-node` is `foreach-field` recursing through the whole tree: its
 ``transform`` argument is a **cmdlet chain** run once per scalar leaf (including
 ``sysmissing``), with the leaf threaded through as the piped value. Blocks and
-arrays are kept as scaffolding and rebuilt in the same shape, so only the leaves
-change:
+collections are kept as scaffolding and rebuilt in the same shape, so only the
+leaves change:
 
     get-content-mdd path=… -> foreach-deep-node transform=[…] -> …
 
@@ -15,7 +15,7 @@ This is the generic, chain-parameterized form of the recursive walk
 from ..chain_runner import run_chain
 from ..diagnostic import note_path_prefix
 from ..registry import cmdlets
-from ..value_types import Block, Collection, PipeValue
+from ..value_types import PipeValue, coerce
 
 
 @cmdlets.register(
@@ -39,23 +39,9 @@ def foreach_deep_node(value: PipeValue, args: dict) -> PipeValue:
             "foreach-deep-node: missing required arg 'transform' (a non-empty cmdlet chain)"
         )
 
-    return _map_leaves(value, transform, [])
+    def transform_leaf(leaf, path):
+        with note_path_prefix(path):
+            return run_chain(transform, initial=leaf)
 
+    return coerce(value).map_leaves(transform_leaf)
 
-def _map_leaves(value, transform, path):
-    if isinstance(value, dict):
-        return Block({
-            key: _map_leaves(child, transform, path + [key])
-            for key, child in value.items()
-        })
-    if isinstance(value, list):
-        names = value.names if isinstance(value, Collection) else None
-        return Collection(
-            [
-                _map_leaves(child, transform, path + [index])
-                for index, child in enumerate(value)
-            ],
-            names,
-        )
-    with note_path_prefix(path):
-        return run_chain(transform, initial=value)

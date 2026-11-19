@@ -21,7 +21,7 @@ string helper.
 import re
 
 from ..registry import cmdlets
-from ..value_types import PipeValue, Text
+from ..value_types import PipeValue, Text, coerce
 
 
 @cmdlets.register(
@@ -58,8 +58,9 @@ from ..value_types import PipeValue, Text
 )
 def transform_text_regex(value: PipeValue, args: dict) -> Text:
     """Replace regex matches of ``args['pattern']`` with ``args['replacement']``."""
-    if not isinstance(value, str):
-        raise TypeError(f'transform-text-regex: expected text, got {type(value).__name__}')
+    value = coerce(value)
+    if not isinstance(value, Text):
+        raise TypeError(f'transform-text-regex: expected text, got {value.type_name}')
 
     pattern = args.get('pattern')
     if pattern is None or str(pattern) == '':
@@ -73,7 +74,7 @@ def transform_text_regex(value: PipeValue, args: dict) -> Text:
     flags = re.IGNORECASE if bool(args.get('case_insensitive', False)) else 0
     count = _coerce_count(args.get('count', 0))
 
-    return re.sub(pattern, replacement, value, count=count, flags=flags)
+    return Text(re.sub(pattern, replacement, value.value, count=count, flags=flags))
 
 
 def _coerce_count(value):
@@ -96,3 +97,4 @@ def _coerce_count(value):
             f'{value!r}'
         )
     return count
+

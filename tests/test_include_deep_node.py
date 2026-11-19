@@ -11,7 +11,7 @@ import pytest
 
 from src.cmdlets.chain_runner import run_chain
 from src.cmdlets.include_deep_node import include_deep_node
-from src.cmdlets.value_types import Collection
+from src.cmdlets.value_types import Collection, sysmissing
 
 
 def _literal(value):
@@ -147,15 +147,15 @@ def test_matches_nothing_returns_none():
     assert run_chain([
         _literal(_data()),
         {'cmdlet': 'include-deep-node', 'args': {'rules': [_rule('DoesNotExist')]}},
-    ]) is None
+    ]) is sysmissing
 
 
 def test_empty_rules_returns_none():
-    assert include_deep_node({'a': 1}, {'rules': []}) is None
+    assert include_deep_node({'a': 1}, {'rules': []}) is sysmissing
 
 
 def test_scalar_root_without_match_returns_none():
-    assert include_deep_node(5, {'rules': [_rule('x')]}) is None
+    assert include_deep_node(5, {'rules': [_rule('x')]}) is sysmissing
 
 
 def test_rejects_non_list_rules():

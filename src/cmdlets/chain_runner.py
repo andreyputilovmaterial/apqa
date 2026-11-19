@@ -1,6 +1,7 @@
 """Run a chain of cmdlets, threading each output into the next."""
 
 from .registry import cmdlets
+from .value_types import coerce
 from ..user_settings import current_user_settings, user_settings_scope
 
 
@@ -57,7 +58,7 @@ def run_chain(chain, initial=None, settings=None):
     """
     if settings is None:
         settings = current_user_settings()
-    value = initial
+    value = coerce(initial)
     with user_settings_scope(settings):
         for index, step in enumerate(chain):
             if not isinstance(step, dict):

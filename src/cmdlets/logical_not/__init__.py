@@ -1,7 +1,7 @@
 """`logical-not` — logical negation of the incoming value's boolean."""
 
 from ..registry import cmdlets
-from ..value_types import Boolean, PipeValue
+from ..value_types import Boolean, PipeValue, coerce
 
 
 @cmdlets.register('logical-not', kind='processor')
@@ -10,4 +10,5 @@ def logical_not(value: PipeValue, args: dict) -> Boolean:
 
     ``not sysmissing`` is ``True``.
     """
-    return not bool(value)
+    return Boolean(not bool(coerce(value)))
+

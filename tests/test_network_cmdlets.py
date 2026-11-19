@@ -201,12 +201,12 @@ def test_fetch_rejects_invalid_timeout():
 
 def test_validate_true_for_2xx():
     for status in (200, 201, 204, 299):
-        assert _validate({'status': status, 'body': '', 'headers': {}}) is True
+        assert _validate({'status': status, 'body': '', 'headers': {}}) == True
 
 
 def test_validate_false_for_non_2xx():
     for status in (199, 300, 301, 404, 500):
-        assert _validate({'status': status, 'body': '', 'headers': {}}) is False
+        assert _validate({'status': status, 'body': '', 'headers': {}}) == False
 
 
 def test_validate_rejects_non_block():
@@ -237,4 +237,4 @@ def test_validate_accepts_fetch_output():
         return_value=response,
     ):
         fetched = _fetch('https://cdn.example.com/a.png')
-    assert _validate(fetched) is True
+    assert _validate(fetched) == True

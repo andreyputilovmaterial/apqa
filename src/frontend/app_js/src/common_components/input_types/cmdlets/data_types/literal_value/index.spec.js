@@ -42,29 +42,40 @@ describe('InputArgLiteralValue', () => {
     expect(valueControl(wrapper).find('input[type="text"]').element.value).toBe('[1,2]');
   });
 
+  it('opens a stored path literal as path, not text (type is preserved)', () => {
+    const wrapper = mountLiteral({ type: 'path', value: '/some/path' });
+    expect(typeSelect(wrapper).element.value).toBe('path');
+    expect(valueControl(wrapper).find('input[type="text"]').element.value).toBe('/some/path');
+  });
+
+  it('opens a stored integer literal as number', () => {
+    const wrapper = mountLiteral({ type: 'integer', value: 42 });
+    expect(typeSelect(wrapper).element.value).toBe('number');
+  });
+
   it('switching to boolean emits false (coerced from a non-boolean)', async () => {
     const wrapper = mountLiteral('abc');
     await typeSelect(wrapper).setValue('boolean');
-    expect(wrapper.emitted('update:value').at(-1)).toEqual([false]);
+    expect(wrapper.emitted('update:value').at(-1)).toEqual([{ type: 'boolean', value: false }]);
     expect(typeSelect(wrapper).element.value).toBe('boolean');
   });
 
   it('switching from boolean to text emits the stringified value', async () => {
     const wrapper = mountLiteral(true);
     await typeSelect(wrapper).setValue('text');
-    expect(wrapper.emitted('update:value').at(-1)).toEqual(['true']);
+    expect(wrapper.emitted('update:value').at(-1)).toEqual([{ type: 'text', value: 'true' }]);
   });
 
-  it('switching to path/date coerces to a string', async () => {
+  it('switching to path/date keeps the selected type on the stored value', async () => {
     const wrapper = mountLiteral(42);
     await typeSelect(wrapper).setValue('path');
-    expect(wrapper.emitted('update:value').at(-1)).toEqual(['42']);
+    expect(wrapper.emitted('update:value').at(-1)).toEqual([{ type: 'path', value: '42' }]);
   });
 
   it('editing the value keeps the selected type', async () => {
     const wrapper = mountLiteral('');
     await valueControl(wrapper).find('input[type="text"]').setValue('hello');
-    expect(wrapper.emitted('update:value').at(-1)).toEqual(['hello']);
+    expect(wrapper.emitted('update:value').at(-1)).toEqual([{ type: 'text', value: 'hello' }]);
     expect(typeSelect(wrapper).element.value).toBe('text');
   });
 });

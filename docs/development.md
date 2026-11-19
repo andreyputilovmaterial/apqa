@@ -399,7 +399,10 @@ single-punch categorical, multi-punch categorical. Compound types: **block**
 (named fields, order-insensitive) and **collection** (an ordered sequence of
 elements addressable by index and by a unique name — see
 `cmdlet-data-formats.md`). A plain `list` is never a pipe value — every compound
-sequence is a `Collection`.
+sequence is a `Collection`. **Every pipe value is an instance of the value
+taxonomy** (`src/cmdlets/value_types/`): scalars are wrapper classes exposing
+their raw payload via `.value`, `sysmissing` is a `SysMissing` singleton (not
+`None`), and blocks/collections auto-wrap their children.
 
 **`where` (Where-Object / filter).** `where` keeps the elements of a collection
 for which a **cmdlet chain** (`args.predicate`, arg type `cmdlet-chain`) returns

@@ -39,8 +39,8 @@ def test_parses_scalars():
     assert _parse('"hello"') == 'hello'
     assert _parse('42') == 42
     assert _parse('3.14') == 3.14
-    assert _parse('true') is True
-    assert _parse('false') is False
+    assert _parse('true') == True
+    assert _parse('false') == False
     assert _parse('null') is sysmissing
 
 

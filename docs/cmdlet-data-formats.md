@@ -2,15 +2,20 @@
 
 > Status: **agreed specification.** The runner (`src/rule_runner.py`), the cmdlet
 > registry, and the comparison ops are implemented and follow this spec. The
-> value-type *taxonomy* is spelled out in `src/cmdlets/value_types.py` — a root
-> `Value` base type plus `Scalar`/`Compound` ABC base types, the
-> scalar-category aliases, and the runtime `Block`/`Collection` classes — and is
-> used for cmdlet annotations. Runtime values are plain Python (`None` for
-> `sysmissing`, `Block` — a `dict` subclass — for a block, `Collection` — a
-> `list` subclass — for a collection): a plain `list` **never** flows through the
-> pipe, every compound sequence is a `Collection`, and every block is a `Block`.
+> value-type *taxonomy* is a self-contained library
+> (`src/cmdlets/value_types/`): a root `Value` base type, `SysMissing` (the
+> `sysmissing` singleton), `Scalar`/`Compound` ABC base types, the per-scalar
+> wrapper classes (`Text`, `Integer`, `Real`, `Boolean`, `PathValue`, `DateTime`,
+> and the categorical placeholders), and the runtime `Block`/`Collection` classes.
+> **Every value that flows through the pipe is an instance of a `Value`** — never a
+> raw Python primitive: a scalar is a wrapper exposing its raw payload via
+> ``.value``, `sysmissing` is a first-class value (not `None`), a plain `list` /
+> `dict` **never** flows through the pipe (every compound sequence is a
+> `Collection`, every block is a `Block`). A `literal` value is stored in a rule as
+> a typed wrapper (`{'type': ..., 'value': ...}` / `{'type': 'sysmissing'}`).
 > Full *runtime* value objects for categoricals are **not yet implemented**.
 > Source readers and the full cmdlet set are built on top of this spec.
+
 
 ## Goal
 
@@ -60,14 +65,16 @@ types that are conventionally nullable.
 
 ## `sysmissing`
 
-`sysmissing` is represented as Python **`None`** (like SQL `NULL` / JSON `null` →
-`None`). `is_sysmissing(value)` is `value is None`.
+`sysmissing` is a first-class value — a singleton instance of `SysMissing`
+(`src/cmdlets/value_types/base.py`) — like SQL `NULL` / JSON `null`. It is **not**
+Python `None`. `is_sysmissing(value)` is `isinstance(value, SysMissing)`; `None`
+is also accepted as a convenience when raw data is normalized via `from_plain`.
 
-`None` is deliberately distinct from *empty* values: an empty collection (`[]`), an
+`sysmissing` is deliberately distinct from *empty* values: an empty collection (`[]`), an
 empty block (`{}`), a nothing-punched multi-punch, an empty string (`""`), zero,
-and `False` are all real values, and none of them equals `None`.
+and `False` are all real values, and none of them equals `sysmissing`.
 
-In comparison, `None` is undefined/uncertain:
+In comparison, `sysmissing` is undefined/uncertain:
 
 - `cmp-eq`: `None` equals only `None`; `None` vs anything else → `false`.
 - `cmp-ne`: `None` vs `None` → `false`; `None` vs anything else → `true`.
@@ -606,9 +613,10 @@ value a cmdlet can return — rather than a plain path.
 ## Remaining to implement
 
 - Full *runtime* value objects for categoricals. The value-type *taxonomy* (names
-  + a root `Value` base type + the runtime `Block`/`Collection` classes) already
-  exists as `src/cmdlets/value_types.py` and is used for cmdlet annotations;
-  until the categorical wrappers are added, the plain-Python rules above apply.
+  + a root `Value` base type + the scalar wrappers and the runtime
+  `Block`/`Collection` classes) already exists as `src/cmdlets/value_types/`;
+  until the categorical wrappers are added, categorical values flow as
+  `Text`/`Collection` per the source readers.
 - Source readers beyond `get-content-excel` and `get-content-mdd` (CSV, SPSS, DB,
   …) and the rest of the middle/terminal cmdlet set (`select-properties`,
   `to-string`, comparison-as-cmdlet `cmp-eq`/`cmp-ne`/…, …).

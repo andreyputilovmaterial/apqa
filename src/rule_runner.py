@@ -2,6 +2,7 @@
 from .cmdlets import comparisons
 from .cmdlets.chain_runner import run_chain  # re-exported for compatibility
 from .cmdlets.diagnostic import collect_notes
+from .cmdlets.value_types import coerce
 
 
 def run_rule(rule, settings=None):
@@ -42,7 +43,7 @@ def run_rule_with_report(rule, settings=None):
     with collect_notes() as notes:
         left_value = run_chain(left, settings=settings)
         right_value = run_chain(right, settings=settings)
-        result = comparisons.get(op)(left_value, right_value, op_args)
+        result = comparisons.get(op)(coerce(left_value), coerce(right_value), op_args)
 
     return result, notes.items
 

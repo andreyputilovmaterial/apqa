@@ -1,21 +1,21 @@
 """`include-child` — keep only the matching direct children of the piped value.
 
 The inverse of `exclude-child`: it keeps the direct children of the received
-block/array whose **key/index** matches a rule in ``rules`` and drops the rest.
-It does not recurse into the kept children.
+block/collection whose **key/index** matches a rule in ``rules`` and drops the
+rest. It does not recurse into the kept children.
 
 Each child is matched by its one-segment data path rendered by ``format_path``
-(a block key is its name, an array element is ``[i]``), so ``rules`` uses the
+(a block key is its name, a collection element is ``[i]``), so ``rules`` uses the
 same shape as `include-deep-node`:
 
     get-content-mdd path=… -> include-child rules=[{type: startswith, pattern: Sniffer}] -> …
 
-Returns ``None`` (sysmissing) when no child is kept.
+Returns ``sysmissing`` when no child is kept.
 """
 
-from ..path_rules import iter_child_paths, normalize_rules, path_matches
+from ..path_rules import normalize_rules, path_matches
 from ..registry import cmdlets
-from ..value_types import Block, Collection, PipeValue
+from ..value_types import Block, Collection, PipeValue, coerce, sysmissing
 
 
 @cmdlets.register(
@@ -34,26 +34,26 @@ from ..value_types import Block, Collection, PipeValue
 def include_child(value: PipeValue, args: dict) -> PipeValue:
     """Keep matching direct children of a block or a collection."""
     rules = normalize_rules(args.get('rules'))
+    value = coerce(value)
 
-    if isinstance(value, dict):
+    if isinstance(value, Block):
         kept = Block({
             key: child
             for key, child in value.items()
             if path_matches([key], [key], rules)
         })
-        return kept if kept else None
-    if isinstance(value, list):
-        names = value.names if isinstance(value, Collection) else None
+        return kept if kept else sysmissing
+    if isinstance(value, Collection):
         kept = []
         kept_names = []
         for index, (child, child_index, child_name) in enumerate(
-            iter_child_paths(value, [], [])
+            value.iter_child_paths([], [])
         ):
             if path_matches(child_index, child_name, rules):
                 kept.append(child)
-                if names is not None:
-                    kept_names.append(names[index])
+                kept_names.append(value.names[index])
         if not kept:
-            return None
-        return Collection(kept, kept_names if names is not None else None)
-    return None
+            return sysmissing
+        return Collection(kept, kept_names)
+    return sysmissing
+

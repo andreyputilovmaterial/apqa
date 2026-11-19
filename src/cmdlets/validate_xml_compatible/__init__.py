@@ -8,26 +8,23 @@ in ``report_create.py``'s ``is_xml_compatible``. This catches text that contains
 unescaped markup characters (e.g. a bare ``&`` or an unbalanced tag).
 
 Every other scalar (``sysmissing``, booleans, numbers, dates, paths, …) is not XML
-markup, so it simply passes. Compound values (blocks and arrays) run the same check
-on every field/item and combine the results with a logical ``AND`` (an empty
+markup, so it simply passes. Compound values (blocks and collections) run the same
+check on every field/item and combine the results with a logical ``AND`` (an empty
 compound value is vacuously valid).
 
 When a text value fails, the cmdlet records a **diagnostic note** (if a run is
 collecting notes) whose path points at the offending leaf — e.g.
-``['Fields', 'BrandAwareness', 'Label']`` — so the runner can tell the user exactly
-which field of which MDD section was not XML-compatible (see
-``docs/qc-results-reporting.md``). The cmdlet still returns a plain ``bool``, so a rule
-that compares it to ``literal(True)`` keeps working unchanged.
+``['Fields', 'BrandAwareness', 'Label']``.
 
 ``xml.etree.ElementTree`` is part of the Python standard library, so it is not a
-pip-installable requirement; the import is still guarded (see ``requirements.txt``)
-so the module always loads, the cmdlet is always registered, and only *running* the
-cmdlet raises a readable error if the module is genuinely unavailable.
+pip-installable requirement; the import is still guarded so the module always
+loads and only *running* the cmdlet raises a readable error if the module is
+genuinely unavailable.
 """
 
 from ..diagnostic import current_notes
 from ..registry import cmdlets
-from ..value_types import PipeValue
+from ..value_types import Boolean, PipeValue, Text, coerce
 
 try:
     import xml.etree.ElementTree as ET
@@ -39,39 +36,31 @@ else:
 
 
 @cmdlets.register('validate-xml-compatible', kind='terminal')
-def validate_xml_compatible(value: PipeValue, args: dict) -> bool:
+def validate_xml_compatible(value: PipeValue, args: dict) -> Boolean:
     if _import_error is not None:
         raise ImportError(
             "validate-xml-compatible: missing optional dependency "
             "'xml.etree.ElementTree'"
         ) from _import_error
 
-    return _check(value, [], current_notes())
+    return Boolean(_check(coerce(value), current_notes()))
 
 
-def _check(value, path, notes):
-    """Recursively validate ``value`` and record a note per failing text leaf."""
-    if isinstance(value, str):
-        problem = _xml_problem(value)
+def _check(value, notes):
+    """Validate every text leaf and record a note per failing one."""
+    result = True
+    for leaf, path in value.iter_leaves_with_paths():
+        if not isinstance(leaf, Text):
+            continue
+        problem = _xml_problem(leaf.value)
         if problem is not None:
             if notes is not None:
                 notes.note(
                     path,
-                    f'not XML-compatible: {problem} (value: {_clip(value)!r})',
+                    f'not XML-compatible: {problem} (value: {_clip(leaf.value)!r})',
                 )
-            return False
-        return True
-    if isinstance(value, dict):
-        return all(
-            _check(field_value, path + [key], notes)
-            for key, field_value in value.items()
-        )
-    if isinstance(value, list):
-        return all(
-            _check(item, path + [index], notes)
-            for index, item in enumerate(value)
-        )
-    return True
+            result = False
+    return result
 
 
 def _xml_problem(text):
@@ -88,3 +77,4 @@ def _clip(value, limit=80):
     if len(text) <= limit:
         return text
     return text[:limit - 3] + '...'
+

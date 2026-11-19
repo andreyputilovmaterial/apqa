@@ -1,14 +1,14 @@
 """`as-text` — convert a value to text."""
 
 from ..registry import cmdlets
-from ..sysmissing import is_sysmissing
-from ..value_types import PipeValue, Text
+from ..value_types import PipeValue, Text, coerce
 
 
 @cmdlets.register('as-text', kind='processor')
 def as_text(value: PipeValue, args: dict) -> Text:
-    """Convert ``value`` to text using Python's natural ``str()``.
+    """Convert ``value`` to text using the value's natural text rendering.
 
-    ``sysmissing`` (``None``) becomes the empty string, never ``"None"``.
+    ``sysmissing`` becomes the empty string, never ``"None"``.
     """
-    return '' if is_sysmissing(value) else str(value)
+    return Text(coerce(value).as_text())
+

@@ -66,7 +66,7 @@ from pathlib import Path
 import re
 
 from ..registry import cmdlets
-from ..value_types import Block, Collection, PipeValue
+from ..value_types import Block, Collection, PipeValue, from_plain
 
 try:
     import win32com.client as _win32com_client
@@ -272,7 +272,7 @@ class _MDDReader:
                 'LongName': _safe_str_get(lang, 'LongName'),
             })
             items.append(block)
-            names.append(block.get('Name'))
+            names.append(block.get('Name').value)
         return Collection(items, names)
 
     def _read_types(self):
@@ -319,7 +319,7 @@ class _MDDReader:
             block = self._read_item_meta(entry, Block())
             block['Elements'] = None
             items.append(block)
-            names.append(block.get('Name'))
+            names.append(block.get('Name').value)
         return Collection(items, names)
 
     def _read_routing(self):
@@ -431,7 +431,7 @@ class _MDDReader:
         result = Block()
         for helper in _iter_attr(field, 'HelperFields'):
             block = self._read_field(helper)
-            name = block.get('Name')
+            name = block.get('Name').value
             if not name:
                 continue
             result[name] = block
@@ -538,7 +538,7 @@ class _MDDReader:
                     continue
             block = self._read_category(cat)
             items.append(block)
-            names.append(block.get('Name'))
+            names.append(block.get('Name').value)
         return Collection(items, names)
 
     def _read_category(self, cat):
@@ -648,6 +648,6 @@ def get_content_mdd(value: PipeValue, args: dict) -> Block:
     resolved = _resolved_path(path)
     document = _open_document(resolved, method)
     try:
-        return _MDDReader(document, resolved, context, step_into).read()
+        return from_plain(_MDDReader(document, resolved, context, step_into).read())
     finally:
         _close_document(document)

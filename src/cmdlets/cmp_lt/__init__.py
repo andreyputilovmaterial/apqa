@@ -4,6 +4,7 @@ import operator
 
 from ..comparison_helpers import ordered_compare
 from ..registry import comparisons
+from ..value_types import coerce
 
 
 @comparisons.register(
@@ -12,4 +13,5 @@ from ..registry import comparisons
     compact=[{'text': '<', 'role': 'symbol'}],
 )
 def lt(left, right, args=None):
-    return ordered_compare(operator.lt, left, right)
+    return ordered_compare(operator.lt, coerce(left), coerce(right))
+

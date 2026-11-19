@@ -10,7 +10,7 @@ Returns ``true`` when ``status`` is in ``200..299`` (the same condition as
 """
 
 from ..registry import cmdlets
-from ..value_types import Boolean, PipeValue
+from ..value_types import Block, Boolean, Integer, PipeValue, coerce
 
 _REQUIRED_FIELDS = ('status', 'body', 'headers')
 
@@ -24,25 +24,27 @@ def validate_network_request_result(value: PipeValue, args: dict) -> Boolean:
     fields. A differently-shaped value raises.
     """
     status = _require_network_result(value)
-    return 200 <= status < 300
+    return Boolean(200 <= status < 300)
 
 
 def _require_network_result(value):
-    if not isinstance(value, dict):
+    value = coerce(value)
+    if not isinstance(value, Block):
         raise TypeError(
             'validate-network-request-result: expected the block produced by '
-            f'get-content-network-fetch, got {type(value).__name__}'
+            f'get-content-network-fetch, got {value.type_name}'
         )
-    missing = [field for field in _REQUIRED_FIELDS if field not in value]
+    missing = [field for field in _REQUIRED_FIELDS if not value.has_child(field)]
     if missing:
         raise ValueError(
             'validate-network-request-result: missing field(s) '
             f'{", ".join(missing)}'
         )
-    status = value['status']
-    if isinstance(status, bool) or not isinstance(status, int):
+    status = value.field('status')
+    if not isinstance(status, Integer):
         raise TypeError(
             'validate-network-request-result: status must be an integer, got '
-            f'{type(status).__name__}'
+            f'{status.type_name}'
         )
-    return status
+    return status.value
+

@@ -1,16 +1,12 @@
+"""The ``sysmissing`` value (re-exported from the value taxonomy).
 
-"""The ``sysmissing`` value.
-
-``sysmissing`` is represented as Python ``None``, mirroring how SQL ``NULL`` and
-JSON ``null`` become ``None`` when read into Python.
-
-``None``/``sysmissing`` is deliberately distinct from *empty* values: an empty
-array, an empty block, a nothing-punched multi-punch, an empty string, zero, and
-``False`` are all real values, whereas ``None`` means the value is missing.
+``sysmissing`` is a singleton :class:`SysMissing` instance — the first-class
+value a cmdlet produces/receives when a value is missing (like SQL ``NULL``). It
+is deliberately distinct from every *empty* value (``''``, ``{}``, ``[]``, ``0``,
+``False``) and from Python ``None``.
 """
 
-sysmissing = None
+from .value_types import SysMissing, sysmissing, is_sysmissing
 
+__all__ = ['SysMissing', 'sysmissing', 'is_sysmissing']
 
-def is_sysmissing(value):
-    return value is None

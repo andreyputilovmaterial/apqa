@@ -33,8 +33,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..registry import cmdlets
-from ..sysmissing import sysmissing
-from ..value_types import Block, PipeValue
+from ..value_types import Block, PipeValue, from_plain, sysmissing
 
 
 def _to_utc(timestamp):
@@ -80,7 +79,7 @@ def get_filesystem_obj_info(value: PipeValue, args: dict) -> PipeValue:
         obj_type = 'other'
 
     birthtime_value = getattr(info, 'st_birthtime', None)
-    return Block({
+    return from_plain(Block({
         'type': obj_type,
         'size': info.st_size,
         'mtime': _to_utc(info.st_mtime),
@@ -88,4 +87,4 @@ def get_filesystem_obj_info(value: PipeValue, args: dict) -> PipeValue:
         'birthtime': (
             _to_utc(birthtime_value) if birthtime_value is not None else sysmissing
         ),
-    })
+    }))

@@ -23,7 +23,7 @@ from src.cmdlets.get_content_mdd import (  # noqa: E402
     _safe_str_get,
     _str_safe,
 )
-from src.cmdlets.value_types import Collection  # noqa: E402
+from src.cmdlets.value_types import Block, Collection  # noqa: E402
 
 
 class _Stub:
@@ -125,7 +125,7 @@ def test_read_category_collection_returns_named_collection(monkeypatch):
     reader = _MDDReader.__new__(_MDDReader)
     monkeypatch.setattr(
         reader, '_read_category',
-        lambda cat: {'Name': cat.Name},
+        lambda cat: Block({'Name': cat.Name}),
     )
     stub = _Stub(Elements=[_Stub(Name='A'), _Stub(Name='B')])
 
@@ -142,7 +142,7 @@ def test_read_category_collection_flattens_references_into_named_collection(monk
     reader.step_into = True
     monkeypatch.setattr(
         reader, '_read_category',
-        lambda cat: {'Name': cat.Name},
+        lambda cat: Block({'Name': cat.Name}),
     )
     shared = _Stub(Elements=[_Stub(Name='X')])
     monkeypatch.setattr(

@@ -27,8 +27,8 @@ def test_returns_block_for_existing_file(tmp_path):
     assert isinstance(info, dict)
     assert info['type'] == 'file'
     assert info['size'] == 5
-    assert isinstance(info['mtime'], datetime)
-    assert isinstance(info['ctime'], datetime)
+    assert isinstance(info['mtime'].value, datetime)
+    assert isinstance(info['ctime'].value, datetime)
 
 
 def test_timestamps_are_timezone_aware_utc(tmp_path):
@@ -38,7 +38,7 @@ def test_timestamps_are_timezone_aware_utc(tmp_path):
     info = _call({'path': str(path)})
 
     for field in ('mtime', 'ctime'):
-        dt = info[field]
+        dt = info[field].value
         assert dt.tzinfo is not None
         assert dt.utcoffset().total_seconds() == 0
 
@@ -65,7 +65,7 @@ def test_birthtime_present_iff_platform_supports(tmp_path):
 
     info = _call({'path': str(path)})
     if supported:
-        assert isinstance(info['birthtime'], datetime)
+        assert isinstance(info['birthtime'].value, datetime)
     else:
         assert info['birthtime'] is sysmissing
 

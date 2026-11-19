@@ -1,10 +1,9 @@
 """Shared path-rule matching for the `exclude-*` cmdlets.
 
-An **exclude rule** names nodes to remove from a block/array tree by matching
-their **data path** (the ``format_path`` notation from
-``src/cmdlets/diagnostic.py``). Both `exclude-child` (direct children only) and
-`exclude-deep-node` (recursive) build on the same rule shape and matcher, so the
-two cmdlets stay interchangeable.
+An **exclude rule** names nodes to remove from a block/collection tree by matching
+their **data path** (the ``format_path`` notation from the value taxonomy). Both
+`exclude-child` (direct children only) and `exclude-deep-node` (recursive) build
+on the same rule shape and matcher, so the two cmdlets stay interchangeable.
 
 A rule is a mapping::
 
@@ -21,8 +20,7 @@ A rule is a mapping::
 
 import re
 
-from .diagnostic import format_path
-from .value_types import Collection
+from .value_types import format_path  # noqa: F401 - re-exported for compatibility
 
 RULE_TYPES = ('eq', 'startswith', 'endswith', 'contains', 'regex')
 
@@ -95,30 +93,6 @@ def matches_any_rule(path_text, rules):
         ):
             return True
     return False
-
-
-def iter_child_paths(value, index_prefix, name_prefix):
-    """Yield ``(child, index_path, name_path)`` for each child of a block/collection.
-
-    A block (``dict``) child has one spelling — its key. A collection (``list``)
-    child has two spellings: its 0-based index (``[i]``) and, when the
-    collection carries element names, its name (``.Name``); an unnamed element
-    falls back to its index spelling.
-
-    ``index_prefix``/``name_prefix`` are the two spellings of the path leading to
-    ``value``, threaded through recursion so a name-spelled path works at any
-    depth.
-    """
-    if isinstance(value, dict):
-        for key, child in value.items():
-            yield child, index_prefix + [key], name_prefix + [key]
-    elif isinstance(value, list):
-        names = value.names if isinstance(value, Collection) else None
-        for index, child in enumerate(value):
-            child_index = index_prefix + [index]
-            name = names[index] if names is not None else None
-            child_name = name_prefix + [name] if name is not None else child_index
-            yield child, child_index, child_name
 
 
 def path_matches(index_path, name_path, rules):

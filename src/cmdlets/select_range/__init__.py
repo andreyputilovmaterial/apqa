@@ -6,7 +6,7 @@ indices count from the end, exactly like Python.
 """
 
 from ..registry import cmdlets
-from ..value_types import Collection, PipeValue
+from ..value_types import PipeValue, coerce
 
 
 @cmdlets.register(
@@ -28,24 +28,7 @@ from ..value_types import Collection, PipeValue
         },
     ],
 )
-def select_range(value: PipeValue, args: dict) -> Collection:
+def select_range(value: PipeValue, args: dict) -> PipeValue:
     """Return ``collection[start:stop]`` (Python slice semantics, no step)."""
-    if not isinstance(value, list):
-        raise TypeError(f'select-range: expected a collection, got {type(value).__name__}')
+    return coerce(value).slice(args.get('start'), args.get('stop'))
 
-    start = _slice_index(args.get('start'), 'start')
-    stop = _slice_index(args.get('stop'), 'stop')
-    if isinstance(value, Collection):
-        return Collection(value[start:stop], value.names[start:stop])
-    return Collection(value[start:stop])
-
-
-def _slice_index(value, name):
-    if value is None:
-        return None
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise TypeError(
-            f'select-range: {name} must be an integer or omitted, got '
-            f'{type(value).__name__}'
-        )
-    return value

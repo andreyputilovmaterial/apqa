@@ -1,7 +1,7 @@
 """`literal` — put a fixed constant on one side of a rule."""
 
 from ..registry import cmdlets
-from ..value_types import from_plain, PipeValue
+from ..value_types import PipeValue, from_serialized
 
 
 @cmdlets.register(
@@ -13,8 +13,9 @@ from ..value_types import from_plain, PipeValue
             'type': 'literal-value',
             'required': True,
             'description': (
-                'The fixed constant value — text, number, boolean, or raw JSON '
-                '(array/object). The editor offers a type selector.'
+                'The fixed constant value — text, number, boolean, path, date, or '
+                'raw JSON (array/object). The editor offers a type selector and '
+                'stores the value as a typed {type, value} object.'
             ),
         },
     ],
@@ -29,4 +30,5 @@ def literal(value: PipeValue, args: dict) -> PipeValue:
     """
     if 'value' not in args:
         raise ValueError("literal: missing required arg 'value'")
-    return from_plain(args['value'])
+    return from_serialized(args['value'])
+

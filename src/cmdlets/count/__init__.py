@@ -1,8 +1,7 @@
 """`count` — count the meaningful entries in the incoming value."""
 
 from ..registry import cmdlets
-from ..sysmissing import is_sysmissing
-from ..value_types import PipeValue
+from ..value_types import Integer, PipeValue, coerce, is_sysmissing
 
 
 @cmdlets.register(
@@ -18,29 +17,21 @@ from ..value_types import PipeValue
         },
     ],
 )
-def count(value: PipeValue, args: dict) -> int:
+def count(value: PipeValue, args: dict) -> Integer:
     """Count the meaningful entries in the incoming value.
 
-    - collection (``Collection``, a ``list``): number of elements.
-    - block (``dict``): number of fields.
-    - multi-punch categorical: number of punched categories (today a punch list
-      is a plain ``list`` and counts as its length, like a collection).
-    - text: ``0`` if empty, ``1`` otherwise (text is not counted
-      character-by-character).
+    - collection: number of elements.
+    - block: number of fields.
+    - multi-punch categorical: number of punched categories.
+    - text: ``0`` if empty, ``1`` otherwise.
     - single-punch categorical or any other scalar: ``1`` if a value is stored
       (i.e. it is not ``sysmissing``).
-    - ``sysmissing`` (``None``): ``0`` by default; ``args['fail_on_sysmissing']``
-      raises instead.
+    - ``sysmissing``: ``0`` by default; ``args['fail_on_sysmissing']`` raises.
     """
+    value = coerce(value)
     if is_sysmissing(value):
         if bool(args.get('fail_on_sysmissing', False)):
             raise ValueError('count: cannot count a sysmissing value')
-        return 0
+        return Integer(0)
+    return Integer(value.count())
 
-    if isinstance(value, str):
-        return 0 if value == '' else 1
-    if isinstance(value, dict):
-        return len(value)
-    if isinstance(value, list):
-        return len(value)
-    return 1

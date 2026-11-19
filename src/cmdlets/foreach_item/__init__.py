@@ -7,7 +7,7 @@ JS ``items.map(x => …)``). The result is a collection of the transformed value
 
 from ..chain_runner import run_chain
 from ..registry import cmdlets
-from ..value_types import Collection, PipeValue
+from ..value_types import PipeValue, coerce
 
 
 @cmdlets.register(
@@ -23,19 +23,14 @@ from ..value_types import Collection, PipeValue
         },
     ],
 )
-def foreach_item(value: PipeValue, args: dict) -> Collection:
+def foreach_item(value: PipeValue, args: dict) -> PipeValue:
     """Return a collection of ``run_chain(transform, initial=item)`` per item."""
-    if not isinstance(value, list):
-        raise TypeError(f'foreach-item: expected a collection, got {type(value).__name__}')
-
     transform = args.get('transform')
     if not isinstance(transform, list) or not transform:
         raise ValueError(
             "foreach-item: missing required arg 'transform' (a non-empty cmdlet chain)"
         )
 
-    names = value.names if isinstance(value, Collection) else None
-    return Collection(
-        [run_chain(transform, initial=item) for item in value],
-        names,
-    )
+    value = coerce(value)
+    return value.map(lambda item: run_chain(transform, initial=item))
+

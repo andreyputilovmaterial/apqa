@@ -1,28 +1,25 @@
 """`transform-strip-html` — remove HTML markup from text, leaving plain text.
 
-Terminal cmdlet: it turns a text value such as ``how <i>would</i> you rate...``
+Processor cmdlet: it turns a text value such as ``how <i>would</i> you rate...``
 into ``how would you rate...``. The conversion is intentionally permissive:
 ``html.parser`` (the lenient stdlib parser behind BeautifulSoup) does best-effort
 parsing of misformatted/unbalanced markup instead of rejecting it.
 
 Value handling mirrors the other text-aware cmdlets:
 
-- ``sysmissing`` (``None``) becomes the empty string.
+- ``sysmissing`` becomes the empty string.
 - text is parsed with ``BeautifulSoup(text, "html.parser").get_text()``.
-- a block (``dict``) or array (``list``) returns the same shape with every
-  field/item processed recursively.
-- any other scalar (a number, boolean, date/time, path, …) is converted with the
-  existing `as-text` cmdlet (Python's natural ``str()``).
+- a block or collection returns the same shape with every leaf processed
+  recursively.
+- any other scalar (a number, boolean, date/time, path, …) is converted to text.
 
 Optional dependency: ``beautifulsoup4`` (see ``requirements.txt``). The import is
-guarded so a missing dependency never breaks loading this module or listing the
-cmdlet — only *running* the cmdlet raises a readable error (chained to the
-original import error).
+guarded so a missing dependency never breaks loading this module — only *running*
+the cmdlet raises a readable error.
 """
 
-from ..as_text import as_text
 from ..registry import cmdlets
-from ..value_types import Block, Collection, PipeValue, Text
+from ..value_types import PipeValue, Text, coerce
 
 try:
     from bs4 import BeautifulSoup
@@ -40,24 +37,15 @@ def transform_strip_html(value: PipeValue, args: dict) -> PipeValue:
             "transform-strip-html: missing optional dependency 'beautifulsoup4'"
         ) from _import_error
 
-    if value is None:
-        return ''
-    if isinstance(value, str):
-        return _strip_html(value)
-    if isinstance(value, dict):
-        return Block({
-            key: transform_strip_html(field, args)
-            for key, field in value.items()
-        })
-    if isinstance(value, list):
-        names = value.names if isinstance(value, Collection) else None
-        return Collection(
-            [transform_strip_html(item, args) for item in value],
-            names,
-        )
-    return as_text(value, args)
+    def strip_leaf(leaf, path):
+        if isinstance(leaf, Text):
+            return Text(_strip_html(leaf.value))
+        return Text(leaf.as_text())
+
+    return coerce(value).map_leaves(strip_leaf)
 
 
-def _strip_html(value: str) -> Text:
+def _strip_html(value: str) -> str:
     """Return ``value`` with HTML tags removed (best-effort, lenient)."""
     return BeautifulSoup(value, 'html.parser').get_text()
+
