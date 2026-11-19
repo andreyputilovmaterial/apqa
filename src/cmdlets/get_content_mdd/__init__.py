@@ -37,9 +37,8 @@ plus an ``Elements`` field whose shape depends on the item kind:
 
     scalar (ObjectTypeValue 0)   ``Elements`` is ``None`` (a scalar has no
                                  sub-elements). A categorical (DataType 3)
-                                 additionally carries a ``Categories`` block and
-                                 an ``Elements`` collection of its response
-                                 options.
+                                 carries an ``Elements`` collection of its
+                                 response options.
     array/grid (ObjectTypeValue 1/2)
                                  ``Elements`` is a collection of iteration blocks
                                  (grid/loop iterations), and ``Fields`` holds
@@ -50,11 +49,12 @@ plus an ``Elements`` field whose shape depends on the item kind:
     shared list / page           ``Elements`` is a collection of category/entry
                                  blocks.
 
-Items that own categories (categorical scalars, arrays, shared lists) also carry a
-``Categories`` block keyed by category name → detailed category block; for a
-categorical scalar the keys of ``Categories`` are the available response options.
-Category groups (``Type`` != 0) nest their children in their own ``Elements``
-collection and are not selectable response options.
+Items that own categories (categorical scalars, arrays, shared lists) carry them
+as a single named ``Collection`` under ``Elements``, ordered as read and
+addressable both by zero-based index (``Elements[0]``) and by element name
+(``Elements.<Name>``); there is no separate ``Categories`` block. Category groups
+(``Type`` != 0) nest their children in their own ``Elements`` collection and are
+not selectable response options.
 
 ``_Attrs`` mirrors the raw MDD object model: Pascal-cased COM properties such as
 ``ObjectTypeValue``, ``DataType``, ``IsSystem``, ``HasCaseData``, ``IsGrid``,
@@ -159,23 +159,6 @@ def _iter(collection):
         return iter(collection)
     except Exception:  # noqa: BLE001
         return iter(())
-
-
-def _index_category(cat, result):
-    name = cat.get('Name')
-    if name:
-        result.setdefault(name, cat)
-    elements = cat.get('Elements')
-    if isinstance(elements, list):
-        for child in elements:
-            _index_category(child, result)
-
-
-def _category_map(category_blocks):
-    result = Block()
-    for cat in category_blocks:
-        _index_category(cat, result)
-    return result
 
 
 def _resolved_path(path):
@@ -305,7 +288,6 @@ class _MDDReader:
             sl = types[sl_name]
             categories = self._read_category_collection(sl)
             block = self._read_item_meta(sl, self._shared_list_attributes(sl))
-            block['Categories'] = _category_map(categories)
             block['Elements'] = categories
             result[sl_name] = block
         return result
@@ -396,7 +378,6 @@ class _MDDReader:
         )
         if data_type == 3:
             categories = self._read_category_collection(field)
-            block['Categories'] = _category_map(categories)
             block['Elements'] = categories
         else:
             block['Elements'] = None
@@ -409,7 +390,6 @@ class _MDDReader:
             attrs['IsGrid'] = bool(is_grid)
         block = self._read_item_meta(field, attrs)
         categories = self._read_category_collection(field)
-        block['Categories'] = _category_map(categories)
         block['Elements'] = categories
         subfields = self._read_subfields(field)
         if subfields:

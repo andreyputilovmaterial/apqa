@@ -88,8 +88,8 @@ leads from the top-level piped value to the offending leaf. It is the "which
 component, which field, during which iteration" answer:
 
 - `Fields.BrandAwareness.Label` — field → subfield → leaf;
-- `Pages.Q1.Elements[2].Categories['None of the above'].Label` — section → page →
-  iteration → categories → category → leaf.
+- `Fields.Gender.Elements.Male.Label` — field → categorical scalar → response
+  option → leaf.
 
 Notes are collected per rule run in a `Notes` instance held in a
 `contextvars.ContextVar`, so:
@@ -195,7 +195,7 @@ stays `{"result": <bool>}` with no `notes` key, preserving the previous contract
 
 - a key that is a plain identifier joins with `.` — `Fields.BrandAwareness.Label`;
 - a collection index becomes `[i]` — `Pages.Q1.Elements[2]`;
-- a key that is not a plain identifier is quoted — `Categories['None of the above']`.
+- a key that is not a plain identifier is quoted — `Fields.Gender.Elements['None of the above']`.
 
 Examples:
 
@@ -203,7 +203,7 @@ Examples:
 | --- | --- |
 | `['Fields', 'BrandAwareness', 'Label']` | `Fields.BrandAwareness.Label` |
 | `['Pages', 'Q1', 'Elements', 2]` | `Pages.Q1.Elements[2]` |
-| `['Pages', 'Q1', 'Elements', 2, 'Categories', 'None of the above', 'Label']` | `Pages.Q1.Elements[2].Categories['None of the above'].Label` |
+| `['Fields', 'Gender', 'Elements', 'None of the above', 'Label']` | `Fields.Gender.Elements['None of the above'].Label` |
 
 ## Authoring guidance for cmdlet authors
 

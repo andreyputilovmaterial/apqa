@@ -457,11 +457,9 @@ read their input from ``args``). Currently implemented:
   ``Types`` (block keyed by name), ``Fields`` (block keyed by name),
   ``Pages`` (block keyed by name), ``Routing`` (text). Every item block carries
   ``Name``/``Label``/``_Attrs``/``Labels``/``Script``/``Properties`` plus
-  ``Elements`` (``None`` for scalars and classes/blocks, a named ``Collection`` of
-  iteration blocks for arrays/grids) and, for items that own categories, a
-  ``Categories`` block keyed by category name → detailed category block (for a
-  categorical scalar its keys are the available response options, and its
-  ``Elements`` is a named ``Collection`` of those options). Blocks that contain
+  ``Elements`` (``None`` for scalars and classes/blocks; a named ``Collection`` of
+  iteration blocks for arrays/grids, of response options for categorical scalars,
+  and of category/entry blocks for shared lists and pages). Blocks that contain
   other fields (a class/block's sub-fields, and the columns of an array/grid)
   put them in a ``Fields`` block keyed by name. ``_Attrs`` mirrors the raw MDD
   object model (Pascal-cased COM properties such as ``ObjectTypeValue``,

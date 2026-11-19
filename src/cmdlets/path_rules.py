@@ -9,7 +9,7 @@ two cmdlets stay interchangeable.
 A rule is a mapping::
 
     {'name': 'Skip Select labels', 'type': 'eq',
-     'pattern': 'Fields.SnifferData.Fields.Cluster.Categories.Select',
+     'pattern': 'Fields.SnifferData.Fields.Cluster.Elements.Select',
      'case_insensitive': False}
 
 - ``pattern`` (required) is the text matched against the rendered path;

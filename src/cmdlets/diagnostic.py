@@ -123,7 +123,7 @@ def format_path(path):
     ``['Fields', 'BrandAwareness', 'Label']`` becomes
     ``Fields.BrandAwareness.Label``; collection indices become ``[i]``; a key
     that is not a plain identifier is quoted, e.g.
-    ``Pages.Q1.Elements[2].Categories['None of the above'].Label``.
+    ``Fields.Gender.Elements['None of the above'].Label``.
     """
     result = ''
     for part in path:

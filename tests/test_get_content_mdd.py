@@ -2,7 +2,7 @@
 
 The actual COM/MDM reading path cannot be exercised here (it needs Windows,
 MDM/Professional and pywin32), so these tests cover the arg-normalization,
-value-coercion and category-map helpers that run everywhere.
+value-coercion and category-collection helpers that run everywhere.
 """
 
 import sys
@@ -16,7 +16,6 @@ from src.cmdlets.get_content_mdd import (  # noqa: E402
     _MDDReader,
     _as_int,
     _as_list,
-    _category_map,
     _is_digit_name,
     _iter_attr,
     _plain,
@@ -30,6 +29,19 @@ from src.cmdlets.value_types import Collection  # noqa: E402
 class _Stub:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+
+class _NamedCollectionStub:
+    """Stands in for a COM collection that iterates items and indexes by name."""
+
+    def __init__(self, items):
+        self._by_name = {item.Name: item for item in items}
+
+    def __iter__(self):
+        return iter(self._by_name.values())
+
+    def __getitem__(self, name):
+        return self._by_name[name]
 
 
 def test_as_list():
@@ -86,24 +98,6 @@ def test_iter_attr():
     stub = _Stub(Elements=[1, 2, 3])
     assert list(_iter_attr(stub, 'Elements')) == [1, 2, 3]
     assert list(_iter_attr(stub, 'Missing')) == []
-
-
-def test_category_map_indexes_leaves_and_nested_groups():
-    categories = [
-        {'Name': 'A', 'Elements': None},
-        {
-            'Name': 'Group',
-            'Elements': [
-                {'Name': 'B', 'Elements': None},
-                {'Name': 'C', 'Elements': None},
-            ],
-        },
-    ]
-    mapped = _category_map(categories)
-    assert set(mapped) == {'A', 'Group', 'B', 'C'}
-    assert mapped['A']['Elements'] is None
-    assert mapped['Group']['Elements'][0]['Name'] == 'B'
-    assert mapped['B']['Name'] == 'B'
 
 
 def test_block_field_stores_subfields_in_Fields_bucket(monkeypatch):
@@ -188,7 +182,54 @@ def test_scalar_categorical_field_emits_elements_collection(monkeypatch):
 
     assert isinstance(block['Elements'], Collection)
     assert block['Elements'].names == ['Yes']
-    assert block['Categories'] == {'Yes': {'Name': 'Yes'}}
+    assert 'Categories' not in block
+
+
+def test_array_field_emits_elements_collection_not_categories(monkeypatch):
+    reader = _MDDReader.__new__(_MDDReader)
+    monkeypatch.setattr(
+        _MDDReader, '_read_item_meta',
+        lambda self, item, attrs: {'Name': 'Loop', '_Attrs': attrs},
+    )
+    monkeypatch.setattr(
+        reader, '_read_category_collection',
+        lambda field: Collection([{'Name': 'Nike'}], ['Nike']),
+    )
+    monkeypatch.setattr(
+        reader, '_read_subfields',
+        lambda field: {},
+    )
+
+    block = reader._read_array_field(_Stub(), 1)
+
+    assert isinstance(block['Elements'], Collection)
+    assert block['Elements'].names == ['Nike']
+    assert 'Categories' not in block
+
+
+def test_shared_list_emits_elements_collection_not_categories(monkeypatch):
+    reader = _MDDReader.__new__(_MDDReader)
+    shared = _Stub(Name='SL_MasterBrandList')
+    reader.document = _Stub(Types=_NamedCollectionStub([shared]))
+    monkeypatch.setattr(
+        _MDDReader, '_read_item_meta',
+        lambda self, item, attrs: {'Name': item.Name, '_Attrs': attrs},
+    )
+    monkeypatch.setattr(
+        _MDDReader, '_shared_list_attributes',
+        lambda self, item: {},
+    )
+    monkeypatch.setattr(
+        reader, '_read_category_collection',
+        lambda item: Collection([{'Name': 'Nike'}], ['Nike']),
+    )
+
+    result = reader._read_types()
+
+    block = result['SL_MasterBrandList']
+    assert isinstance(block['Elements'], Collection)
+    assert block['Elements'].names == ['Nike']
+    assert 'Categories' not in block
 
 
 def test_non_categorical_scalar_field_elements_is_none(monkeypatch):

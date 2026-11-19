@@ -12,7 +12,7 @@ received value itself is never removed; only nodes beneath it are candidates.
 
 ``rules`` is a list of rule mappings (see ``src/cmdlets/path_rules.py``); each
 rule matches a node's rendered path (``format_path`` notation, e.g.
-``Fields.SnifferData.Fields.Cluster.Categories.Select``). A path naming a block
+``Fields.SnifferData.Fields.Cluster.Elements.Select``). A path naming a block
 key or an array element removes that whole node; a path naming a leaf removes
 just that leaf; a path matching no node is ignored.
 """
