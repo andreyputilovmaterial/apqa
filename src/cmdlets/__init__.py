@@ -37,7 +37,7 @@ from . import get_filesystem_obj_info  # noqa: F401 - import registers the cmdle
 from . import include_child  # noqa: F401 - import registers the cmdlet
 from . import include_deep_node  # noqa: F401 - import registers the cmdlet
 from . import is_sysmissing  # noqa: F401 - import registers the cmdlet
-from . import length  # noqa: F401 - import registers the cmdlet
+from . import transform_text_count_chars  # noqa: F401 - import registers the cmdlet
 from . import literal  # noqa: F401 - import registers the cmdlet
 from . import literal_from_json  # noqa: F401 - import registers the cmdlet
 from . import logical_all  # noqa: F401 - import registers the cmdlet

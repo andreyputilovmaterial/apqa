@@ -253,14 +253,21 @@ def test_bit_shifts():
 
 # ---- string ----------------------------------------------------------------
 
-def test_length():
-    assert cmdlets.get('length')('hello', {}) == 5
-    assert cmdlets.get('length')('', {}) == 0
+def test_transform_text_count_chars():
+    assert cmdlets.get('transform-text-count-chars')('hello', {}) == 5
+    assert cmdlets.get('transform-text-count-chars')('', {}) == 0
 
 
-def test_length_requires_text():
+def test_transform_text_count_chars_strips_whitespace():
+    assert cmdlets.get('transform-text-count-chars')(
+        '  hello  ', {'strip_whitespace': True}
+    ) == 5
+    assert cmdlets.get('transform-text-count-chars')('  hello  ', {}) == 9
+
+
+def test_transform_text_count_chars_requires_text():
     with pytest.raises(TypeError):
-        cmdlets.get('length')(5, {})
+        cmdlets.get('transform-text-count-chars')(5, {})
 
 
 def test_transform_text_regex_replaces_all_matches():

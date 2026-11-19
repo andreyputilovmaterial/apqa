@@ -41,6 +41,7 @@ CMDLET_RENAMES = {
     'filter': 'exclude-deep-node',
     'matches': 'validate-text-matches',
     'map': 'foreach-item',
+    'length': 'transform-text-count-chars',
 }
 
 

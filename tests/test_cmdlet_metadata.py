@@ -81,6 +81,16 @@ def test_validate_text_matches_is_terminal():
     assert 'matches' not in kinds
 
 
+def test_length_renamed_to_transform_text_count_chars():
+    meta = {c['name']: c for c in get_cmdlet_metadata()['cmdlets']}
+    assert 'length' not in meta
+    assert meta['transform-text-count-chars']['kind'] == 'processor'
+    args = {a['name']: a for a in meta['transform-text-count-chars']['args']}
+    assert args['strip_whitespace']['type'] == 'boolean'
+    assert args['strip_whitespace']['required'] is False
+    assert args['strip_whitespace']['default'] is False
+
+
 def test_every_cmdlet_has_permission_list():
     for cmdlet in get_cmdlet_metadata()['cmdlets']:
         assert isinstance(cmdlet['permissions'], list)

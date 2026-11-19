@@ -101,6 +101,13 @@ def test_migrate_chain_rewrites_map_to_foreach_item():
     assert out[0]['args']['transform'][0]['cmdlet'] == 'select-field'
 
 
+def test_migrate_chain_rewrites_length_to_transform_text_count_chars():
+    chain = [{'cmdlet': 'length', 'args': {}}]
+    out = migrate_chain(chain)
+    assert out[0]['cmdlet'] == 'transform-text-count-chars'
+    assert out[0]['args'] == {}
+
+
 def test_migrate_group_dict_rewrites_alias_chains():
     data = {
         'name': 'g',

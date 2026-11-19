@@ -277,7 +277,9 @@ Bitwise operators require integer operands (bool excluded) and use
 `args['operands']` for the binary/n-ary ones: `bitwise-not` (unary), `bitwise-and`,
 `bitwise-or`, `bitwise-xor`, `bitwise-lshift`, `bitwise-rshift`.
 
-String helpers: `length` returns the text length; `transform-text-regex` replaces every regex match of
+String helpers: `transform-text-count-chars` returns the number of characters in
+a text value (its optional `strip_whitespace` flag strips leading and trailing
+whitespace first); `transform-text-regex` replaces every regex match of
 `args['pattern']` with `args['replacement']` (Python's `re.sub`, so replacement
 backreferences like `\1` work), with optional `case_insensitive` and `count`
 (maximum number of replacements; `0` replaces all). Text matching as a yes/no

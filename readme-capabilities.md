@@ -44,7 +44,8 @@ Commands that bring your data into the rule — the first command in a chain.
 - **`transform-text-code-grab-assignments-mrs`** — pull out the values of
   `NAME = VALUE` assignments from a text (for example from a script file). Give
   it the `variable_name` to look for.
-- **`length`** — number of characters in a text.
+- **`transform-text-count-chars`** — number of characters in a text (optionally
+  strip surrounding whitespace first).
 
 ## Checking values (`validate-*`)
 
