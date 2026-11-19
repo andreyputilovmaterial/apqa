@@ -1,7 +1,6 @@
 
 import datetime
 import json
-import sqlite3
 import threading
 from pathlib import Path
 
@@ -110,6 +109,7 @@ class DBFileSqlite(DBFileBase):
     """
 
     def __init__(self, resource_path):
+        import sqlite3  # lazy: the stdlib driver is only needed for the SQLite backend
         self.resource_path = Path(resource_path).resolve()
         if not self.resource_path.is_file():
             raise FileNotFoundError(f'db file: file not found: {self.resource_path}')
@@ -149,6 +149,7 @@ class DBFileSqlite(DBFileBase):
 
     @classmethod
     def _init_storage(cls, resource_path):
+        import sqlite3  # lazy: the stdlib driver is only needed for the SQLite backend
         path = Path(resource_path).resolve()
         if path.exists():
             raise FileExistsError(f'db file: already exists: {path}')

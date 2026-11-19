@@ -193,7 +193,7 @@ echo -
 
 
 echo "Calling pinliner (with --main entry point)..."
-"$pythonexecutable" "src_dev_build/lib/pinliner/pinliner/pinliner.py" src -o "$DIST_DIR/apqa_bundle.py" --main src.launcher --main-attr main
+"$pythonexecutable" "src_dev_build/lib/pinliner/pinliner/pinliner.py" src -o "$DIST_DIR/apqa_bundle.py" --main src.launcher --main-attr main --embed-code-encoding zlibbase64
 echo "done"
 echo "Appending the pytest entry point..."
 {

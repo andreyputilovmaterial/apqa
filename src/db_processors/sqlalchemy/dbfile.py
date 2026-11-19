@@ -29,21 +29,6 @@ import json
 import threading
 from pathlib import Path
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    Text,
-    create_engine,
-    func,
-    inspect,
-    select,
-)
-from sqlalchemy.engine import make_url
-from sqlalchemy.sql import quoted_name
-
 from ..dbfile_base import DBFile as DBFileBase
 from ..group_base import Group
 from ..ids import ensure_unique
@@ -71,51 +56,98 @@ def _loads(text, default):
         return default
 
 
-# Reserved-word column names are quoted everywhere, mirroring the SQLite schema.
-_GROUP = quoted_name('group', True)
-_LEFT = quoted_name('left', True)
-_RIGHT = quoted_name('right', True)
+class _SQLAlchemySchema:
+    """SQLAlchemy's own namespace plus the shared schema, built lazily.
 
-_METADATA = MetaData()
+    SQLAlchemy is the heaviest dependency of the db processors, and its schema
+    objects (``MetaData`` and the ``rules``/``groups``/``project`` tables) are
+    only needed when a SQLAlchemy URL is actually opened. Building them here —
+    instead of at import time — keeps importing this module (to register the
+    processor) cheap, so a YAML- or SQLite-backed session never pays for
+    SQLAlchemy.
+    """
 
-_RULES_TABLE = Table(
-    'rules', _METADATA,
-    Column('id', String(255), primary_key=True),
-    Column('name', Text, nullable=False),
-    Column(_GROUP, String(255), nullable=False),
-    Column('meta', Text, nullable=False),
-    Column(_LEFT, Text, nullable=False),
-    Column('op', String(255), nullable=False),
-    Column('op_args', Text, nullable=False),
-    Column(_RIGHT, Text, nullable=False),
-    # Insertion-order marker. The hand-written SQLite backend uses `rowid` for
-    # this; here it is an explicit column so ordering works on every dialect.
-    Column('seq', Integer, nullable=False),
-)
+    def __init__(self):
+        from sqlalchemy import (
+            Column,
+            Integer,
+            MetaData,
+            String,
+            Table,
+            Text,
+            create_engine,
+            func,
+            inspect,
+            select,
+        )
+        from sqlalchemy.engine import make_url
+        from sqlalchemy.sql import quoted_name
 
-_GROUPS_TABLE = Table(
-    'groups', _METADATA,
-    Column('id', String(255), primary_key=True),
-    Column('name', Text, nullable=False),
-    Column('parent', String(255), nullable=False),
-    Column('aliases', Text, nullable=False),
-    Column('meta', Text, nullable=False),
-    Column('seq', Integer, nullable=False),
-)
+        self.make_url = make_url
+        self.create_engine = create_engine
+        self.inspect = inspect
+        self.select = select
+        self.func = func
 
-_PROJECT_TABLE = Table(
-    'project', _METADATA,
-    Column('id', Integer, primary_key=True),
-    Column('name', Text, nullable=False),
-    Column('comment', Text, nullable=False),
-    Column('meta', Text, nullable=False),
-)
+        # Reserved-word column names are quoted everywhere, mirroring the SQLite
+        # schema.
+        group = quoted_name('group', True)
+        left = quoted_name('left', True)
+        right = quoted_name('right', True)
+
+        metadata = MetaData()
+        self.metadata = metadata
+        self.rules = Table(
+            'rules', metadata,
+            Column('id', String(255), primary_key=True),
+            Column('name', Text, nullable=False),
+            Column(group, String(255), nullable=False),
+            Column('meta', Text, nullable=False),
+            Column(left, Text, nullable=False),
+            Column('op', String(255), nullable=False),
+            Column('op_args', Text, nullable=False),
+            Column(right, Text, nullable=False),
+            # Insertion-order marker. The hand-written SQLite backend uses `rowid`
+            # for this; here it is an explicit column so ordering works on every
+            # dialect.
+            Column('seq', Integer, nullable=False),
+        )
+        self.groups = Table(
+            'groups', metadata,
+            Column('id', String(255), primary_key=True),
+            Column('name', Text, nullable=False),
+            Column('parent', String(255), nullable=False),
+            Column('aliases', Text, nullable=False),
+            Column('meta', Text, nullable=False),
+            Column('seq', Integer, nullable=False),
+        )
+        self.project = Table(
+            'project', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', Text, nullable=False),
+            Column('comment', Text, nullable=False),
+            Column('meta', Text, nullable=False),
+        )
+
+
+_schema_cache = None
+_schema_lock = threading.Lock()
+
+
+def _schema():
+    """Return the shared SQLAlchemy schema, importing SQLAlchemy on first use."""
+    global _schema_cache
+    if _schema_cache is None:
+        with _schema_lock:
+            if _schema_cache is None:
+                _schema_cache = _SQLAlchemySchema()
+    return _schema_cache
 
 
 def _url(resource_path):
     """Parse ``resource_path`` into a SQLAlchemy URL or raise a readable error."""
     try:
-        return make_url(f'{resource_path}')
+        return _schema().make_url(f'{resource_path}')
     except Exception as error:
         raise ValueError(
             f'db file: not a valid SQLAlchemy URL: {resource_path!r}'
@@ -125,7 +157,7 @@ def _url(resource_path):
 def _engine(url):
     """Create an engine for ``url``, turning URL/driver errors into ``ValueError``."""
     try:
-        return create_engine(url)
+        return _schema().create_engine(url)
     except Exception as error:
         raise ValueError(
             'db file: cannot create SQLAlchemy engine for '
@@ -141,7 +173,7 @@ def _storage_exists(engine, url):
     """Return True when the storage (file or ``rules`` table) already exists."""
     if _is_sqlite_file_url(url):
         return Path(url.database).resolve().exists()
-    return 'rules' in inspect(engine).get_table_names()
+    return 'rules' in _schema().inspect(engine).get_table_names()
 
 
 @DBFileBase.register('sqlalchemy')
@@ -154,6 +186,7 @@ class DBFileSqlalchemy(DBFileBase):
     """
 
     def __init__(self, resource_path):
+        self._sa = _schema()
         url = _url(resource_path)
         self._url = url
         self.resource_path = url.render_as_string(hide_password=True)
@@ -175,10 +208,11 @@ class DBFileSqlalchemy(DBFileBase):
                 raise FileExistsError(
                     f'db file: already exists: {url.render_as_string(hide_password=True)}'
                 )
-            _METADATA.create_all(engine)
+            sa = _schema()
+            sa.metadata.create_all(engine)
             with engine.begin() as conn:
                 conn.execute(
-                    _PROJECT_TABLE.insert().values(id=1, name='', comment='', meta='{}')
+                    sa.project.insert().values(id=1, name='', comment='', meta='{}')
                 )
         finally:
             engine.dispose()
@@ -186,20 +220,20 @@ class DBFileSqlalchemy(DBFileBase):
 
     def _ensure_schema(self):
         with self._lock:
-            _METADATA.create_all(self._engine, checkfirst=True)
+            self._sa.metadata.create_all(self._engine, checkfirst=True)
             with self._engine.begin() as conn:
                 row = conn.execute(
-                    select(_PROJECT_TABLE.c.id).where(_PROJECT_TABLE.c.id == 1)
+                    self._sa.select(self._sa.project.c.id).where(self._sa.project.c.id == 1)
                 ).first()
                 if row is None:
                     conn.execute(
-                        _PROJECT_TABLE.insert().values(
+                        self._sa.project.insert().values(
                             id=1, name='', comment='', meta='{}'
                         )
                     )
 
     def _next_seq(self, conn, table):
-        return (conn.execute(select(func.max(table.c.seq))).scalar() or 0) + 1
+        return (conn.execute(self._sa.select(self._sa.func.max(table.c.seq))).scalar() or 0) + 1
 
     def save(self):
         # Every mutation commits its own transaction, so there is nothing left to
@@ -212,7 +246,7 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 rows = conn.execute(
-                    select(_RULES_TABLE).order_by(_RULES_TABLE.c.seq)
+                    self._sa.select(self._sa.rules).order_by(self._sa.rules.c.seq)
                 ).mappings().all()
         return [self._row_to_rule(row) for row in rows]
 
@@ -221,7 +255,7 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 row = conn.execute(
-                    select(_RULES_TABLE).where(_RULES_TABLE.c.id == rule_id)
+                    self._sa.select(self._sa.rules).where(self._sa.rules.c.id == rule_id)
                 ).mappings().first()
         if row is None:
             raise KeyError(f'rule not found: {rule_id}')
@@ -232,7 +266,7 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 row = conn.execute(
-                    select(_RULES_TABLE.c.id).where(_RULES_TABLE.c.id == rule_id)
+                    self._sa.select(self._sa.rules.c.id).where(self._sa.rules.c.id == rule_id)
                 ).first()
         return row is not None
 
@@ -243,9 +277,9 @@ class DBFileSqlalchemy(DBFileBase):
         rule.group = self.resolve_group_ref(rule.group)
         with self._lock:
             with self._engine.begin() as conn:
-                seq = self._next_seq(conn, _RULES_TABLE)
+                seq = self._next_seq(conn, self._sa.rules)
                 conn.execute(
-                    _RULES_TABLE.insert().values(
+                    self._sa.rules.insert().values(
                         id=rule.id,
                         name=rule.name,
                         group=rule.group,
@@ -271,8 +305,8 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.begin() as conn:
                 conn.execute(
-                    _RULES_TABLE.update()
-                    .where(_RULES_TABLE.c.id == rule_id)
+                    self._sa.rules.update()
+                    .where(self._sa.rules.c.id == rule_id)
                     .values(
                         name=rule.name,
                         group=rule.group,
@@ -292,8 +326,8 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.begin() as conn:
                 conn.execute(
-                    _RULES_TABLE.update()
-                    .where(_RULES_TABLE.c.id == rule_id)
+                    self._sa.rules.update()
+                    .where(self._sa.rules.c.id == rule_id)
                     .values(name=rule.name)
                 )
         return rule
@@ -303,7 +337,7 @@ class DBFileSqlalchemy(DBFileBase):
         rule = self.get_rule(rule_id)
         with self._lock:
             with self._engine.begin() as conn:
-                conn.execute(_RULES_TABLE.delete().where(_RULES_TABLE.c.id == rule_id))
+                conn.execute(self._sa.rules.delete().where(self._sa.rules.c.id == rule_id))
         return rule
 
     # ---- groups CRUD ---------------------------------------------------------
@@ -312,7 +346,7 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 rows = conn.execute(
-                    select(_GROUPS_TABLE).order_by(_GROUPS_TABLE.c.seq)
+                    self._sa.select(self._sa.groups).order_by(self._sa.groups.c.seq)
                 ).mappings().all()
         return [self._row_to_group(row) for row in rows]
 
@@ -321,7 +355,7 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 row = conn.execute(
-                    select(_GROUPS_TABLE).where(_GROUPS_TABLE.c.id == group_id)
+                    self._sa.select(self._sa.groups).where(self._sa.groups.c.id == group_id)
                 ).mappings().first()
         if row is None:
             raise KeyError(f'group not found: {group_id}')
@@ -332,7 +366,7 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 row = conn.execute(
-                    select(_GROUPS_TABLE.c.id).where(_GROUPS_TABLE.c.id == group_id)
+                    self._sa.select(self._sa.groups.c.id).where(self._sa.groups.c.id == group_id)
                 ).first()
         return row is not None
 
@@ -343,9 +377,9 @@ class DBFileSqlalchemy(DBFileBase):
         group.parent = self._validate_group_parent(group, group.parent)
         with self._lock:
             with self._engine.begin() as conn:
-                seq = self._next_seq(conn, _GROUPS_TABLE)
+                seq = self._next_seq(conn, self._sa.groups)
                 conn.execute(
-                    _GROUPS_TABLE.insert().values(
+                    self._sa.groups.insert().values(
                         id=group.id,
                         name=group.name,
                         parent=group.parent,
@@ -368,8 +402,8 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.begin() as conn:
                 conn.execute(
-                    _GROUPS_TABLE.update()
-                    .where(_GROUPS_TABLE.c.id == group_id)
+                    self._sa.groups.update()
+                    .where(self._sa.groups.c.id == group_id)
                     .values(
                         name=group.name,
                         parent=group.parent,
@@ -386,8 +420,8 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.begin() as conn:
                 conn.execute(
-                    _GROUPS_TABLE.update()
-                    .where(_GROUPS_TABLE.c.id == group_id)
+                    self._sa.groups.update()
+                    .where(self._sa.groups.c.id == group_id)
                     .values(name=group.name)
                 )
         return group
@@ -398,17 +432,17 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 child = conn.execute(
-                    select(_GROUPS_TABLE.c.id).where(_GROUPS_TABLE.c.parent == group_id)
+                    self._sa.select(self._sa.groups.c.id).where(self._sa.groups.c.parent == group_id)
                 ).first()
                 rule = conn.execute(
-                    select(_RULES_TABLE.c.id).where(_RULES_TABLE.c.group == group_id)
+                    self._sa.select(self._sa.rules.c.id).where(self._sa.rules.c.group == group_id)
                 ).first()
                 if child is not None:
                     raise ValueError(f'group is not empty (it has sub-groups): {group_id}')
                 if rule is not None:
                     raise ValueError(f'group is not empty (it has rules): {group_id}')
             with self._engine.begin() as conn:
-                conn.execute(_GROUPS_TABLE.delete().where(_GROUPS_TABLE.c.id == group_id))
+                conn.execute(self._sa.groups.delete().where(self._sa.groups.c.id == group_id))
         return group
 
     # ---- project CRUD ----------------------------------------------------------
@@ -417,11 +451,11 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.connect() as conn:
                 row = conn.execute(
-                    select(
-                        _PROJECT_TABLE.c.name,
-                        _PROJECT_TABLE.c.comment,
-                        _PROJECT_TABLE.c.meta,
-                    ).where(_PROJECT_TABLE.c.id == 1)
+                    self._sa.select(
+                        self._sa.project.c.name,
+                        self._sa.project.c.comment,
+                        self._sa.project.c.meta,
+                    ).where(self._sa.project.c.id == 1)
                 ).mappings().first()
         if row is None:
             return Project()
@@ -437,8 +471,8 @@ class DBFileSqlalchemy(DBFileBase):
         with self._lock:
             with self._engine.begin() as conn:
                 conn.execute(
-                    _PROJECT_TABLE.update()
-                    .where(_PROJECT_TABLE.c.id == 1)
+                    self._sa.project.update()
+                    .where(self._sa.project.c.id == 1)
                     .values(
                         name=project.name,
                         comment=project.comment,

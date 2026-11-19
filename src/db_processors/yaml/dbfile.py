@@ -1,7 +1,6 @@
 
 
 from pathlib import Path
-import yaml
 
 from ..dbfile_base import DBFile as DBFileBase
 from ..document_base import DBFileDocument
@@ -48,6 +47,7 @@ class DBFileYaml(DBFileDocument):
 
     @classmethod
     def _init_storage(cls, resource_path):
+        import yaml  # lazy: PyYAML is only needed for the YAML backend
         path = Path(resource_path).resolve()
         if path.exists():
             raise FileExistsError(f'db file: already exists: {path}')
@@ -64,11 +64,13 @@ class DBFileYaml(DBFileDocument):
         return path
 
     def _read(self):
+        import yaml  # lazy: PyYAML is only needed for the YAML backend
         with open(self.resource_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
         self._read_document(data)
 
     def save(self):
+        import yaml  # lazy: PyYAML is only needed for the YAML backend
         with open(self.resource_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self._to_document(), f, sort_keys=False)
 
