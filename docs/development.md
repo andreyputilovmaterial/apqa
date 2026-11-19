@@ -583,7 +583,7 @@ An **arg schema** is `{ name, type, required, description }` plus optional
   constant editor: text / number / boolean / path / date / json),
   `cmdlet-chains` (a list of cmdlet chains, e.g.
   `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a
-  single cmdlet chain, e.g. `map`'s `transform` / `where`'s `predicate`).
+  single cmdlet chain, e.g. `foreach-item`'s `transform`).
 
 Every arg editor also carries a shared **"unset"** checkbox — the uniform
 opt-out for `sysmissing` (see `docs/cmdlet-data-formats.md` "Arg values"):

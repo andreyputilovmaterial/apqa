@@ -136,7 +136,6 @@ collection is a workbook, a sheet, a table, or a query result:
 | --- | --- | --- |
 | `obj.field` (JS-style) / `Select-Object -ExpandProperty Name` | extract one field from a block, or one field from every iteration → flat list | `select-field` |
 | `Select-Object -First/-Last/-Skip/-Index` | pick one element by index, or a sub-range | `select-item`, `select-range` |
-| `Where-Object { … }` | filter iterations by a condition | `where` |
 | `ForEach-Object { … }` | map/transform each item of a collection | `foreach-item` |
 | — | map/transform each own field of a block (no recursion) | `foreach-field` |
 | — | map/transform each scalar leaf, traversing the whole tree | `foreach-deep-node` |
@@ -149,7 +148,7 @@ collection is a workbook, a sheet, a table, or a query result:
 > **Naming note (unsettled).** `select-field` is a deliberately provisional name
 > for "read one field" — the verb (`select-` vs `get-`/`read-`) and the noun
 > (`field` vs `property`) are still being felt out and may change. Likewise
-> `foreach-item`/`where` are the spec names for ForEach-Object/Where-Object;
+> `foreach-item` is the spec name for ForEach-Object;
 > `map` was the earlier name for ForEach-Object and has been folded into
 > `foreach-item`. The former path-removal cmdlet `filter` was split into the
 > `exclude-*` / `include-*` pairs (see "Excluding / including nodes by path");
@@ -332,9 +331,6 @@ On a **block** (object) or a **collection**:
 - `select-range` (sub-range of a collection) — `args.start` (inclusive) /
   `args.stop` (exclusive), both optional, Python-slice semantics, no step.
   Returns a collection with the sliced names.
-- `where` (filter elements) — `args.predicate` is a **cmdlet chain** run once
-  per element (the element is its piped value); an element is kept when the
-  chain's result is truthy. Returns a collection again, same field shape.
 - `foreach-item` (transform collection items) — `args.transform` is a **cmdlet chain**
   run once per item (the item is its piped input); returns a collection of the
   transformed values (any shape). This was formerly named `map`.
@@ -558,7 +554,7 @@ structured exclude rules — name / match type / pattern / case flag), `json`,
 `literal-value` (the `literal` cmdlet's typed constant editor — see below),
 `cmdlet-chains` (a list of cmdlet chains, e.g.
 `logical-and`/`logical-or`/`bitwise-*` `operands`), and `cmdlet-chain` (a single
-cmdlet chain, e.g. `map`'s `transform` or `where`'s `predicate`).
+cmdlet chain, e.g. `foreach-item`'s `transform`).
 
 `literal-value` (used only by `literal.value`) is a **composite editor**: a type
 selector (`text` / `number` / `boolean` / `path` / `date` / `json`) plus the

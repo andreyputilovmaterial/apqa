@@ -1,5 +1,5 @@
 // `cmdlet-chain` arg editor: a single nested cmdlet chain (e.g. `foreach-item`'s
-// `transform` or `where`'s `predicate`). The first slot offers
+// `transform`). The first slot offers
 // processors/terminals because a nested chain receives a piped value.
 const InputArgCmdletChain = {
   inheritAttrs: false,

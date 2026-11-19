@@ -60,14 +60,13 @@ Commands that bring your data into the rule — the first command in a chain.
 
 - **`is-sysmissing`** — is the value missing?
 
-## Picking & rearranging & changin shape (`select-*`, `where`, `foreach-*`, `sort`, `exclude-*`, `include-*`)
+## Picking & rearranging & changing shape (`select-*`, `foreach-*`, `sort`, `exclude-*`, `include-*`)
 
 - **`select-field`** — pick one field from a block, or pull that field out of
   every row into a list.
 - **`select-item`** — pick one item from a list by its position.
 - **`select-range`** — take a slice of a list (from a start position up to an
   end position).
-- **`where`** — keep only the items of a list that match a condition you write.
 - **`foreach-item`** — run a command on every item of a list.
 - **`foreach-field`** — run a command on every field of a block.
 - **`foreach-deep-node`** — run a command on every single value inside a nested

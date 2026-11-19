@@ -1,5 +1,5 @@
 """Tests for the shape-changing cmdlets: select-field, select-item, select-range,
-map, and where."""
+foreach-item, and sort."""
 
 import sys
 from pathlib import Path
@@ -142,30 +142,6 @@ def test_select_range_bounds_must_be_integer():
         cmdlets.get('select-range')([0, 1], {'start': 1.5})
 
 
-# ---- where -----------------------------------------------------------------
-
-def test_where_keeps_truthy_iterations():
-    rows = [{'x': 0}, {'x': 1}]
-    predicate = [_field('x')]
-    assert cmdlets.get('where')(rows, {'predicate': predicate}) == [{'x': 1}]
-
-
-def test_where_empty_array():
-    assert cmdlets.get('where')([], {'predicate': [_field('x')]}) == []
-
-
-def test_where_requires_non_empty_predicate():
-    with pytest.raises(ValueError):
-        cmdlets.get('where')([1], {})
-    with pytest.raises(ValueError):
-        cmdlets.get('where')([1], {'predicate': []})
-
-
-def test_where_rejects_non_array():
-    with pytest.raises(TypeError):
-        cmdlets.get('where')({'a': 1}, {'predicate': [_field('a')]})
-
-
 # ---- rule runner end-to-end ------------------------------------------------
 
 def test_help_example_pipeline():
@@ -178,18 +154,6 @@ def test_help_example_pipeline():
         ],
         'op': 'cmp-eq',
         'right': [_literal(2)],
-    }
-    assert run_rule(rule) is True
-
-
-def test_where_pipeline():
-    rule = {
-        'left': [
-            _literal([{'x': 0}, {'x': 1}]),
-            {'cmdlet': 'where', 'args': {'predicate': [_field('x')]}},
-        ],
-        'op': 'cmp-eq',
-        'right': [_literal([{'x': 1}])],
     }
     assert run_rule(rule) is True
 
@@ -214,13 +178,6 @@ def test_select_range_preserves_collection_names():
     result = cmdlets.get('select-range')(coll, {'start': 1, 'stop': 3})
     assert isinstance(result, Collection)
     assert result.names == ['b', 'c']
-
-
-def test_where_preserves_collection_names():
-    rows = Collection([{'x': 0}, {'x': 1}], ['zero', 'one'])
-    result = cmdlets.get('where')(rows, {'predicate': [_field('x')]})
-    assert isinstance(result, Collection)
-    assert result.names == ['one']
 
 
 def test_foreach_item_preserves_collection_names():

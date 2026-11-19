@@ -5,6 +5,9 @@
 ## Last state
 
 
+- **Deleted the `where` cmdlet.** Removed `src/cmdlets/where/` and its registration in `src/cmdlets/__init__.py`. `where` was a collection filter driven by an arbitrary `predicate` cmdlet chain (kept elements whose predicate is truthy); the path-based `include-child`/`include-deep-node` only match keys/paths, not element values, so there is **no equivalent replacement** and **no read-time migration** — any stored rule that used `where` will now fail at run time with an unknown-cmdlet error. Updated `tests/test_shape_cmdlets.py` (removed `where` tests), `tests/test_cmdlet_metadata.py`, `docs/cmdlet-data-formats.md`, `docs/roadmap.md`, `readme-capabilities.md`, and a `cmdlet_chain` editor comment that referenced `where`'s `predicate`.
+
+
 - **Renamed the `length` cmdlet to `transform-text-count-chars` and added a `strip_whitespace` option.** The module moved from `src/cmdlets/length/` to `src/cmdlets/transform_text_count_chars/` (`git mv`). It now registers as `transform-text-count-chars` (kind `processor`) with a `strip_whitespace` boolean arg (default `false`) that strips leading/trailing whitespace before counting; non-text input (incl. `sysmissing`) raises `TypeError`. `src/db_processors/name_migrations.py` gained `'length': 'transform-text-count-chars'` so existing DB files upgrade on read. Updated `src/cmdlets/__init__.py`, the `transform-text-regex` docstring cross-reference, `docs/cmdlet-data-formats.md`, `readme-capabilities.md`, and tests (`test_standard_cmdlets.py`, `test_name_migrations.py`, `test_cmdlet_metadata.py`).
 
 

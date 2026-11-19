@@ -60,4 +60,3 @@ from . import transform_text_regex  # noqa: F401 - import registers the cmdlet
 from . import validate_network_request_result  # noqa: F401 - import registers the cmdlet
 from . import validate_text_matches  # noqa: F401 - import registers the cmdlet
 from . import validate_xml_compatible  # noqa: F401 - import registers the optional-dep cmdlet
-from . import where  # noqa: F401 - import registers the cmdlet
