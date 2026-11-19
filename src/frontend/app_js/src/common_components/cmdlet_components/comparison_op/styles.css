@@ -1,8 +1,7 @@
 /* The comparison op reuses the `.apqa-cmdlet` base chip so it reads as the same
    kind of unit as the cmdlets in the left/right chains; this class stays as the
-   separate hook for op-specific styling (weight, monospace font, alignment). */
+   separate hook for op-specific styling (weight, monospace font). */
 .apqa-comparison {
-  align-self: flex-start;
   font-weight: 600;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;

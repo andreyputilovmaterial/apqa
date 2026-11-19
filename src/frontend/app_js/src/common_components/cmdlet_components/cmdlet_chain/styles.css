@@ -2,6 +2,9 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;
   min-width: 0;
+  /* Top-align with the comparison-op chip (also `vertical-align: top`) so the
+     chain and the op share one line top in the inline definition row. */
+  vertical-align: top;
 }
 
 /* No pipe separator between chips: each cmdlet renders its own leading

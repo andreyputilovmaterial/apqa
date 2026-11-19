@@ -26,15 +26,20 @@ export function makeComparisonOp(form) {
 
     setup(props) {
       const spec = computed(() => opSpec(props.ops, props.op, form));
-      return { spec, partClasses };
+      // Leading and trailing tab separators (hidden, see `.apqa-cmdlet-separator`)
+      // put a tab between the comparison op and the chains on either side in the
+      // copy-as-text output, without changing the visible spacing.
+      return { spec, partClasses, tabChar: '\t' };
     },
 
     template: `
 <span class="apqa-cmdlet apqa-comparison" :title="op || ''">
+  <span class="apqa-cmdlet-separator" aria-hidden="true">{{ tabChar }}</span>
   <template v-if="spec !== null">
     <span v-for="(part, index) in spec" :key="index" :class="partClasses(part)">{{ part.text }}</span>
   </template>
   <span v-else class="apqa-cmdlet-part">{{ op || '?' }}</span>
+  <span class="apqa-cmdlet-separator" aria-hidden="true">{{ tabChar }}</span>
 </span>
 `,
   };

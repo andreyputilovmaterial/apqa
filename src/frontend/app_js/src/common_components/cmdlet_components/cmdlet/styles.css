@@ -78,3 +78,20 @@
   border: none;
   padding: 0;
 }
+
+/* Hidden tab separator between adjacent chips (and at the comparison op's
+   edges). It carries a real tab character so copy-as-text yields tab-separated
+   chips, but is rendered at zero size so the visible layout is unchanged — the
+   gap between chips still comes from the chip margins / the definition row's
+   spacing, never from this separator. `white-space: pre` keeps the tab from
+   being collapsed into a space (or trimmed); `tab-size: 0` makes the tab glyph
+   advance zero pixels (a tab's width comes from tab stops, not from
+   `font-size`), and `font-size: 0` removes its line-box strut. Both are
+   required for the tab to stay invisible yet survive selection/copy — clipping
+   via `width: 0; overflow: hidden` drops it from the copied text. */
+.apqa-cmdlet-separator {
+  display: inline;
+  font-size: 0;
+  tab-size: 0;
+  white-space: pre;
+}

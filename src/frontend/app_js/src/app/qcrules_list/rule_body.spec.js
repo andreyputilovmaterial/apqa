@@ -39,6 +39,22 @@ describe('RuleBody', () => {
     expect(text).toContain('count');
   });
 
+  it('separates the definition chips with tab characters in the copy text', () => {
+    const record = makeRecord({
+      left: [
+        { cmdlet: 'get-content', args: { path: 'a.sav' } },
+        { cmdlet: 'count' },
+      ],
+      right: [{ cmdlet: 'get-content', args: { path: 'b.sav' } }],
+    });
+    const wrapper = mountBody({ record, ops: OPS });
+    const text = wrapper.text();
+
+    expect(text).toContain('get-content path=a.sav\tcount');
+    expect(text).toContain('count\t=');
+    expect(text).toContain('=\tget-content path=b.sav');
+  });
+
   it('renders a cmdlet compact display spec from its metadata', () => {
     const record = makeRecord({
       left: [{ cmdlet: 'get-content-excel', args: { path: '/data/map.xlsx' } }],

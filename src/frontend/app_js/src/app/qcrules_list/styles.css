@@ -176,15 +176,19 @@
   color: var(--mdm-color-error);
 }
 
-/* Rule content: left chain, comparison op, right chain. */
+/* Rule content: left chain, comparison op, right chain. The three pieces are
+   laid out as inline content (not flex) so they read as one continuous line in
+   copy-as-text — a flex container blockifies its items, which inserts newlines
+   between them in the copied selection. The chips already flow and wrap inline
+   (inline-block + vertical-align: top), so a block container with an 8px right
+   margin on each non-last piece reproduces the previous flex row layout (wrap +
+   column-gap) without the copy newlines. */
 .apqa-rule-card-definition {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  row-gap: 0;
-  column-gap: 8px;
   min-width: 0;
+}
+
+.apqa-rule-card-definition > *:not(:last-child) {
+  margin-right: 8px;
 }
 
 /* Shared meta row (tags + badges + created timestamp). */
