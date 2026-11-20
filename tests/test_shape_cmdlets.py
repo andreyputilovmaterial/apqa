@@ -50,6 +50,20 @@ def test_select_field_missing_field_in_block_raises():
         cmdlets.get('select-field')({'a': 1}, {'field': 'b'})
 
 
+def test_select_field_missing_ok_returns_sysmissing_for_block():
+    assert cmdlets.get('select-field')(
+        {'a': 1}, {'field': 'b', 'missing_ok': True}
+    ) is sysmissing
+
+
+def test_select_field_missing_ok_returns_sysmissing_per_element():
+    rows = Collection([{'a': 1}, {}], ['r1', 'r2'])
+    result = cmdlets.get('select-field')(rows, {'field': 'a', 'missing_ok': True})
+    assert result[0] == 1
+    assert result[1] is sysmissing
+    assert result.names == ['r1', 'r2']
+
+
 def test_select_field_missing_field_in_element_raises():
     with pytest.raises(ValueError):
         cmdlets.get('select-field')([{'a': 1}, {}], {'field': 'b'})
@@ -73,9 +87,21 @@ def test_select_field_rejects_scalar_and_sysmissing():
         cmdlets.get('select-field')(sysmissing, {'field': 'a'})
 
 
+def test_select_field_missing_ok_still_rejects_scalar_and_sysmissing():
+    with pytest.raises(TypeError):
+        cmdlets.get('select-field')(5, {'field': 'a', 'missing_ok': True})
+    with pytest.raises(TypeError):
+        cmdlets.get('select-field')(sysmissing, {'field': 'a', 'missing_ok': True})
+
+
 def test_select_field_rejects_non_block_element():
     with pytest.raises(TypeError):
         cmdlets.get('select-field')([1], {'field': 'a'})
+
+
+def test_select_field_missing_ok_still_rejects_non_block_element():
+    with pytest.raises(TypeError):
+        cmdlets.get('select-field')([1], {'field': 'a', 'missing_ok': True})
 
 
 # ---- select-item -----------------------------------------------------------
@@ -93,6 +119,18 @@ def test_select_item_out_of_range_raises():
         cmdlets.get('select-item')(['a'], {'index': 5})
 
 
+def test_select_item_missing_ok_returns_sysmissing():
+    assert cmdlets.get('select-item')(
+        ['a'], {'index': 5, 'missing_ok': True}
+    ) is sysmissing
+
+
+def test_select_item_missing_ok_negative_out_of_range():
+    assert cmdlets.get('select-item')(
+        ['a'], {'index': -5, 'missing_ok': True}
+    ) is sysmissing
+
+
 def test_select_item_requires_index():
     with pytest.raises(ValueError):
         cmdlets.get('select-item')(['a'], {})
@@ -105,9 +143,21 @@ def test_select_item_index_must_be_integer():
         cmdlets.get('select-item')(['a'], {'index': True})
 
 
+def test_select_item_missing_ok_still_requires_integer_index():
+    with pytest.raises(TypeError):
+        cmdlets.get('select-item')(['a'], {'index': 1.5, 'missing_ok': True})
+    with pytest.raises(TypeError):
+        cmdlets.get('select-item')(['a'], {'index': True, 'missing_ok': True})
+
+
 def test_select_item_rejects_non_array():
     with pytest.raises(TypeError):
         cmdlets.get('select-item')({'a': 1}, {'index': 0})
+
+
+def test_select_item_missing_ok_still_rejects_non_array():
+    with pytest.raises(TypeError):
+        cmdlets.get('select-item')({'a': 1}, {'index': 0, 'missing_ok': True})
 
 
 # ---- select-range ----------------------------------------------------------

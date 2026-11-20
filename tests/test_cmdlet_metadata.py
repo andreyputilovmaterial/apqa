@@ -159,13 +159,20 @@ def test_shape_cmdlet_kinds_and_args():
     select_field_args = {a['name']: a for a in meta['select-field']['args']}
     assert select_field_args['field']['type'] == 'text'
     assert select_field_args['field']['required'] is True
+    assert select_field_args['missing_ok']['type'] == 'boolean'
+    assert select_field_args['missing_ok']['required'] is False
+    assert select_field_args['missing_ok']['default'] is False
 
     select_item_args = {a['name']: a for a in meta['select-item']['args']}
     assert select_item_args['index']['type'] == 'number'
+    assert select_item_args['missing_ok']['type'] == 'boolean'
+    assert select_item_args['missing_ok']['required'] is False
+    assert select_item_args['missing_ok']['default'] is False
 
     select_range_args = {a['name']: a for a in meta['select-range']['args']}
     assert select_range_args['start']['type'] == 'number'
     assert select_range_args['stop']['type'] == 'number'
+    assert 'missing_ok' not in select_range_args
 
     foreach_item_args = {a['name']: a for a in meta['foreach-item']['args']}
     assert foreach_item_args['transform']['type'] == 'cmdlet-chain'

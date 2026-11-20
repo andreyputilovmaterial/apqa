@@ -129,6 +129,16 @@ def test_block_missing_field_raises_value_error():
         vt.Block({'a': 1}).field('b')
 
 
+def test_block_field_missing_ok_returns_sysmissing():
+    assert vt.Block({'a': 1}).field('b', missing_ok=True) is vt.sysmissing
+    assert vt.Block({'a': 1}).select_field('b', missing_ok=True) is vt.sysmissing
+
+
+def test_collection_item_missing_ok_returns_sysmissing():
+    assert vt.Collection([1]).item(5, missing_ok=True) is vt.sysmissing
+    assert vt.Collection([1]).item(-5, missing_ok=True) is vt.sysmissing
+
+
 def test_collection_children():
     coll = vt.Collection([10, 20], ['x', 'y'])
     assert list(coll.children()) == [

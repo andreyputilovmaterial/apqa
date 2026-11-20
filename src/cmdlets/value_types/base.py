@@ -84,10 +84,10 @@ class Value(ABC):
 
     # -- shape operations (compound types override; leaves raise) ------------
 
-    def select_field(self, name):
+    def select_field(self, name, missing_ok=False):
         raise TypeError(f'{self.type_name}: cannot select a field')
 
-    def item(self, index):
+    def item(self, index, missing_ok=False):
         raise TypeError(f'{self.type_name}: cannot select an item')
 
     def slice(self, start=None, stop=None):

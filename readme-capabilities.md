@@ -67,8 +67,10 @@ Commands that bring your data into the rule — the first command in a chain.
 ## Picking & rearranging & changing shape (`select-*`, `foreach-*`, `sort`, `exclude-*`, `include-*`)
 
 - **`select-field`** — pick one field from a block, or pull that field out of
-  every row into a list.
-- **`select-item`** — pick one item from a list by its position.
+  every row into a list. A `missing_ok` option returns "missing" instead of
+  failing when the field is absent.
+- **`select-item`** — pick one item from a list by its position. A `missing_ok`
+  option returns "missing" instead of failing when the position is out of range.
 - **`select-range`** — take a slice of a list (from a start position up to an
   end position).
 - **`foreach-item`** — run a command on every item of a list.

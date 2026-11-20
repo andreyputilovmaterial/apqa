@@ -1,6 +1,6 @@
 """Compound value classes: blocks and collections."""
 
-from .base import Compound
+from .base import Compound, sysmissing
 
 __all__ = ['Block', 'Collection']
 
@@ -37,14 +37,20 @@ class Block(Compound, dict):
 
     # -- field access -------------------------------------------------------
 
-    def field(self, name):
-        """Return the field named ``name`` (raise ``ValueError`` if missing)."""
+    def field(self, name, missing_ok=False):
+        """Return the field named ``name``.
+
+        Raise ``ValueError`` when the field is missing, unless ``missing_ok`` is
+        true — then return ``sysmissing`` instead (JS ``obj.missing === undefined``).
+        """
         if name not in self:
+            if missing_ok:
+                return sysmissing
             raise ValueError(f'field {name!r} not found in block')
         return self[name]
 
-    def select_field(self, name):
-        return self.field(name)
+    def select_field(self, name, missing_ok=False):
+        return self.field(name, missing_ok=missing_ok)
 
     def map_fields(self, func):
         """Return a block with the same field names and ``func(value)`` per field."""
@@ -174,8 +180,12 @@ class Collection(Compound, list):
             return default
         return self[index]
 
-    def item(self, index):
-        """Return the element at ``index`` (0-based; negative counts from the end)."""
+    def item(self, index, missing_ok=False):
+        """Return the element at ``index`` (0-based; negative counts from the end).
+
+        Raise ``ValueError`` when the index is out of range, unless ``missing_ok``
+        is true — then return ``sysmissing`` instead (JS ``arr[i] === undefined``).
+        """
         if isinstance(index, bool) or not isinstance(index, int):
             raise TypeError(
                 f'collection index must be an integer, got {type(index).__name__}'
@@ -183,6 +193,8 @@ class Collection(Compound, list):
         try:
             return self[index]
         except IndexError:
+            if missing_ok:
+                return sysmissing
             raise ValueError(
                 f'index {index} out of range for collection of length {len(self)}'
             ) from None
@@ -190,13 +202,17 @@ class Collection(Compound, list):
     def item_by_name(self, name):
         return self[self.by_name[name]]
 
-    def select_field(self, name):
-        return self.project(name)
+    def select_field(self, name, missing_ok=False):
+        return self.project(name, missing_ok=missing_ok)
 
-    def project(self, name):
-        """Return a collection of ``item.select_field(name)`` per element."""
+    def project(self, name, missing_ok=False):
+        """Return a collection of ``item.select_field(name)`` per element.
+
+        With ``missing_ok``, elements that lack the field contribute ``sysmissing``
+        at that position instead of raising.
+        """
         return Collection(
-            [item.select_field(name) for item in self],
+            [item.select_field(name, missing_ok=missing_ok) for item in self],
             self.names,
         )
 

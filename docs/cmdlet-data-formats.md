@@ -323,14 +323,19 @@ On a **block** (object) or a **collection**:
 
 - `select-field` (read one field) — on a block → the field's value; on a collection →
   a collection of that field's value per element (names preserved; like
-  `items.map(x => x.field)`). A missing field raises; nesting is by chaining
+  `items.map(x => x.field)`). A missing field raises; with `args.missing_ok:
+  true` it returns `sysmissing` instead (per element on a collection) — the JS
+  `obj.missing === undefined` behaviour. Nesting is by chaining
   (`select-field "a" | select-field "b"`).
 - `select-item` (pick one element of a collection) — `args.index` (0-based; negative
-  counts from the end) → that element. Selecting by name is deferred until source
+  counts from the end) → that element. An out-of-range index raises; with
+  `args.missing_ok: true` it returns `sysmissing` instead — the JS
+  `arr[i] === undefined` behaviour. Selecting by name is deferred until source
   readers implement record/row naming.
 - `select-range` (sub-range of a collection) — `args.start` (inclusive) /
   `args.stop` (exclusive), both optional, Python-slice semantics, no step.
-  Returns a collection with the sliced names.
+  Returns a collection with the sliced names. An out-of-range slice is empty
+  (like JS `array.slice`), never an error.
 - `foreach-item` (transform collection items) — `args.transform` is a **cmdlet chain**
   run once per item (the item is its piped input); returns a collection of the
   transformed values (any shape). This was formerly named `map`.
