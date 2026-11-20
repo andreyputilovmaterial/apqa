@@ -1,6 +1,8 @@
 
 from urllib.parse import urlparse
 import json
+import sys
+import traceback
 
 from .common_functions import JSONEncoder, path_relative_to
 
@@ -14,7 +16,9 @@ def handle_qcrule_run(net_request_handler, config: dict, added_data=None):
     in the path or query string):
 
     - ``POST <mount>`` (JSON body: a rule dict) -> `run_rule_with_report` /
-      `run_rule`: execute the rule, return ``{result, notes?}``.
+      `run_rule`: execute the rule, return ``{result, notes?}``. A cmdlet error
+      returns HTTP 400 ``{error, traceback}`` (``error`` is the short message,
+      ``traceback`` the full stack, which is also printed to the console).
 
     Rule execution is delegated to ``config['iface']['run_rule_with_report']`` /
     ``config['iface']['run_rule']`` (see ``src/rule_runner.py``).
@@ -64,6 +68,12 @@ def handle_qcrule_run(net_request_handler, config: dict, added_data=None):
             return json_response(200, data)
         result = run_rule(payload)
     except Exception as e:
-        return json_response(400, {'error': f'{e}'})
+        traceback_text = ''.join(traceback.format_exception(e))
+        # A failed rule is a normal QC outcome (not an unhandled crash), so this
+        # is a 400, not a 500. Still print the full stack to the console among the
+        # request logs (interleaved under the threaded server) and hand it to the
+        # frontend, where the short `error` can be clicked to reveal the full trace.
+        print(traceback_text, file=sys.stdout, flush=True)
+        return json_response(400, {'error': f'{e}', 'traceback': traceback_text})
 
     return json_response(200, {'result': bool(result)})

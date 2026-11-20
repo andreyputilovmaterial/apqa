@@ -31,7 +31,7 @@ const RulesTree = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel', 'reorder', 'edit-group', 'run-group', 'add-rule', 'add-subfolder', 'delete-group', 'save-group', 'cancel-group'],
+  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel', 'view-error', 'reorder', 'edit-group', 'run-group', 'add-rule', 'add-subfolder', 'delete-group', 'save-group', 'cancel-group'],
 
   components: {
     'alias-record': AliasRecord,
@@ -131,6 +131,7 @@ const RulesTree = {
         @delete="$emit('delete', $event)"
         @save="onSave"
         @cancel="onCancel"
+        @view-error="$emit('view-error', $event)"
       />
     </template>
   </ul>

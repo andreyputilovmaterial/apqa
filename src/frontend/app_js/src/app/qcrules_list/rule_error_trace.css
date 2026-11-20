@@ -1,0 +1,14 @@
+.apqa-rule-error-trace-pre {
+  margin: 12px 0;
+  padding: 12px;
+  max-height: 60vh;
+  overflow: auto;
+  background: #f6f6f6;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: #cc0000;
+}

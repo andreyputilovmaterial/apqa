@@ -189,6 +189,18 @@ returns the notes to the frontend:
 When there are no notes (or the config only provides `run_rule`), the response
 stays `{"result": <bool>}` with no `notes` key, preserving the previous contract.
 
+When a rule raises, the endpoint returns HTTP 400 with a **short** `error`
+message (the existing contract) plus a `traceback` field carrying the full stack
+trace; it also prints that traceback to the backend console among the request
+logs:
+
+```json
+{"error": "cmdlet 'get-content-mdd' (step 0): get-content-mdd: cannot create …", "traceback": "Traceback (most recent call last):\n  …"}
+```
+
+The frontend shows only `error` on the rule card; the `traceback` is revealed in
+a read-only modal when the error is clicked.
+
 ## Data-path rendering (`format_path`)
 
 `format_path` renders a path as a short, human-readable address:

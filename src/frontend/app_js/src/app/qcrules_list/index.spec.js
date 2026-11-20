@@ -228,6 +228,51 @@ describe('QcRulesList', () => {
     );
   });
 
+  it('shows a "View full trace" action and opens a modal for an error with a traceback', async () => {
+    const rule = {
+      id: 'r1',
+      name: 'Rule one',
+      group: '',
+      left: [],
+      op: 'eq',
+      op_args: {},
+      right: [],
+      meta: {},
+    };
+
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/qc/rules') return Promise.resolve({ ok: true, json: () => Promise.resolve({ rules: [rule] }) });
+      if (url === '/qc/groups') return Promise.resolve({ ok: true, json: () => Promise.resolve({ groups: [] }) });
+      if (url === '/cmdlets/metadata') return Promise.resolve({ ok: true, json: () => Promise.resolve({ cmdlets: [], ops: [] }) });
+      if (url === '/tests/run') {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({
+            error: "cmdlet 'get-content-mdd' (step 0): boom",
+            traceback: 'Traceback (most recent call last):\n  boom',
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    const wrapper = mount(QcRulesList, { global: { components: cmdletComponents } });
+    await flushPromises();
+
+    await wrapper.find('.apqa-record-action-run').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('.apqa-rule-run-result-error').text()).toBe(
+      "cmdlet 'get-content-mdd' (step 0): boom",
+    );
+    const traceButton = wrapper.find('.apqa-rule-run-result-error-trace');
+    expect(traceButton.exists()).toBe(true);
+
+    await traceButton.trigger('click');
+    expect(createModal).toHaveBeenCalledTimes(1);
+  });
+
   it('edits a folder and PUTs the updated fields', async () => {
     const group = {
       id: 'data',

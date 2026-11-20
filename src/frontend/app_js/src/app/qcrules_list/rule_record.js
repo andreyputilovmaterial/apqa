@@ -23,7 +23,7 @@ const RuleRecord = {
     dropPosition: { type: String, default: '' },
   },
 
-  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel', 'view-error'],
 
   components: {
     'rule-body': RuleBody,
@@ -51,6 +51,7 @@ const RuleRecord = {
       @delete="$emit('delete', record)"
       @save="onSave"
       @cancel="onCancel"
+      @view-error="$emit('view-error', $event)"
     />
   </div>
 </li>

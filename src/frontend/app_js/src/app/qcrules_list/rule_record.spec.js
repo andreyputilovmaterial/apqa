@@ -185,6 +185,29 @@ describe('RuleRecord', () => {
     expect(error.text()).toBe("cmdlet 'nope' (step 0): cmdlet not found: nope");
   });
 
+  it('emits view-error with the traceback when the error has one', async () => {
+    const wrapper = mountRecord({
+      props: {
+        record: makeRecord(),
+        runResults: {
+          'Rule A': {
+            status: 'error',
+            message: 'boom',
+            traceback: 'Traceback (most recent call last):\n  boom',
+          },
+        },
+      },
+    });
+
+    const button = wrapper.find('.apqa-rule-run-result-error-trace');
+    expect(button.exists()).toBe(true);
+
+    await button.trigger('click');
+
+    expect(wrapper.emitted('view-error')).toHaveLength(1);
+    expect(wrapper.emitted('view-error')[0][0]).toContain('Traceback');
+  });
+
   it('shows no run-result banner when there is no cached result', () => {
     const wrapper = mountRecord({ props: { record: makeRecord() } });
 

@@ -26,7 +26,7 @@ const RuleBody = {
     tagSuggestions: { type: Array, default: () => [] },
   },
 
-  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel'],
+  emits: ['edit', 'run', 'duplicate', 'delete', 'save', 'cancel', 'view-error'],
 
   components: {
     'rule-edit-form': RuleEditForm,
@@ -71,7 +71,15 @@ const RuleBody = {
     <div v-if="runResult" class="apqa-rule-run-result">
       <div v-if="runResult.status === 'running'" class="apqa-rule-run-result-status apqa-rule-run-result-running">Running...</div>
       <template v-else>
-        <div v-if="runResult.status === 'error'" class="apqa-rule-run-result-error">{{ runResult.message }}</div>
+        <div v-if="runResult.status === 'error'" class="apqa-rule-run-result-error-block">
+          <div class="apqa-rule-run-result-error">{{ runResult.message }}</div>
+          <button
+            v-if="runResult.traceback"
+            type="button"
+            class="apqa-rule-run-result-error-trace"
+            @click="$emit('view-error', runResult.traceback)"
+          >View full trace</button>
+        </div>
         <div v-else class="apqa-rule-run-result-status" :class="runResult.status === 'passed' ? 'apqa-rule-run-result-passed' : 'apqa-rule-run-result-failed'">{{ runResult.status === 'passed' ? 'Passed' : 'Failed' }}</div>
         <ul v-if="runResult.status === 'failed' && runResult.notes && runResult.notes.length" class="apqa-rule-run-result-notes">
           <li v-for="(note, index) in runResult.notes" :key="index">- {{ formatNote(note) }}</li>

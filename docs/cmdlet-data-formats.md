@@ -563,7 +563,11 @@ served to the frontend by `GET /cmdlets/metadata` (see
   declares no dependency group defaults to `deps-stdlib-only`. The non-stdlib
   libraries are lazy-imported — loaded only when the cmdlet actually runs, never
   at module import — so registering/listing a cmdlet never pulls in its
-  dependency. It is enforced at run time by the chain runner against the
+  dependency. The one exception is `get-content-mdd`: it imports
+  `win32com.client` eagerly at module load, because `pythoncom` initializes COM
+  on whichever thread imports it, and MDD reading must do that on the long-lived
+  main thread rather than a short-lived request thread. It is enforced at run
+  time by the chain runner against the
   session's in-memory `UserSettings` allow-list (`src/user_settings.py`): a
   cmdlet whose groups are not granted does not run. By default every group is
   granted, so all cmdlets run.

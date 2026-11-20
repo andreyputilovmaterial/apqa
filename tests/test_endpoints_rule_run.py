@@ -115,6 +115,8 @@ def test_runner_error_is_4xx_with_message():
     status, data = call(make_config(), 'POST', '/tests/run', rule)
     assert 400 <= status < 500
     assert 'cmdlet not found' in data['error']
+    assert 'traceback' in data
+    assert 'cmdlet not found' in data['traceback']
 
 
 def test_wrong_method():

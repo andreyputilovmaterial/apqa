@@ -8,6 +8,7 @@ import RulesTree from './rules_tree';
 import RuleForm from './rule_form';
 import GroupForm from './group_form';
 import RuleDeleteConfirm from './rule_delete_confirm';
+import RuleErrorTrace from './rule_error_trace';
 import { allRulesInOrder, rulesForGroup } from './grouping';
 import { groupRunSummary } from './run_result';
 
@@ -90,7 +91,7 @@ const QcRulesList = {
         <div class="apqa-qcrules-page-all-run-result-status" :class="allRunSummaryClass">{{ allRunSummaryText }}</div>
       </div>
 
-      <rules-tree :records="records" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @add-subfolder="onAddSubfolder" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" />
+      <rules-tree :records="records" :groups="groups" :records-per-page="25" :cmdlets="cmdlets" :ops="ops" :tag-suggestions="tagSuggestions" :editing-id="editingId" :editing-group-id="editingGroupId" :run-results="runResults" :empty-run-groups="emptyRunGroups" @edit="onEditRule" @run="onRunRule" @duplicate="onDuplicateRule" @delete="onDeleteRule" @edit-group="onEditGroup" @run-group="onRunGroup" @add-rule="onAddRuleToGroup" @add-subfolder="onAddSubfolder" @delete-group="onDeleteGroup" @save="onSaveRule" @cancel="onCancelEdit" @save-group="onSaveGroup" @cancel-group="onCancelGroupEdit" @reorder="onReorder" @view-error="onViewError" />
     </section>
   </template>
 </div>
@@ -482,6 +483,7 @@ const QcRulesList = {
           runResults[record.id] = {
             status: 'error',
             message: (data && data.error) || `HTTP ${response.status}`,
+            traceback: (data && data.traceback) || '',
           };
           return;
         }
@@ -497,6 +499,21 @@ const QcRulesList = {
 
     async function onRunRule(record) {
       await runRuleRecord(record);
+    }
+
+    // Open the full backend stack trace for a failed rule run in a read-only
+    // modal. The short message stays on the rule card; this is the click-through
+    // detail view. Closing (or the backdrop click) rejects the modal promise,
+    // which is fine — there is nothing to do on close.
+    async function onViewError(traceback) {
+      const Popup = defineComponent({
+        setup: (_, { attrs }) => () => h(RuleErrorTrace, { ...attrs, traceback }),
+      });
+      try {
+        await createModal(Popup);
+      } catch (e) {
+        // Modal dismissed — nothing to do.
+      }
     }
 
     // Run every rule in the list one at a time, in the same depth-first order
@@ -706,6 +723,7 @@ const QcRulesList = {
       onRunAll,
       onEditRule,
       onRunRule,
+      onViewError,
       onDuplicateRule,
       onDeleteRule,
       onEditGroup,
